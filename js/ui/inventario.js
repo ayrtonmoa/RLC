@@ -22,7 +22,6 @@ const UI_Inventario = {
       <textarea id="inventarioText" rows="8" placeholder="Cole aqui..." style="width: 100%; padding: 10px; margin: 15px 0;"></textarea>
       <button onclick="UI_Inventario.analisar()">🔍 Analisar Inventário</button>
       <button onclick="UI_Inventario.debugParsing()" style="background: #6c757d;">🐛 Debug Parsing</button>
-      <button onclick="UI_Inventario.testarCalculo()" style="background: #dc3545;">⚠️ Testar Cálculo</button>
       
       <div id="resultadoInventario" style="margin-top: 20px;"></div>
     `;
@@ -139,16 +138,52 @@ const UI_Inventario = {
           const powerLine = linhas[j + 1];
           const match = powerLine.match(/([\d\s.,]+)\s*(Eh\/s|Ph\/s|Th\/s|Gh\/s|Mh\/s)/i);
           if (match) {
-            const numberStr = match[1].replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+            let numberStr = match[1].replace(/\s/g, ''); // Remove espaços
+            
+            // CORREÇÃO: Detectar se ponto/vírgula é decimal ou milhar
+            const temPonto = numberStr.includes('.');
+            const temVirgula = numberStr.includes(',');
+            
+            if (temPonto && temVirgula) {
+              // Ambos: último é decimal
+              const ultimoPonto = numberStr.lastIndexOf('.');
+              const ultimaVirgula = numberStr.lastIndexOf(',');
+              
+              if (ultimaVirgula > ultimoPonto) {
+                // "1.234,56" → "1234.56"
+                numberStr = numberStr.replace(/\./g, '').replace(',', '.');
+              } else {
+                // "1,234.56" → "1234.56"
+                numberStr = numberStr.replace(/,/g, '');
+              }
+            } else if (temVirgula) {
+              // Só vírgula: decimal em pt-BR
+              // "3,14" → "3.14"
+              numberStr = numberStr.replace(',', '.');
+            } else if (temPonto) {
+              // Só ponto: verificar se é decimal ou milhar
+              const partes = numberStr.split('.');
+              
+              if (partes.length === 2 && partes[1].length === 3 && partes[0].length > 3) {
+                // "12.345" (5+ dígitos, 3 após ponto) → milhar
+                numberStr = numberStr.replace('.', '');
+              }
+              // Senão: "5.513" → mantém como decimal (4 dígitos)
+            }
+            
             power = parseFloat(numberStr);
             const unit = match[2].toLowerCase();
             
-            if (unit.includes('eh')) power *= 1000000;
-            else if (unit.includes('ph')) power *= 1000;
-            else if (unit.includes('gh')) power *= 0.001;
-            else if (unit.includes('mh')) power *= 0.000001;
+            console.log('  📝 Original:', match[1], '→ Processado:', numberStr, '→ Valor:', power);
             
-            console.log('  ⚡ Power:', power.toFixed(3), 'Th/s (original:', powerLine + ')');
+            // CORREÇÃO: Converter para GH/s (mesma unidade da API)
+            if (unit.includes('eh')) power *= 1000000000; // Eh → GH
+            else if (unit.includes('ph')) power *= 1000000;  // Ph → GH
+            else if (unit.includes('th')) power *= 1000;     // Th → GH
+            else if (unit.includes('gh')) power *= 1;        // GH → GH (já está)
+            else if (unit.includes('mh')) power *= 0.001;    // Mh → GH
+            
+            console.log('  ⚡ Power:', power.toFixed(3), 'GH/s (original:', powerLine + ')');
           }
         }
         
@@ -169,11 +204,11 @@ const UI_Inventario = {
       }
       
       if (power > 0) {
-        console.log('  ✅ ADICIONADA:', { nome, level, cells, power: power.toFixed(3), bonus, quantity });
+        console.log('  ✅ ADICIONADA:', { nome, level, cells, power: power.toFixed(3) + ' GH/s', bonus, quantity });
         miners.push({ 
           name: nome, 
           cells: cells, 
-          power: power, 
+          power: power, // Em GH/s (mesma unidade da API)
           bonus: bonus, 
           quantity: quantity, 
           level: level 
@@ -187,75 +222,80 @@ const UI_Inventario = {
     return miners;
   },
   
-calcular: function(miners, userData) {
-  const baseAtual = userData.roomData.miners.reduce((s, m) => s + m.power, 0);
-  const bonusPercentualAtual = userData.powerData.bonus_percent / 10000;
-  const totalAtual = userData.powerData.current_power;
-  
-  console.log('🔍 Iniciando verificação de miners instaladas...');
-  
-  return miners.map(m => {
-    // Verificar se já possui
-    let jaPossui = false;
-    let minerInstalada = null;
-    let tipoMatch = null;
-    let levelDetectado = m.level;
+  calcular: function(miners, userData) {
+    const baseAtual = userData.roomData.miners.reduce((s, m) => s + m.power, 0);
+    const bonusPercentualAtual = userData.powerData.bonus_percent / 10000;
+    const totalAtual = userData.powerData.current_power;
     
-    const nomeInventario = m.name.toLowerCase().trim();
-    const powerInventario = m.power;
+    console.log('🔍 Iniciando verificação de miners instaladas...');
+    console.log('   ⚠️ IMPORTANTE: Valores em GH/s (API) vs GH/s (inventário)');
     
-    const minersComMesmoNome = userData.roomData.miners.filter(mi => 
-      mi.name.toLowerCase().trim() === nomeInventario
-    );
-    
-    if (minersComMesmoNome.length > 0) {
-      console.log('  📦', m.name, '→ Encontrei', minersComMesmoNome.length, 'com mesmo nome');
+    return miners.map(m => {
+      // Verificar se já possui
+      let jaPossui = false;
+      let minerInstalada = null;
+      let tipoMatch = null;
+      let levelDetectado = m.level;
       
-      const tolerancia = 500;
-      const minerComMesmoPower = minersComMesmoNome.find(mi => {
-        const diferenca = Math.abs(mi.power - powerInventario);
-        return diferenca < tolerancia;
-      });
+      const nomeInventario = m.name.toLowerCase().trim();
+      const powerInventario = m.power;
       
-      if (minerComMesmoPower) {
-        jaPossui = true;
-        minerInstalada = minerComMesmoPower;
-        tipoMatch = 'exato';
-        levelDetectado = minerComMesmoPower.level_label;
-        console.log('    ✅ MATCH EXATO! Level:', levelDetectado);
+      const minersComMesmoNome = userData.roomData.miners.filter(mi => 
+        mi.name.toLowerCase().trim() === nomeInventario
+      );
+      
+      if (minersComMesmoNome.length > 0) {
+        console.log('  📦', m.name, '→ Encontrei', minersComMesmoNome.length, 'com mesmo nome');
+        
+        // CORREÇÃO: Tolerância de 0.1% para GH/s (mínimo 1 GH/s)
+        const tolerancia = Math.max(1, powerInventario * 0.001);
+        console.log('    🔍 Tolerância:', tolerancia.toFixed(3), 'GH/s');
+        
+        const minerComMesmoPower = minersComMesmoNome.find(mi => {
+          const diferenca = Math.abs(mi.power - powerInventario);
+          console.log('    🔢 Comparando:', mi.power.toFixed(3), 'GH/s vs', powerInventario.toFixed(3), 'GH/s → Diff:', diferenca.toFixed(3), 'GH/s');
+          return diferenca < tolerancia;
+        });
+        
+        if (minerComMesmoPower) {
+          jaPossui = true;
+          minerInstalada = minerComMesmoPower;
+          tipoMatch = 'exato';
+          levelDetectado = minerComMesmoPower.level_label;
+          console.log('    ✅ MATCH EXATO! Level:', levelDetectado);
+        } else {
+          jaPossui = false;
+          minerInstalada = minersComMesmoNome[0];
+          tipoMatch = 'nome_diferente_tier';
+          levelDetectado = 'Unknown (diferente de ' + minerInstalada.level_label + ')';
+          console.log('    ⚠️ Mesmo nome, mas tier diferente!');
+        }
       } else {
-        jaPossui = false;
-        minerInstalada = minersComMesmoNome[0];
-        tipoMatch = 'nome_diferente_tier';
-        levelDetectado = 'Unknown (diferente de ' + minerInstalada.level_label + ')';
-        console.log('    ⚠️ Mesmo nome, mas tier diferente!');
+        console.log('  ❌', m.name, '→ NÃO possui');
       }
-    } else {
-      console.log('  ❌', m.name, '→ NÃO possui');
-    }
-    
-    // CALCULAR GANHO PELA SOMA DIRETA (igual fizemos no calculations.js)
-    const ganhoBase = m.power;
-    const ganhoBonusQueReceberá = m.power * bonusPercentualAtual;
-    const ganhoBonusDeColecao = jaPossui ? 0 : (baseAtual * (m.bonus / 100));
-    
-    // Ganho total = soma dos ganhos
-    const impacto = ganhoBase + ganhoBonusQueReceberá + ganhoBonusDeColecao;
-    
-    return { 
-      name: m.name,
-      cells: m.cells,
-      power: m.power,
-      bonus: m.bonus,
-      level: levelDetectado,
-      quantity: m.quantity,
-      impacto: impacto,
-      jaPossui: jaPossui,
-      minerInstalada: minerInstalada,
-      tipoMatch: tipoMatch
-    };
-  }).sort((a, b) => b.impacto - a.impacto);
-},
+      
+      // CALCULAR GANHO PELA SOMA DIRETA (igual fizemos no calculations.js)
+      const ganhoBase = m.power;
+      const ganhoBonusQueReceberá = m.power * bonusPercentualAtual;
+      const ganhoBonusDeColecao = jaPossui ? 0 : (baseAtual * (m.bonus / 100));
+      
+      // Ganho total = soma dos ganhos
+      const impacto = ganhoBase + ganhoBonusQueReceberá + ganhoBonusDeColecao;
+      
+      return { 
+        name: m.name,
+        cells: m.cells,
+        power: m.power,
+        bonus: m.bonus,
+        level: levelDetectado,
+        quantity: m.quantity,
+        impacto: impacto,
+        jaPossui: jaPossui,
+        minerInstalada: minerInstalada,
+        tipoMatch: tipoMatch
+      };
+    }).sort((a, b) => b.impacto - a.impacto);
+  },
   
   mostrarResultado: function(miners, minersFracas) {
     const div = document.getElementById('resultadoInventario');
@@ -644,7 +684,7 @@ calcular: function(miners, userData) {
     console.log('\n📊 RESULTADO:');
     console.log('Total extraídas:', resultado.length);
     resultado.forEach((m, i) => {
-      console.log((i + 1) + '.', m.name, '→', m.level, '|', m.cells, 'cells |', m.power.toFixed(3), 'Th/s |', m.bonus + '% | Qty:', m.quantity);
+      console.log((i + 1) + '.', m.name, '→', m.level, '|', m.cells, 'cells |', m.power.toFixed(3), 'GH/s |', m.bonus + '% | Qty:', m.quantity);
     });
     
     let html = '<div style="background: #f0f8ff; border: 2px solid #007bff; padding: 20px; border-radius: 8px;">';
@@ -692,7 +732,7 @@ calcular: function(miners, userData) {
     if (resultado.length > 0) {
       html += '<div style="background: white; padding: 15px; margin: 15px 0; border-radius: 5px; border: 1px solid #ddd;">';
       html += '<h4>📊 Miners Extraídas:</h4>';
-      html += '<table style="width: 100%; font-size: 11px;"><tr><th>#</th><th>Nome</th><th>Level</th><th>Cells</th><th>Power (Th/s)</th><th>Bonus</th><th>Qty</th></tr>';
+      html += '<table style="width: 100%; font-size: 11px;"><tr><th>#</th><th>Nome</th><th>Level</th><th>Cells</th><th>Power (GH/s)</th><th>Bonus</th><th>Qty</th></tr>';
       
       resultado.forEach((m, i) => {
         const corLinha = m.level === 'Unknown' ? 'background: #ffebee;' : '';
