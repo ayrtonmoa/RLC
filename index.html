@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RollerCoin Analyzer Pro</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>RollerCoin Analyzer Pro</h1>
+
+    <div class="card">
+      <label for="username">Username:</label>
+      <input type="text" id="username" placeholder="Digite seu username" value="">
+      <button id="analisarBtn">Analisar</button>
+      <div id="status" class="status">Digite um username e clique em Analisar</div>
+      <div id="progress" class="progress" style="display:none;">
+        <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="guia">Como Utilizar</div>
+      <div class="tab" data-tab="resumo">Resumo & Perfil</div>
+      <div class="tab" data-tab="miners">Impact Analyzer</div>
+      <div class="tab" data-tab="buyanalyzer">Buy Analyzer</div>
+      <div class="tab" data-tab="inventario">Inventário & Troca</div>
+      <div class="tab" data-tab="debug">Debug Info</div>
+      <div class="tab" data-tab="racks">Racks</div>
+    </div>
+
+    <div id="guia" class="card tab-content active"></div>
+    <div id="resumo" class="card tab-content"></div>
+    <div id="miners" class="card tab-content"></div>
+    <div id="buyanalyzer" class="card tab-content"></div>
+    <div id="inventario" class="card tab-content"></div>
+    <div id="debug" class="card tab-content"></div>
+    <div id="racks" class="card tab-content"></div>
+  </div>
+
+  <!-- Scripts em ordem de dependência - MUITO IMPORTANTE A ORDEM! -->
+  <script src="js/config.js"></script>
+  <script src="data/state.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/calculations.js"></script>
+  
+  <!-- UI Components -->
+  <script src="js/ui/guia.js"></script>
+  <script src="js/ui/resumo.js"></script>
+  <script src="js/ui/miners.js"></script>
+  <script src="js/ui/buyAnalyzer.js"></script>
+  <script src="js/ui/inventario.js"></script>
+  <script src="js/ui/debug.js"></script>
+  <script src="js/ui/racks.js"></script>
+  <script src="js/ui/tabs.js"></script>
+  
+  <!-- Inicialização - Deve ser o ÚLTIMO script -->
+  <script>
+    // Função para analisar usuário
+    async function analisarUsuario(username) {
+      const button = document.getElementById('analisarBtn');
+      button.disabled = true;
+      
+      try {
+        const user = await API.getUserDataByNick(username);
+        State.setUserData(user);
+        
+        UI_Resumo.mostrar(user);
+        UI_Miners.mostrar(user);
+        UI_BuyAnalyzer.mostrar(user);
+        UI_Inventario.mostrar(user);
+        UI_Debug.mostrar(user);
+        UI_Racks.mostrar(user);
+        
+        Utils.hideProgress();
+        document.getElementById('status').innerHTML = '<span class="success">Análise concluída com sucesso!</span>';
+      } catch (err) {
+        Utils.hideProgress();
+        document.getElementById('status').innerHTML = '<span class="error">Erro: ' + err.message + '</span>';
+        console.error(err);
+      } finally {
+        button.disabled = false;
+      }
+    }
+    
+    // Inicialização quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+      // Verificar se todos os módulos foram carregados
+      console.log('Verificando módulos carregados...');
+      console.log('CONFIG:', typeof CONFIG !== 'undefined' ? '✅' : '❌');
+      console.log('State:', typeof State !== 'undefined' ? '✅' : '❌');
+      console.log('Utils:', typeof Utils !== 'undefined' ? '✅' : '❌');
+      console.log('API:', typeof API !== 'undefined' ? '✅' : '❌');
+      console.log('Calculations:', typeof Calculations !== 'undefined' ? '✅' : '❌');
+      console.log('UI_Guia:', typeof UI_Guia !== 'undefined' ? '✅' : '❌');
+      console.log('UI_Resumo:', typeof UI_Resumo !== 'undefined' ? '✅' : '❌');
+      console.log('UI_Miners:', typeof UI_Miners !== 'undefined' ? '✅' : '❌');
+      console.log('UI_BuyAnalyzer:', typeof UI_BuyAnalyzer !== 'undefined' ? '✅' : '❌');
+      console.log('UI_Inventario:', typeof UI_Inventario !== 'undefined' ? '✅' : '❌');
+      console.log('UI_Debug:', typeof UI_Debug !== 'undefined' ? '✅' : '❌');
+      console.log('UI_Racks:', typeof UI_Racks !== 'undefined' ? '✅' : '❌');
+      console.log('UI_Tabs:', typeof UI_Tabs !== 'undefined' ? '✅' : '❌');
+      
+      // Inicializar interface
+      UI_Guia.mostrar();
+      UI_Tabs.init();
+      
+      // Event listeners
+      document.getElementById('analisarBtn').addEventListener('click', async () => {
+        const username = document.getElementById('username').value.trim();
+        if (!username) {
+          document.getElementById('status').innerHTML = '<span class="error">Digite um username</span>';
+          return;
+        }
+        
+        await analisarUsuario(username);
+      });
+      
+      document.getElementById('username').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          document.getElementById('analisarBtn').click();
+        }
+      });
+      
+      console.log('✅ Sistema inicializado com sucesso!');
+    });
+  </script>
+</body>
+</html>
