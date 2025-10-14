@@ -1,4 +1,4 @@
-// js/ui/miners.js - Aba Impact Analyzer (COM INDICADOR DE DUPLICATAS)
+// js/ui/miners.js - Aba Impact Analyzer (CORRIGIDO - USA MINER_ID)
 
 const UI_Miners = {
   currentFilter: 'all',
@@ -31,14 +31,15 @@ const UI_Miners = {
       </div>
       
       <div style="background: #fff3e0; padding: 15px; border-left: 4px solid #FF9800; margin: 15px 0;">
-        <h4>📋 Sobre Status das Miners</h4>
-        <ul style="font-size: 13px; margin: 5px 0;">
-          <li><strong style="color: #666;">⚪ Única:</strong> Você tem apenas 1 desta miner. Impacto INCLUI perda de bônus de coleção.</li>
-          <li><strong style="color: #2196F3;">🔷 Primeira do tipo:</strong> Primeira de várias iguais. Impacto INCLUI perda de bônus de coleção.</li>
-          <li><strong style="color: #FF9800;">🔄 Duplicata:</strong> 2ª, 3ª, 4ª... da mesma miner. Impacto NÃO inclui perda de bônus.</li>
+        <h4>📋 Sobre Duplicatas (Mesmo Tipo de Miner)</h4>
+        <p style="font-size: 13px;">Miners <strong>duplicatas</strong> são aquelas que você tem mais de uma unidade <strong>idêntica</strong> (mesmo modelo, não apenas mesmo nome).</p>
+        <ul style="font-size: 13px; margin: 10px 0;">
+          <li><strong style="color: #666;">⚪ Única:</strong> Apenas 1 desta miner. Remover causa perda de bônus.</li>
+          <li><strong style="color: #2196F3;">🔷 Primeira:</strong> Primeira de várias iguais. Remover causa perda de bônus.</li>
+          <li><strong style="color: #FF9800;">🔄 Duplicata:</strong> 2ª, 3ª... da mesma miner. Remover NÃO perde bônus.</li>
         </ul>
         <p style="margin-top: 10px; font-size: 12px; color: #666;">
-          <strong>💡 Exemplo:</strong> Se você tem 3x "Rare Miner", a primeira (🔷) tem alto impacto, as outras 2 (🔄) têm impacto menor. Se você tem apenas 1x "Epic Miner" (⚪), ela tem alto impacto.
+          <strong>💡 Exemplo:</strong> Se você tem 3x "Rare Antminer S19 Pro", a primeira tem alto impacto, as outras 2 têm menor impacto. Se você tem "Rare Antminer S19" E "Rare Antminer S19 Pro", são miners <strong>diferentes</strong> e NÃO são duplicatas.
         </p>
       </div>
       
@@ -61,6 +62,18 @@ const UI_Miners = {
         </tr>
     `;
 
+    // ✅ CRIAR MAPA DE CONTAGEM POR MINER_ID
+    const minerCountMap = {};
+    impacts.forEach(m => {
+      if (!minerCountMap[m.minerId]) {
+        minerCountMap[m.minerId] = 0;
+      }
+      minerCountMap[m.minerId]++;
+    });
+
+    // ✅ RASTREAR QUAL É A PRIMEIRA DE CADA TIPO
+    const primeiraDoTipo = new Set();
+
     impacts.forEach((m, index) => {
       const maiorImpacto = impacts[0].impact;
       const percentualRelativo = (m.impact / maiorImpacto) * 100;
@@ -68,11 +81,16 @@ const UI_Miners = {
       const impactClass = percentualRelativo > 80 ? 'high-impact' : 
                           percentualRelativo > 40 ? 'medium-impact' : 'low-impact';
       
-      // Contar quantas miners deste tipo existem (usando a mesma chave do cálculo)
-      const minerCount = impacts.filter(other => other.tipoKey === m.tipoKey).length;
-      const isDuplicate = m.isDuplicate; // Duplicata (2ª, 3ª, 4ª...)
-      const isFirst = m.isFirstOfType && minerCount > 1; // Primeira (quando há mais de uma)
-      const isUnique = minerCount === 1; // Única (só tem uma)
+      // ✅ USAR MINER_ID PARA CONTAR
+      const minerCount = minerCountMap[m.minerId];
+      const isUnique = minerCount === 1;
+      const isFirst = !primeiraDoTipo.has(m.minerId) && minerCount > 1;
+      const isDuplicate = primeiraDoTipo.has(m.minerId);
+      
+      // Marcar como "já vimos este tipo"
+      if (!primeiraDoTipo.has(m.minerId)) {
+        primeiraDoTipo.add(m.minerId);
+      }
       
       // Ícone de status
       let statusIcon = '';
@@ -81,15 +99,15 @@ const UI_Miners = {
       
       if (isUnique) {
         statusIcon = '⚪';
-        statusTooltip = 'Única - Impacto inclui perda de bônus de coleção';
+        statusTooltip = 'Única - Remover causa perda de bônus de coleção';
         statusColor = 'color: #666;';
       } else if (isFirst) {
         statusIcon = '🔷';
-        statusTooltip = `Primeira de ${minerCount} unidades - Impacto INCLUI perda de bônus de coleção`;
+        statusTooltip = `Primeira de ${minerCount} unidades - Remover causa perda de bônus`;
         statusColor = 'color: #2196F3;';
       } else if (isDuplicate) {
         statusIcon = '🔄';
-        statusTooltip = `Duplicata (${minerCount} unidades total) - Impacto NÃO inclui perda de bônus`;
+        statusTooltip = `Duplicata (${minerCount} unidades total) - Remover NÃO perde bônus`;
         statusColor = 'color: #FF9800;';
       }
       
@@ -98,7 +116,7 @@ const UI_Miners = {
       const sala = rack ? (rack.placement?.room_level || 0) + 1 : 'N/A';
       const rackName = rack?.name || 'N/A';
       
-      // Encontrar ordem VISUAL do rack (ordenado por sala -> linha -> coluna)
+      // Encontrar ordem VISUAL do rack
       const racksOrdenados = [...user.roomData.racks].sort((a, b) => {
         const salaA = a.placement?.room_level || 0;
         const salaB = b.placement?.room_level || 0;
@@ -114,13 +132,9 @@ const UI_Miners = {
       const rackOrdemVisual = racksOrdenados.findIndex(r => r._id === m.rackId) + 1;
       const rackOrdem = rackOrdemVisual > 0 ? `Rack #${rackOrdemVisual}` : 'N/A';
       
-      // Dimensões do rack
       const rackHeight = rack?.rack_info?.height || 4;
-      
-      // Posição da miner dentro do rack (linha de cima pra baixo)
       const minerY = m.position.y;
       
-      // Criar descrição simplificada e clara
       const localizacao = `<strong>Sala ${sala}</strong><br>` +
                          `${rackOrdem}: ${rackName}<br>` +
                          `<small>Linha ${minerY + 1} de ${rackHeight} do rack</small>`;
@@ -128,12 +142,12 @@ const UI_Miners = {
       html += `
         <tr class="${impactClass}" data-type="${percentualRelativo > 80 ? 'high' : percentualRelativo > 40 ? 'medium' : 'low'}" data-duplicate="${isDuplicate}">
           <td><strong>#${index + 1}</strong></td>
-          <td><strong>${m.name}</strong>${minerCount > 1 ? ` <span style="color: orange;">🔢</span>` : ''}</td>
+          <td><strong>${m.name}</strong>${minerCount > 1 ? ` <span style="color: orange;">🔢${minerCount}</span>` : ''}</td>
           <td>${m.level}</td>
           <td title="${statusTooltip}" style="font-size: 20px; ${statusColor}">${statusIcon}</td>
           <td>${localizacao}</td>
           <td>${Utils.formatPower(m.basePower * 1e9)}<br><small>${m.basePower.toFixed(3)} GH/s</small></td>
-          <td>${(m.minerBonusPercent * 100).toFixed(2)}%${m.isDuplicate ? '<br><small style="color: #999;">(não aplicado)</small>' : ''}</td>
+          <td>${(m.minerBonusPercent * 100).toFixed(2)}%${isDuplicate ? '<br><small style="color: #999;">(não aplicado)</small>' : ''}</td>
           <td>${(m.rackBonus * 100).toFixed(2)}%</td>
           <td><strong>${Utils.formatPower(m.impact * 1e9)}</strong><br><small>${m.impact.toFixed(3)} GH/s</small></td>
           <td>${Utils.formatPower(m.perdaBase * 1e9)}<br><small>Base perdida</small></td>
@@ -184,9 +198,12 @@ const UI_Miners = {
     const novoPoderTotal = impactData.novoPoderTotal;
     const percentualPerda = (impactData.impact / poderAtual) * 100;
     
-    // Determinar se é duplicata
-    const minerCount = impacts.filter(other => other.tipoKey === impactData.tipoKey).length;
+    // ✅ USAR MINER_ID
+    const minerCount = impacts.filter(other => other.minerId === impactData.minerId).length;
     const isUnique = minerCount === 1;
+    const primeiraIndex = impacts.findIndex(m => m.minerId === impactData.minerId);
+    const isFirst = primeiraIndex === impacts.indexOf(impactData);
+    const isDuplicate = !isFirst && minerCount > 1;
     
     let statusText = '';
     let bonusInfo = '';
@@ -194,7 +211,7 @@ const UI_Miners = {
     if (isUnique) {
       statusText = '<span style="color: #666; font-weight: bold;">⚪ Única</span>';
       bonusInfo = '<div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;"><p style="color: #e65100; font-size: 13px; margin: 0;">⚠️ Esta é a <strong>única</strong> miner deste tipo. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
-    } else if (impactData.isFirstOfType) {
+    } else if (isFirst) {
       statusText = '<span style="color: #2196F3; font-weight: bold;">🔷 Primeira do tipo</span>';
       bonusInfo = '<div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;"><p style="color: #e65100; font-size: 13px; margin: 0;">⚠️ Esta é a <strong>primeira de ' + minerCount + '</strong> miners iguais. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
     } else {
@@ -210,10 +227,10 @@ const UI_Miners = {
             <h4>${minerParaRemover.name} (${minerParaRemover.level_label})</h4>
             <p><strong>Status:</strong> ${statusText}</p>
             <p><strong>Poder Base:</strong> ${Utils.formatPower(minerParaRemover.power * 1e9)}</p>
-            <p><strong>Bônus Total Oferecido:</strong> ${((minerParaRemover.bonus_percent/10000) * 100).toFixed(2)}%</p>
-            ${impactData.isDuplicate ? 
-              '<p><strong>Bônus Aplicado no Impacto:</strong> <span style="color: #999;">0% (duplicata não perde)</span></p>' :
-              '<p><strong>Bônus Aplicado no Impacto:</strong> <span style="color: #dc3545;">' + ((minerParaRemover.bonus_percent/10000) * 100).toFixed(2) + '% (será perdido!)</span></p>'
+            <p><strong>Bônus Total:</strong> ${((minerParaRemover.bonus_percent/10000) * 100).toFixed(2)}%</p>
+            ${isDuplicate ? 
+              '<p><strong>Bônus Aplicado:</strong> <span style="color: #999;">0% (duplicata não perde)</span></p>' :
+              '<p><strong>Bônus Aplicado:</strong> <span style="color: #dc3545;">' + ((minerParaRemover.bonus_percent/10000) * 100).toFixed(2) + '% (será perdido!)</span></p>'
             }
           </div>
           ${bonusInfo}
@@ -298,24 +315,39 @@ const UI_Miners = {
     
     const impacts = Calculations.calcularImpactos(userData);
     
-    let csv = 'Ranking,Nome,Level,Status,Poder Base (H/s),Bonus Miner (%),Bonus Aplicado (%),Bonus Rack (%),Impacto Real (H/s),Bonus Removido (H/s),Sem Bonus Colecao (H/s),Percentual Total (%)\n';
+    // Criar mapa de contagem
+    const minerCountMap = {};
+    impacts.forEach(m => {
+      if (!minerCountMap[m.minerId]) {
+        minerCountMap[m.minerId] = 0;
+      }
+      minerCountMap[m.minerId]++;
+    });
+    
+    const primeiraDoTipo = new Set();
+    
+    let csv = 'Ranking,Nome,Level,Miner ID,Status,Qtd Total,Poder Base (H/s),Bonus Miner (%),Bonus Rack (%),Impacto Real (H/s),Percentual Total (%)\n';
     
     impacts.forEach((m, index) => {
-      const minerCount = impacts.filter(other => other.tipoKey === m.tipoKey).length;
+      const minerCount = minerCountMap[m.minerId];
       const isUnique = minerCount === 1;
+      const isFirst = !primeiraDoTipo.has(m.minerId);
+      const isDuplicate = primeiraDoTipo.has(m.minerId);
+      
+      if (!primeiraDoTipo.has(m.minerId)) {
+        primeiraDoTipo.add(m.minerId);
+      }
       
       let status = '';
       if (isUnique) {
         status = 'Única';
-      } else if (m.isFirstOfType) {
+      } else if (isFirst) {
         status = 'Primeira';
       } else {
         status = 'Duplicata';
       }
       
-      const bonusAplicado = m.minerBonusPercentAplicado * 100;
-      
-      csv += `${index + 1},"${m.name}","${m.level}","${status}",${(m.basePower * 1e9)},${(m.minerBonusPercent * 100).toFixed(2)},${bonusAplicado.toFixed(2)},${(m.rackBonus * 100).toFixed(2)},${(m.impact * 1e9)},${(m.perdaRackBonus * 1e9)},${(m.perdaBase * 1e9)},${m.impactPercent.toFixed(2)}\n`;
+      csv += `${index + 1},"${m.name}","${m.level}","${m.minerId}","${status}",${minerCount},${(m.basePower * 1e9)},${(m.minerBonusPercent * 100).toFixed(2)},${(m.rackBonus * 100).toFixed(2)},${(m.impact * 1e9)},${m.impactPercent.toFixed(2)}\n`;
     });
     
     Utils.exportarCSV(csv, 'rollercoin_impact_' + userData.name + '_' + new Date().toISOString().split('T')[0] + '.csv');

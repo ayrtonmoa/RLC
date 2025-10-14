@@ -1,9 +1,8 @@
-// js/calculations.js - Cálculos de Impacto (VERSÃO CORRIGIDA - Duplicatas)
+// js/calculations.js - Cálculos de Impacto (VERSÃO COMPLETA COM MINER_ID)
 
 const Calculations = {
   /**
    * Calcula o impacto de cada miner individualmente
-   * CORREÇÃO: Miners duplicadas não perdem bônus de coleção
    */
   calcularImpactos(user) {
     const racks = user.roomData.racks || [];
@@ -27,34 +26,10 @@ const Calculations = {
     State.addDebugInfo(`Bônus % (raw): ${user.powerData.bonus_percent} -> ${(bonusPercentualAtual * 100).toFixed(2)}%`);
     State.addDebugInfo(`Bônus power: ${Utils.formatPower(bonusPowerAtual * 1e9)}`);
 
-    // 🔥 IDENTIFICAR PRIMEIRA OCORRÊNCIA DE CADA TIPO (nome + level)
-    const primeiraOcorrenciaPorTipo = {};
-    allMiners.forEach((m, index) => {
-      const chaveTipo = m.name + '|' + m.level_label;
-      if (!primeiraOcorrenciaPorTipo[chaveTipo]) {
-        primeiraOcorrenciaPorTipo[chaveTipo] = index;
-      }
-    });
-    
-    State.addDebugInfo(`=== IDENTIFICAÇÃO DE DUPLICATAS ===`);
-    Object.entries(primeiraOcorrenciaPorTipo).forEach(([tipo, index]) => {
-      const count = allMiners.filter(m => (m.name + '|' + m.level_label) === tipo).length;
-      if (count > 1) {
-        State.addDebugInfo(`🔍 ${tipo}: ${count} unidades - Primeira: índice #${index}`);
-      }
-    });
-
     const impacts = allMiners.map((m, index) => {
       const basePowerGHS = m.power;
+      const minerBonusPercent = m.bonus_percent / 10000;
       const rackBonusFactor = rackFactorById[m.placement.user_rack_id] || 0;
-      const chaveTipo = m.name + '|' + m.level_label;
-      
-      // 🎯 DETERMINAR SE É A PRIMEIRA OCORRÊNCIA DESTE TIPO
-      const ehPrimeiraDoTipo = primeiraOcorrenciaPorTipo[chaveTipo] === index;
-      
-      // Se é primeira do tipo, remover ela causa perda do bônus de coleção
-      // Se é duplicata, remover ela NÃO causa perda do bônus (outra ainda está lá)
-      const minerBonusPercent = ehPrimeiraDoTipo ? (m.bonus_percent / 10000) : 0;
       
       const novaBaseTotal = baseTotalMiners - basePowerGHS;
       const novoBonusPercentual = bonusPercentualAtual - minerBonusPercent;
@@ -70,17 +45,12 @@ const Calculations = {
       const perdaBonusDeColecao = baseTotalMiners * minerBonusPercent;
       const perdaBonusProprioBonus = basePowerGHS * bonusPercentualAtual;
 
-      // Log para duplicatas
-      if (!ehPrimeiraDoTipo) {
-        State.addDebugInfo(`⚠️ DUPLICATA: ${m.name} (${m.level_label}) #${index} - Impacto: ${Utils.formatPower(impactoReal * 1e9)} (SEM bônus coleção)`);
-      }
-
       return { 
         name: m.name, 
         level: m.level_label, 
+        minerId: m.miner_id, // ✅ ADICIONADO
         basePower: basePowerGHS,
-        minerBonusPercent: m.bonus_percent / 10000, // Valor original para exibição
-        minerBonusPercentAplicado: minerBonusPercent, // Valor aplicado no cálculo (0 se duplicata)
+        minerBonusPercent: minerBonusPercent,
         rackBonus: rackBonusFactor, 
         impact: impactoReal,
         perdaBase: perdaBase,
@@ -91,10 +61,7 @@ const Calculations = {
         rackId: m.placement.user_rack_id,
         position: m.placement,
         minerIndex: index,
-        width: m.width || 2,
-        isDuplicate: !ehPrimeiraDoTipo,
-        isFirstOfType: ehPrimeiraDoTipo,
-        tipoKey: chaveTipo
+        width: m.width || 2
       };
     });
 
@@ -105,12 +72,12 @@ const Calculations = {
   },
   
   /**
-   * Conta miners únicas (diferentes nome+level)
+   * Conta miners únicas (diferentes miner_id)
    */
   calcularMinersUnicas(impacts) {
     const uniqueSet = new Set();
     impacts.forEach(m => {
-      uniqueSet.add(m.name + '|' + m.level);
+      uniqueSet.add(m.minerId); // ✅ CORRIGIDO: usar miner_id
     });
     return uniqueSet.size;
   },
@@ -197,11 +164,10 @@ const Calculations = {
       index === self.findIndex((m) => m.miner_id === miner.miner_id)
     );
     uniqueMinersAtuais.forEach(m => {
-      minersUnicasAtuais.add(m.name + '|' + (CONFIG.MINER_LEVELS[m.level] || 'Unknown'));
+      minersUnicasAtuais.add(m.miner_id); // ✅ CORRIGIDO: usar miner_id
     });
     
-    const chaveMiner = minerInventario.name + '|' + minerInventario.level;
-    const jaPossui = minersUnicasAtuais.has(chaveMiner);
+    const jaPossui = minersUnicasAtuais.has(minerInventario.minerId); // ✅ CORRIGIDO
     
     const novaBase = baseTotalAtual + minerInventario.power;
     const novoBonusPercentual = jaPossui ? bonusPercentualAtual : bonusPercentualAtual + (minerInventario.bonus / 100);
@@ -296,35 +262,3 @@ const Calculations = {
 };
 
 window.Calculations = Calculations;
-
-// 🔧 ATUALIZAÇÃO DO UI_Miners para mostrar duplicatas claramente
-if (typeof UI_Miners !== 'undefined') {
-  const originalMostrar = UI_Miners.mostrar;
-  
-  UI_Miners.mostrar = function(user) {
-    originalMostrar.call(this, user);
-    
-    // Adicionar legenda sobre duplicatas
-    const minersDiv = document.getElementById('miners');
-    if (minersDiv) {
-      const legendaHTML = `
-        <div style="background: #fff3e0; padding: 15px; border-left: 4px solid #FF9800; margin: 15px 0;">
-          <h4>📋 Sobre Miners Duplicadas</h4>
-          <ul style="font-size: 13px; margin: 5px 0;">
-            <li><strong>🔷 Primeira do tipo:</strong> Inclui perda de bônus de coleção (impacto MAIOR)</li>
-            <li><strong>🔸 Duplicata:</strong> NÃO perde bônus de coleção (impacto MENOR)</li>
-            <li><strong>🔍 Símbolo:</strong> Miners com 🔄 são duplicatas</li>
-          </ul>
-          <p style="margin-top: 10px; font-size: 12px; color: #666;">
-            <strong>💡 Exemplo:</strong> Se você tem 3x "Rare Miner", apenas a primeira tem alto impacto (com perda de bônus). As outras 2 têm impacto menor (sem perda de bônus de coleção).
-          </p>
-        </div>
-      `;
-      
-      const table = minersDiv.querySelector('table');
-      if (table) {
-        table.insertAdjacentHTML('beforebegin', legendaHTML);
-      }
-    }
-  };
-}
