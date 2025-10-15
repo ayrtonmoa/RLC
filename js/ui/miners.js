@@ -1,7 +1,10 @@
-// js/ui/miners.js - Aba Impact Analyzer (CORRIGIDO - USA MINER_ID)
+// js/ui/miners.js - COM BUSCA NOS FILTROS E ORDENAÇÃO
 
 const UI_Miners = {
   currentFilter: 'all',
+  tableData: [],
+  currentSort: { column: null, direction: 'asc' },
+  activeFilters: {},
   
   mostrar(user) {
     if (!user.powerData || !user.roomData) {
@@ -10,17 +13,94 @@ const UI_Miners = {
     }
 
     const impacts = Calculations.calcularImpactos(user);
+    this.prepararDados(impacts, user);
+    this.renderizar();
+  },
+  
+  prepararDados(impacts, user) {
+    const minerCountMap = {};
+    impacts.forEach(m => {
+      if (!minerCountMap[m.minerId]) {
+        minerCountMap[m.minerId] = 0;
+      }
+      minerCountMap[m.minerId]++;
+    });
+
+    const primeiraDoTipo = new Set();
+    const poderTotalAtual = user.powerData.current_power;
+    const maiorImpacto = impacts[0].impact;
+
+    this.tableData = impacts.map((m, index) => {
+      const percentualRelativo = (m.impact / maiorImpacto) * 100;
+      const minerCount = minerCountMap[m.minerId];
+      const isUnique = minerCount === 1;
+      const isFirst = !primeiraDoTipo.has(m.minerId) && minerCount > 1;
+      const isDuplicate = primeiraDoTipo.has(m.minerId);
+      
+      if (!primeiraDoTipo.has(m.minerId)) {
+        primeiraDoTipo.add(m.minerId);
+      }
+
+      let statusIcon = '';
+      let statusText = '';
+      
+      if (isUnique) {
+        statusIcon = '⚪';
+        statusText = 'Única';
+      } else if (isFirst) {
+        statusIcon = '🔷';
+        statusText = 'Primeira';
+      } else if (isDuplicate) {
+        statusIcon = '🔄';
+        statusText = 'Duplicata';
+      }
+
+      const rack = user.roomData.racks.find(r => r._id === m.rackId);
+      const sala = rack ? (rack.placement?.room_level || 0) + 1 : 0;
+      const rackName = rack?.name || 'N/A';
+
+      const impactClass = percentualRelativo > 80 ? 'high-impact' : 
+                          percentualRelativo > 40 ? 'medium-impact' : 'low-impact';
+
+      return {
+        ranking: index + 1,
+        name: m.name,
+        level: m.level,
+        statusIcon: statusIcon,
+        statusText: statusText,
+        sala: sala,
+        rackName: rackName,
+        basePower: m.basePower,
+        minerBonusPercent: m.minerBonusPercent,
+        rackBonus: m.rackBonus,
+        impact: m.impact,
+        perdaBase: m.perdaBase,
+        perdaBonusTotal: m.perdaBonusBase + m.perdaBonusPropia + m.perdaRackBonus,
+        percentualRelativo: percentualRelativo,
+        minerIndex: m.minerIndex,
+        minerCount: minerCount,
+        isDuplicate: isDuplicate,
+        impactClass: impactClass,
+        impactType: percentualRelativo > 80 ? 'high' : percentualRelativo > 40 ? 'medium' : 'low',
+        originalData: m
+      };
+    });
+  },
+  
+  renderizar() {
+    const userData = State.getUserData();
+    const poderTotalAtual = userData.powerData.current_power;
+    const impacts = Calculations.calcularImpactos(userData);
+    
     const div = document.getElementById('miners');
     
-    const poderTotalAtual = user.powerData.current_power;
-
     let html = `
       <h2>Impact Analyzer - Detalhado</h2>
       
       <div style="background-color: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
         <p style="font-weight: bold; margin-bottom: 10px; text-align: center;">Estatísticas Gerais</p>
         <div class="summary-grid">
-          <div><strong>Total de Miners:</strong> ${impacts.length}</div>
+          <div><strong>Total de Miners:</strong> ${this.tableData.length}</div>
           <div><strong>Miners Únicas:</strong> ${Calculations.calcularMinersUnicas(impacts)}</div>
           <div><strong>Poder Total Atual:</strong> ${Utils.formatPower(poderTotalAtual * 1e9)}</div>
           <div><strong>Maior Impacto Individual:</strong> ${Utils.formatPower(impacts[0].impact * 1e9)}</div>
@@ -38,148 +118,337 @@ const UI_Miners = {
           <li><strong style="color: #2196F3;">🔷 Primeira:</strong> Primeira de várias iguais. Remover causa perda de bônus.</li>
           <li><strong style="color: #FF9800;">🔄 Duplicata:</strong> 2ª, 3ª... da mesma miner. Remover NÃO perde bônus.</li>
         </ul>
-        <p style="margin-top: 10px; font-size: 12px; color: #666;">
-          <strong>💡 Exemplo:</strong> Se você tem 3x "Rare Antminer S19 Pro", a primeira tem alto impacto, as outras 2 têm menor impacto. Se você tem "Rare Antminer S19" E "Rare Antminer S19 Pro", são miners <strong>diferentes</strong> e NÃO são duplicatas.
-        </p>
       </div>
       
       <div style="margin-bottom: 15px;">
         <button onclick="UI_Miners.exportarCSV()">📊 Exportar CSV</button>
         <button onclick="UI_Miners.restaurarTodas()" style="background: #28a745;">🔄 Restaurar Todas</button>
-        <button onclick="UI_Miners.filtrar('high')">🔴 Alto Impacto</button>
-        <button onclick="UI_Miners.filtrar('medium')">🟡 Médio Impacto</button>
-        <button onclick="UI_Miners.filtrar('low')">🟢 Baixo Impacto</button>
-        <button onclick="UI_Miners.filtrar('duplicates')">🔍 Duplicadas</button>
-        <button onclick="UI_Miners.filtrar('all')">Todos</button>
+        <button onclick="UI_Miners.limparFiltros()" style="background: #6c757d;">🔍 Limpar Filtros</button>
+        <button onclick="UI_Miners.filtrarRapido('high')">🔴 Alto Impacto</button>
+        <button onclick="UI_Miners.filtrarRapido('medium')">🟡 Médio Impacto</button>
+        <button onclick="UI_Miners.filtrarRapido('low')">🟢 Baixo Impacto</button>
+        <button onclick="UI_Miners.filtrarRapido('duplicates')">🔍 Duplicadas</button>
       </div>
+      
+      <div id="filtrosAtivos" style="margin-bottom: 10px; min-height: 20px;"></div>
 
-      <table id="minersTable">
-        <tr>
-          <th>Ranking</th><th>Nome</th><th>Level</th><th>Status</th><th>Localização</th>
-          <th>Poder Base</th><th>Bônus %</th><th>Rack %</th>
-          <th>Impacto Real</th><th>Perda Base</th><th>Perda Bônus</th>
-          <th>% Relativo</th><th>Ação</th>
-        </tr>
+      <table id="minersTable" style="position: relative;">
+        <thead>
+          <tr>
+            <th onclick="UI_Miners.ordenar('ranking')" style="cursor: pointer;">
+              Ranking ${this.getSortIcon('ranking')}
+            </th>
+            <th style="position: relative;">
+              Nome ${this.getFilterIcon('name')}
+            </th>
+            <th style="position: relative;">
+              Level ${this.getFilterIcon('level')}
+            </th>
+            <th style="position: relative;">
+              Status ${this.getFilterIcon('statusText')}
+            </th>
+            <th style="position: relative;">
+              Sala ${this.getFilterIcon('sala')}
+            </th>
+            <th onclick="UI_Miners.ordenar('basePower')" style="cursor: pointer;">
+              Poder Base ${this.getSortIcon('basePower')}
+            </th>
+            <th onclick="UI_Miners.ordenar('minerBonusPercent')" style="cursor: pointer;">
+              Bônus % ${this.getSortIcon('minerBonusPercent')}
+            </th>
+            <th onclick="UI_Miners.ordenar('rackBonus')" style="cursor: pointer;">
+              Rack % ${this.getSortIcon('rackBonus')}
+            </th>
+            <th onclick="UI_Miners.ordenar('impact')" style="cursor: pointer;">
+              Impacto Real ${this.getSortIcon('impact')}
+            </th>
+            <th onclick="UI_Miners.ordenar('perdaBase')" style="cursor: pointer;">
+              Perda Base ${this.getSortIcon('perdaBase')}
+            </th>
+            <th onclick="UI_Miners.ordenar('perdaBonusTotal')" style="cursor: pointer;">
+              Perda Bônus ${this.getSortIcon('perdaBonusTotal')}
+            </th>
+            <th onclick="UI_Miners.ordenar('percentualRelativo')" style="cursor: pointer;">
+              % Relativo ${this.getSortIcon('percentualRelativo')}
+            </th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="minersTableBody"></tbody>
+      </table>
     `;
-
-    // ✅ CRIAR MAPA DE CONTAGEM POR MINER_ID
-    const minerCountMap = {};
-    impacts.forEach(m => {
-      if (!minerCountMap[m.minerId]) {
-        minerCountMap[m.minerId] = 0;
+    
+    div.innerHTML = html;
+    this.renderizarLinhas();
+    this.atualizarFiltrosAtivos();
+  },
+  
+  renderizarLinhas() {
+    let dados = [...this.tableData];
+    
+    Object.keys(this.activeFilters).forEach(column => {
+      const valores = this.activeFilters[column];
+      if (valores && valores.length > 0) {
+        dados = dados.filter(row => valores.includes(String(row[column])));
       }
-      minerCountMap[m.minerId]++;
     });
-
-    // ✅ RASTREAR QUAL É A PRIMEIRA DE CADA TIPO
-    const primeiraDoTipo = new Set();
-
-    impacts.forEach((m, index) => {
-      const maiorImpacto = impacts[0].impact;
-      const percentualRelativo = (m.impact / maiorImpacto) * 100;
-      
-      const impactClass = percentualRelativo > 80 ? 'high-impact' : 
-                          percentualRelativo > 40 ? 'medium-impact' : 'low-impact';
-      
-      // ✅ USAR MINER_ID PARA CONTAR
-      const minerCount = minerCountMap[m.minerId];
-      const isUnique = minerCount === 1;
-      const isFirst = !primeiraDoTipo.has(m.minerId) && minerCount > 1;
-      const isDuplicate = primeiraDoTipo.has(m.minerId);
-      
-      // Marcar como "já vimos este tipo"
-      if (!primeiraDoTipo.has(m.minerId)) {
-        primeiraDoTipo.add(m.minerId);
-      }
-      
-      // Ícone de status
-      let statusIcon = '';
-      let statusTooltip = '';
-      let statusColor = '';
-      
-      if (isUnique) {
-        statusIcon = '⚪';
-        statusTooltip = 'Única - Remover causa perda de bônus de coleção';
-        statusColor = 'color: #666;';
-      } else if (isFirst) {
-        statusIcon = '🔷';
-        statusTooltip = `Primeira de ${minerCount} unidades - Remover causa perda de bônus`;
-        statusColor = 'color: #2196F3;';
-      } else if (isDuplicate) {
-        statusIcon = '🔄';
-        statusTooltip = `Duplicata (${minerCount} unidades total) - Remover NÃO perde bônus`;
-        statusColor = 'color: #FF9800;';
-      }
-      
-      // Buscar o rack para pegar informações de posição
-      const rack = user.roomData.racks.find(r => r._id === m.rackId);
-      const sala = rack ? (rack.placement?.room_level || 0) + 1 : 'N/A';
-      const rackName = rack?.name || 'N/A';
-      
-      // Encontrar ordem VISUAL do rack
-      const racksOrdenados = [...user.roomData.racks].sort((a, b) => {
-        const salaA = a.placement?.room_level || 0;
-        const salaB = b.placement?.room_level || 0;
-        if (salaA !== salaB) return salaA - salaB;
+    
+    if (this.currentSort.column) {
+      dados.sort((a, b) => {
+        let valA = a[this.currentSort.column];
+        let valB = b[this.currentSort.column];
         
-        const linhaA = a.placement?.y || 0;
-        const linhaB = b.placement?.y || 0;
-        if (linhaA !== linhaB) return linhaA - linhaB;
+        if (typeof valA === 'number' && typeof valB === 'number') {
+          return this.currentSort.direction === 'asc' ? valA - valB : valB - valA;
+        }
         
-        return (a.placement?.x || 0) - (b.placement?.x || 0);
+        valA = String(valA).toLowerCase();
+        valB = String(valB).toLowerCase();
+        
+        if (this.currentSort.direction === 'asc') {
+          return valA < valB ? -1 : valA > valB ? 1 : 0;
+        } else {
+          return valA > valB ? -1 : valA < valB ? 1 : 0;
+        }
       });
-      
-      const rackOrdemVisual = racksOrdenados.findIndex(r => r._id === m.rackId) + 1;
-      const rackOrdem = rackOrdemVisual > 0 ? `Rack #${rackOrdemVisual}` : 'N/A';
-      
-      const rackHeight = rack?.rack_info?.height || 4;
-      const minerY = m.position.y;
-      
-      const localizacao = `<strong>Sala ${sala}</strong><br>` +
-                         `${rackOrdem}: ${rackName}<br>` +
-                         `<small>Linha ${minerY + 1} de ${rackHeight} do rack</small>`;
-      
+    }
+    
+    const tbody = document.getElementById('minersTableBody');
+    if (!tbody) return;
+    
+    let html = '';
+    
+    dados.forEach((row) => {
       html += `
-        <tr class="${impactClass}" data-type="${percentualRelativo > 80 ? 'high' : percentualRelativo > 40 ? 'medium' : 'low'}" data-duplicate="${isDuplicate}">
-          <td><strong>#${index + 1}</strong></td>
-          <td><strong>${m.name}</strong>${minerCount > 1 ? ` <span style="color: orange;">🔢${minerCount}</span>` : ''}</td>
-          <td>${m.level}</td>
-          <td title="${statusTooltip}" style="font-size: 20px; ${statusColor}">${statusIcon}</td>
-          <td>${localizacao}</td>
-          <td>${Utils.formatPower(m.basePower * 1e9)}<br><small>${m.basePower.toFixed(3)} GH/s</small></td>
-          <td>${(m.minerBonusPercent * 100).toFixed(2)}%${isDuplicate ? '<br><small style="color: #999;">(não aplicado)</small>' : ''}</td>
-          <td>${(m.rackBonus * 100).toFixed(2)}%</td>
-          <td><strong>${Utils.formatPower(m.impact * 1e9)}</strong><br><small>${m.impact.toFixed(3)} GH/s</small></td>
-          <td>${Utils.formatPower(m.perdaBase * 1e9)}<br><small>Base perdida</small></td>
-          <td>${Utils.formatPower((m.perdaBonusBase + m.perdaBonusPropia + m.perdaRackBonus) * 1e9)}<br><small>Bônus perdido</small></td>
-          <td><strong>${percentualRelativo.toFixed(1)}%</strong><br><small>vs maior</small></td>
-          <td><button onclick="UI_Miners.simularRemocao(${m.minerIndex})" style="padding: 5px 10px; font-size: 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">🗑️ Simular</button></td>
+        <tr class="${row.impactClass}" data-type="${row.impactType}" data-duplicate="${row.isDuplicate}">
+          <td><strong>#${row.ranking}</strong></td>
+          <td><strong>${row.name}</strong>${row.minerCount > 1 ? ` <span style="color: orange;">🔢${row.minerCount}</span>` : ''}</td>
+          <td>${row.level}</td>
+          <td style="font-size: 20px;">${row.statusIcon}</td>
+          <td><strong>Sala ${row.sala}</strong><br><small>${row.rackName}</small></td>
+          <td>${Utils.formatPower(row.basePower * 1e9)}<br><small>${row.basePower.toFixed(3)} GH/s</small></td>
+          <td>${(row.minerBonusPercent * 100).toFixed(2)}%${row.isDuplicate ? '<br><small style="color: #999;">(não aplicado)</small>' : ''}</td>
+          <td>${(row.rackBonus * 100).toFixed(2)}%</td>
+          <td><strong>${Utils.formatPower(row.impact * 1e9)}</strong><br><small>${row.impact.toFixed(3)} GH/s</small></td>
+          <td>${Utils.formatPower(row.perdaBase * 1e9)}<br><small>Base perdida</small></td>
+          <td>${Utils.formatPower(row.perdaBonusTotal * 1e9)}<br><small>Bônus perdido</small></td>
+          <td><strong>${row.percentualRelativo.toFixed(1)}%</strong><br><small>vs maior</small></td>
+          <td><button onclick="UI_Miners.simularRemocao(${row.minerIndex})" style="padding: 5px 10px; font-size: 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">🗑️ Simular</button></td>
         </tr>
       `;
     });
     
-    html += "</table>";
-    div.innerHTML = html;
+    tbody.innerHTML = html;
   },
   
-  filtrar(tipo) {
-    this.currentFilter = tipo;
-    const table = document.getElementById('minersTable');
-    if (!table) return;
+  getSortIcon(column) {
+    if (this.currentSort.column !== column) {
+      return '<span style="color: #ccc; font-size: 10px;">▲▼</span>';
+    }
+    return this.currentSort.direction === 'asc' ? 
+      '<span style="color: #007bff; font-size: 12px;">▲</span>' : 
+      '<span style="color: #007bff; font-size: 12px;">▼</span>';
+  },
+  
+  getFilterIcon(column) {
+    const hasFilter = this.activeFilters[column] && this.activeFilters[column].length > 0;
+    const color = hasFilter ? '#007bff' : '#999';
+    return `<span onclick="UI_Miners.mostrarFiltro('${column}', event)" style="cursor: pointer; color: ${color}; margin-left: 5px; font-size: 14px;" title="Filtrar">🔽</span>`;
+  },
+  
+  ordenar(column) {
+    if (this.currentSort.column === column) {
+      this.currentSort.direction = this.currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.currentSort.column = column;
+      this.currentSort.direction = 'asc';
+    }
+    this.renderizarLinhas();
+    this.renderizar();
+  },
+  
+  mostrarFiltro(column, event) {
+    event.stopPropagation();
     
-    const rows = table.querySelectorAll('tr[data-type]');
+    const existente = document.getElementById('filterDropdown');
+    if (existente) existente.remove();
     
-    rows.forEach(row => {
-      if (tipo === 'all') {
-        row.style.display = '';
-      } else if (tipo === 'duplicates') {
-        row.style.display = row.dataset.duplicate === 'true' ? '' : 'none';
-      } else if (row.dataset.type === tipo) {
-        row.style.display = '';
+    const valoresUnicos = [...new Set(this.tableData.map(row => String(row[column])))].sort();
+    
+    const dropdown = document.createElement('div');
+    dropdown.id = 'filterDropdown';
+    dropdown.style.cssText = `
+      position: fixed;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 10000;
+      max-height: 400px;
+      overflow-y: auto;
+      min-width: 250px;
+    `;
+    
+    const rect = event.target.getBoundingClientRect();
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    
+    const filtrosAtivos = this.activeFilters[column] || [];
+    
+    let html = '<div style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">';
+    html += '<button onclick="UI_Miners.selecionarTodosFiltro(\'' + column + '\')" style="font-size: 11px; padding: 3px 8px; margin-right: 5px;">✓ Todos</button>';
+    html += '<button onclick="UI_Miners.limparFiltroColuna(\'' + column + '\')" style="font-size: 11px; padding: 3px 8px;">✗ Limpar</button>';
+    html += '</div>';
+    
+    html += `
+      <div style="margin-bottom: 10px;">
+        <input type="text" 
+               id="filterSearch" 
+               placeholder="🔍 Buscar..." 
+               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 13px;"
+               oninput="UI_Miners.filtrarOpcoes('${column}')">
+      </div>
+    `;
+    
+    html += '<div id="filterOptions" style="max-height: 250px; overflow-y: auto;">';
+    
+    valoresUnicos.forEach(valor => {
+      const checked = filtrosAtivos.includes(String(valor));
+      
+      html += `
+        <div class="filter-option" data-value="${valor.toLowerCase()}" style="margin: 5px 0;">
+          <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
+            <input type="checkbox" 
+                   value="${valor}" 
+                   ${checked ? 'checked' : ''}
+                   onchange="UI_Miners.toggleFiltroValor('${column}', '${valor}')"
+                   style="margin-right: 8px;">
+            <span>${valor}</span>
+          </label>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    
+    dropdown.innerHTML = html;
+    document.body.appendChild(dropdown);
+    
+    setTimeout(() => {
+      const searchInput = document.getElementById('filterSearch');
+      if (searchInput) searchInput.focus();
+    }, 100);
+    
+    setTimeout(() => {
+      document.addEventListener('click', function fecharDropdown(e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.remove();
+          document.removeEventListener('click', fecharDropdown);
+        }
+      });
+    }, 100);
+  },
+  
+  filtrarOpcoes(column) {
+    const searchTerm = document.getElementById('filterSearch').value.toLowerCase();
+    const options = document.querySelectorAll('.filter-option');
+    
+    options.forEach(option => {
+      const valor = option.getAttribute('data-value');
+      if (valor.includes(searchTerm)) {
+        option.style.display = '';
       } else {
-        row.style.display = 'none';
+        option.style.display = 'none';
       }
     });
+  },
+  
+  toggleFiltroValor(column, valor) {
+    if (!this.activeFilters[column]) {
+      this.activeFilters[column] = [];
+    }
+    
+    const index = this.activeFilters[column].indexOf(valor);
+    
+    if (index > -1) {
+      this.activeFilters[column].splice(index, 1);
+    } else {
+      this.activeFilters[column].push(valor);
+    }
+    
+    this.renderizarLinhas();
+    this.atualizarFiltrosAtivos();
+  },
+  
+  selecionarTodosFiltro(column) {
+    this.activeFilters[column] = [];
+    this.renderizarLinhas();
+    this.atualizarFiltrosAtivos();
+    
+    const dropdown = document.getElementById('filterDropdown');
+    if (dropdown) dropdown.remove();
+  },
+  
+  limparFiltroColuna(column) {
+    delete this.activeFilters[column];
+    this.renderizarLinhas();
+    this.atualizarFiltrosAtivos();
+    this.renderizar();
+  },
+  
+  limparFiltros() {
+    this.activeFilters = {};
+    this.currentFilter = 'all';
+    this.renderizarLinhas();
+    this.atualizarFiltrosAtivos();
+    this.renderizar();
+  },
+  
+  filtrarRapido(tipo) {
+    this.limparFiltros();
+    
+    if (tipo === 'duplicates') {
+      this.activeFilters['statusText'] = ['Duplicata'];
+    } else {
+      const mapping = {
+        'high': ['high-impact'],
+        'medium': ['medium-impact'],
+        'low': ['low-impact']
+      };
+      
+      const dadosFiltrados = this.tableData.filter(row => row.impactClass === mapping[tipo][0]);
+      const nomes = [...new Set(dadosFiltrados.map(row => row.name))];
+      this.activeFilters['name'] = nomes;
+    }
+    
+    this.renderizarLinhas();
+    this.atualizarFiltrosAtivos();
+  },
+  
+  atualizarFiltrosAtivos() {
+    const div = document.getElementById('filtrosAtivos');
+    if (!div) return;
+    
+    const filtros = Object.keys(this.activeFilters).filter(k => this.activeFilters[k].length > 0);
+    
+    if (filtros.length === 0) {
+      div.innerHTML = '';
+      return;
+    }
+    
+    let html = '<div style="background: #e3f2fd; padding: 10px; border-radius: 5px; font-size: 12px;"><strong>Filtros ativos:</strong> ';
+    
+    filtros.forEach(column => {
+      const valores = this.activeFilters[column];
+      html += `<span style="background: white; padding: 3px 8px; margin: 2px; border-radius: 3px; display: inline-block;">`;
+      html += `<strong>${column}:</strong> ${valores.length} selecionado(s) `;
+      html += `<span onclick="UI_Miners.limparFiltroColuna('${column}')" style="cursor: pointer; color: red; font-weight: bold;">✗</span>`;
+      html += `</span> `;
+    });
+    
+    html += '</div>';
+    div.innerHTML = html;
   },
   
   simularRemocao(minerIndex) {
@@ -198,7 +467,6 @@ const UI_Miners = {
     const novoPoderTotal = impactData.novoPoderTotal;
     const percentualPerda = (impactData.impact / poderAtual) * 100;
     
-    // ✅ USAR MINER_ID
     const minerCount = impacts.filter(other => other.minerId === impactData.minerId).length;
     const isUnique = minerCount === 1;
     const primeiraIndex = impacts.findIndex(m => m.minerId === impactData.minerId);
@@ -315,7 +583,6 @@ const UI_Miners = {
     
     const impacts = Calculations.calcularImpactos(userData);
     
-    // Criar mapa de contagem
     const minerCountMap = {};
     impacts.forEach(m => {
       if (!minerCountMap[m.minerId]) {
