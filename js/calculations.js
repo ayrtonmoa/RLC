@@ -1,8 +1,9 @@
-// js/calculations.js - Cálculos de Impacto (VERSÃO COMPLETA COM MINER_ID)
+// js/calculations.js - VERSÃO CORRETA FINAL
 
 const Calculations = {
   /**
    * Calcula o impacto de cada miner individualmente
+   * LÓGICA: Apenas a PRIMEIRA de cada miner_id tem bônus no impacto
    */
   calcularImpactos(user) {
     const racks = user.roomData.racks || [];
@@ -26,10 +27,32 @@ const Calculations = {
     State.addDebugInfo(`Bônus % (raw): ${user.powerData.bonus_percent} -> ${(bonusPercentualAtual * 100).toFixed(2)}%`);
     State.addDebugInfo(`Bônus power: ${Utils.formatPower(bonusPowerAtual * 1e9)}`);
 
+    // ✅ IDENTIFICAR PRIMEIRA OCORRÊNCIA DE CADA MINER_ID
+    const primeiraOcorrenciaPorMinerId = {};
+    allMiners.forEach((m, index) => {
+      if (!primeiraOcorrenciaPorMinerId[m.miner_id]) {
+        primeiraOcorrenciaPorMinerId[m.miner_id] = index;
+      }
+    });
+    
+    State.addDebugInfo(`=== IDENTIFICAÇÃO DE DUPLICATAS (por miner_id) ===`);
+    Object.entries(primeiraOcorrenciaPorMinerId).forEach(([minerId, index]) => {
+      const count = allMiners.filter(m => m.miner_id === minerId).length;
+      if (count > 1) {
+        const exemplo = allMiners.find(m => m.miner_id === minerId);
+        State.addDebugInfo(`🔢 ${exemplo.name} (${exemplo.level_label}) [${minerId}]: ${count} unidades - Primeira: índice #${index}`);
+      }
+    });
+
     const impacts = allMiners.map((m, index) => {
       const basePowerGHS = m.power;
-      const minerBonusPercent = m.bonus_percent / 10000;
       const rackBonusFactor = rackFactorById[m.placement.user_rack_id] || 0;
+      
+      // ✅ DETERMINAR SE É A PRIMEIRA DESTE MINER_ID
+      const ehPrimeira = primeiraOcorrenciaPorMinerId[m.miner_id] === index;
+      
+      // ✅ SÓ A PRIMEIRA TEM BÔNUS NO CÁLCULO DE IMPACTO
+      const minerBonusPercent = ehPrimeira ? (m.bonus_percent / 10000) : 0;
       
       const novaBaseTotal = baseTotalMiners - basePowerGHS;
       const novoBonusPercentual = bonusPercentualAtual - minerBonusPercent;
@@ -45,12 +68,23 @@ const Calculations = {
       const perdaBonusDeColecao = baseTotalMiners * minerBonusPercent;
       const perdaBonusProprioBonus = basePowerGHS * bonusPercentualAtual;
 
+      // Log para duplicatas
+      if (!ehPrimeira) {
+        State.addDebugInfo(`🔄 DUPLICATA: ${m.name} (${m.level_label}) #${index} - Impacto: ${Utils.formatPower(impactoReal * 1e9)} (SEM bônus coleção)`);
+      } else {
+        const count = allMiners.filter(other => other.miner_id === m.miner_id).length;
+        if (count > 1) {
+          State.addDebugInfo(`🔷 PRIMEIRA: ${m.name} (${m.level_label}) #${index} - Impacto: ${Utils.formatPower(impactoReal * 1e9)} (COM bônus coleção)`);
+        }
+      }
+
       return { 
         name: m.name, 
-        level: m.level_label, 
-        minerId: m.miner_id, // ✅ ADICIONADO
+        level: m.level_label,
+        minerId: m.miner_id,
         basePower: basePowerGHS,
-        minerBonusPercent: minerBonusPercent,
+        minerBonusPercent: m.bonus_percent / 10000, // Valor original para exibição
+        minerBonusPercentAplicado: minerBonusPercent, // 0 se duplicata
         rackBonus: rackBonusFactor, 
         impact: impactoReal,
         perdaBase: perdaBase,
@@ -61,7 +95,9 @@ const Calculations = {
         rackId: m.placement.user_rack_id,
         position: m.placement,
         minerIndex: index,
-        width: m.width || 2
+        width: m.width || 2,
+        isDuplicate: !ehPrimeira,
+        isFirstOfType: ehPrimeira
       };
     });
 
@@ -77,7 +113,7 @@ const Calculations = {
   calcularMinersUnicas(impacts) {
     const uniqueSet = new Set();
     impacts.forEach(m => {
-      uniqueSet.add(m.minerId); // ✅ CORRIGIDO: usar miner_id
+      uniqueSet.add(m.minerId);
     });
     return uniqueSet.size;
   },
@@ -133,7 +169,6 @@ const Calculations = {
     const impacts = this.calcularImpactos(userData);
     const allMiners = userData.roomData.miners;
     
-    // Separar miners por células
     const miners1Cell = [];
     const miners2Cell = [];
     
@@ -150,11 +185,9 @@ const Calculations = {
       }
     });
     
-    // Ordenar do menor para o maior impacto
     miners1Cell.sort((a, b) => a.impact - b.impact);
     miners2Cell.sort((a, b) => a.impact - b.impact);
     
-    // Calcular ganho ao adicionar
     const baseTotalAtual = allMiners.reduce((sum, m) => sum + m.power, 0);
     const bonusPercentualAtual = userData.powerData.bonus_percent / 10000;
     const poderTotalAtual = userData.powerData.current_power;
@@ -164,10 +197,10 @@ const Calculations = {
       index === self.findIndex((m) => m.miner_id === miner.miner_id)
     );
     uniqueMinersAtuais.forEach(m => {
-      minersUnicasAtuais.add(m.miner_id); // ✅ CORRIGIDO: usar miner_id
+      minersUnicasAtuais.add(m.miner_id);
     });
     
-    const jaPossui = minersUnicasAtuais.has(minerInventario.minerId); // ✅ CORRIGIDO
+    const jaPossui = minersUnicasAtuais.has(minerInventario.minerId);
     
     const novaBase = baseTotalAtual + minerInventario.power;
     const novoBonusPercentual = jaPossui ? bonusPercentualAtual : bonusPercentualAtual + (minerInventario.bonus / 100);
@@ -177,7 +210,6 @@ const Calculations = {
     
     const opcoes = [];
     
-    // Opções baseadas no tamanho da miner
     if (minerInventario.cells === 1 && miners1Cell.length > 0) {
       const remover = miners1Cell[0];
       const roi = ganhoAdicionar - remover.impact;
@@ -190,7 +222,6 @@ const Calculations = {
     }
     
     if (minerInventario.cells === 2) {
-      // Opção A: Remover 1 miner de 2 células
       if (miners2Cell.length > 0) {
         const remover = miners2Cell[0];
         const roi = ganhoAdicionar - remover.impact;
@@ -202,7 +233,6 @@ const Calculations = {
         });
       }
       
-      // Opção B: Remover 2 miners de 1 célula
       if (miners1Cell.length >= 2) {
         const remover1 = miners1Cell[0];
         const remover2 = miners1Cell[1];
@@ -216,7 +246,6 @@ const Calculations = {
       }
     }
     
-    // Retornar a melhor opção (maior ROI)
     if (opcoes.length === 0) return null;
     
     opcoes.sort((a, b) => b.roi - a.roi);
@@ -257,7 +286,7 @@ const Calculations = {
       }
     });
 
-    return vizinhas.slice(0, 1); // Retorna apenas a primeira
+    return vizinhas.slice(0, 1);
   }
 };
 
