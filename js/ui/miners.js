@@ -451,83 +451,84 @@ const UI_Miners = {
     div.innerHTML = html;
   },
   
-  simularRemocao(minerIndex) {
-    const userData = State.getUserData();
-    if (!userData) return;
-    
-    const allMiners = userData.roomData.miners;
-    const minerParaRemover = allMiners[minerIndex];
-    
-    if (!minerParaRemover) return;
-    
-    const impacts = Calculations.calcularImpactos(userData);
-    const impactData = impacts.find(i => i.minerIndex === minerIndex);
-    
-    const poderAtual = userData.powerData.current_power;
-    const novoPoderTotal = impactData.novoPoderTotal;
-    const percentualPerda = (impactData.impact / poderAtual) * 100;
-    
-    const minerCount = impacts.filter(other => other.minerId === impactData.minerId).length;
-    const isUnique = minerCount === 1;
-    const primeiraIndex = impacts.findIndex(m => m.minerId === impactData.minerId);
-    const isFirst = primeiraIndex === impacts.indexOf(impactData);
-    const isDuplicate = !isFirst && minerCount > 1;
-    
-    let statusText = '';
-    let bonusInfo = '';
-    
-    if (isUnique) {
-      statusText = '<span style="color: #666; font-weight: bold;">⚪ Única</span>';
-      bonusInfo = '<div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;"><p style="color: #e65100; font-size: 13px; margin: 0;">⚠️ Esta é a <strong>única</strong> miner deste tipo. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
-    } else if (isFirst) {
-      statusText = '<span style="color: #2196F3; font-weight: bold;">🔷 Primeira do tipo</span>';
-      bonusInfo = '<div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;"><p style="color: #e65100; font-size: 13px; margin: 0;">⚠️ Esta é a <strong>primeira de ' + minerCount + '</strong> miners iguais. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
-    } else {
-      statusText = '<span style="color: #FF9800; font-weight: bold;">🔄 Duplicata</span>';
-      bonusInfo = '<div style="background: #e8f5e8; padding: 10px; border-radius: 5px; border-left: 4px solid #4CAF50;"><p style="color: #2e7d32; font-size: 13px; margin: 0;">✅ Esta é uma duplicata (' + minerCount + ' unidades total). Removê-la <strong>NÃO causará</strong> perda de bônus de coleção porque você tem outras miners iguais!</p></div>';
-    }
-    
-    const modalHTML = `
-      <div id="simulationModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
-          <h3 style="margin-top: 0; color: #dc3545;">🗑️ Simulação de Remoção</h3>
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-            <h4>${minerParaRemover.name} (${minerParaRemover.level_label})</h4>
-            <p><strong>Status:</strong> ${statusText}</p>
-            <p><strong>Poder Base:</strong> ${Utils.formatPower(minerParaRemover.power * 1e9)}</p>
-            <p><strong>Bônus Total:</strong> ${((minerParaRemover.bonus_percent/10000) * 100).toFixed(2)}%</p>
-            ${isDuplicate ? 
-              '<p><strong>Bônus Aplicado:</strong> <span style="color: #999;">0% (duplicata não perde)</span></p>' :
-              '<p><strong>Bônus Aplicado:</strong> <span style="color: #dc3545;">' + ((minerParaRemover.bonus_percent/10000) * 100).toFixed(2) + '% (será perdido!)</span></p>'
-            }
+simularRemocao(minerIndex) {
+  const userData = State.getUserData();
+  if (!userData) return;
+  
+  const allMiners = userData.roomData.miners;
+  const minerParaRemover = allMiners[minerIndex];
+  
+  if (!minerParaRemover) return;
+  
+  const impacts = Calculations.calcularImpactos(userData);
+  const impactData = impacts.find(i => i.minerIndex === minerIndex);
+  
+// ✅ CORRETO (dá 24.703 - valor oficial!)
+const poderAtual = userData.powerData.current_power;
+const novoPoderTotal = poderAtual - impactData.impact;
+  const percentualPerda = (impactData.impact / poderAtual) * 100;
+  
+  const minerCount = impacts.filter(other => other.minerId === impactData.minerId).length;
+  const isUnique = minerCount === 1;
+  const primeiraIndex = impacts.findIndex(m => m.minerId === impactData.minerId);
+  const isFirst = primeiraIndex === impacts.indexOf(impactData);
+  const isDuplicate = !isFirst && minerCount > 1;
+  
+  let statusText = '';
+  let bonusInfo = '';
+  
+  if (isUnique) {
+    statusText = '<span style="color: #666; font-weight: bold;">⚪ Única</span>';
+    bonusInfo = '<div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;"><p style="color: #e65100; font-size: 13px; margin: 0;">⚠️ Esta é a <strong>única</strong> miner deste tipo. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
+  } else if (isFirst) {
+    statusText = '<span style="color: #2196F3; font-weight: bold;">🔷 Primeira do tipo</span>';
+    bonusInfo = '<div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;"><p style="color: #e65100; font-size: 13px; margin: 0;">⚠️ Esta é a <strong>primeira de ' + minerCount + '</strong> miners iguais. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
+  } else {
+    statusText = '<span style="color: #FF9800; font-weight: bold;">🔄 Duplicata</span>';
+    bonusInfo = '<div style="background: #e8f5e8; padding: 10px; border-radius: 5px; border-left: 4px solid #4CAF50;"><p style="color: #2e7d32; font-size: 13px; margin: 0;">✅ Esta é uma duplicata (' + minerCount + ' unidades total). Removê-la <strong>NÃO causará</strong> perda de bônus de coleção porque você tem outras miners iguais!</p></div>';
+  }
+  
+  const modalHTML = `
+    <div id="simulationModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+      <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+        <h3 style="margin-top: 0; color: #dc3545;">🗑️ Simulação de Remoção</h3>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <h4>${minerParaRemover.name} (${minerParaRemover.level_label})</h4>
+          <p><strong>Status:</strong> ${statusText}</p>
+          <p><strong>Poder Base:</strong> ${Utils.formatPower(minerParaRemover.power * 1e9)}</p>
+          <p><strong>Bônus Total:</strong> ${((minerParaRemover.bonus_percent/10000) * 100).toFixed(2)}%</p>
+          ${isDuplicate ? 
+            '<p><strong>Bônus Aplicado:</strong> <span style="color: #999;">0% (duplicata não perde)</span></p>' :
+            '<p><strong>Bônus Aplicado:</strong> <span style="color: #dc3545;">' + ((minerParaRemover.bonus_percent/10000) * 100).toFixed(2) + '% (será perdido!)</span></p>'
+          }
+        </div>
+        ${bonusInfo}
+        <hr>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+          <div style="text-align: center;">
+            <h4 style="color: #007bff;">Poder Atual</h4>
+            <p style="font-size: 1.2em; font-weight: bold;">${Utils.formatPower(poderAtual * 1e9)}</p>
           </div>
-          ${bonusInfo}
-          <hr>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
-            <div style="text-align: center;">
-              <h4 style="color: #007bff;">Poder Atual</h4>
-              <p style="font-size: 1.2em; font-weight: bold;">${Utils.formatPower(poderAtual * 1e9)}</p>
-            </div>
-            <div style="text-align: center;">
-              <h4 style="color: #dc3545;">Após Remoção</h4>
-              <p style="font-size: 1.2em; font-weight: bold;">${Utils.formatPower(novoPoderTotal * 1e9)}</p>
-            </div>
-          </div>
-          <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
-            <h4 style="margin-top: 0;">📉 Impacto da Remoção</h4>
-            <p><strong>Perda Total:</strong> <span style="color: #dc3545; font-weight: bold;">${Utils.formatPower(impactData.impact * 1e9)}</span></p>
-            <p><strong>Percentual de Perda:</strong> <span style="color: #dc3545; font-weight: bold;">${percentualPerda.toFixed(2)}%</span></p>
-          </div>
-          <div style="margin-top: 20px; text-align: center;">
-            <button onclick="UI_Miners.fecharModal()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Fechar</button>
-            <button onclick="UI_Miners.confirmarRemocao(${minerIndex})" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">⚠️ Confirmar Remoção</button>
+          <div style="text-align: center;">
+            <h4 style="color: #dc3545;">Após Remoção</h4>
+            <p style="font-size: 1.2em; font-weight: bold;">${Utils.formatPower(novoPoderTotal * 1e9)}</p>
           </div>
         </div>
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+          <h4 style="margin-top: 0;">📉 Impacto da Remoção</h4>
+          <p><strong>Perda Total:</strong> <span style="color: #dc3545; font-weight: bold;">${Utils.formatPower(impactData.impact * 1e9)}</span></p>
+          <p><strong>Percentual de Perda:</strong> <span style="color: #dc3545; font-weight: bold;">${percentualPerda.toFixed(2)}%</span></p>
+        </div>
+        <div style="margin-top: 20px; text-align: center;">
+          <button onclick="UI_Miners.fecharModal()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Fechar</button>
+          <button onclick="UI_Miners.confirmarRemocao(${minerIndex})" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">⚠️ Confirmar Remoção</button>
+        </div>
       </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-  },
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+},
   
   fecharModal() {
     const modal = document.getElementById('simulationModal');
