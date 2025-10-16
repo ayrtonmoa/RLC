@@ -1,115 +1,151 @@
-// js/calculations.js - VERSÃO CORRETA FINAL
+// js/calculations.js - CORREÇÃO: Ordenar antes de identificar duplicatas
 
 const Calculations = {
-  /**
-   * Calcula o impacto de cada miner individualmente
-   * LÓGICA: Apenas a PRIMEIRA de cada miner_id tem bônus no impacto
-   */
-  calcularImpactos(user) {
-    const racks = user.roomData.racks || [];
-    const allMiners = user.roomData.miners || [];
-    
-    // Criar mapa de bônus por rack
-    const rackFactorById = {};
-    racks.forEach(r => {
-      rackFactorById[r._id] = (r.bonus || 0) / 10000;
-      State.addDebugInfo(`Rack ${r.name}: Bonus = ${(r.bonus/100)}% (${r.bonus/10000})`);
-    });
-    
-    const poderTotalAtual = user.powerData.current_power;
-    const baseTotalMiners = allMiners.reduce((sum, m) => sum + m.power, 0);
-    const bonusPercentualAtual = user.powerData.bonus_percent / 10000;
-    const bonusPowerAtual = user.powerData.bonus;
-    
-    State.addDebugInfo("=== ESTADO ATUAL DA REDE ===");
-    State.addDebugInfo(`Poder total: ${Utils.formatPower(poderTotalAtual * 1e9)}`);
-    State.addDebugInfo(`Base miners: ${Utils.formatPower(baseTotalMiners * 1e9)}`);
-    State.addDebugInfo(`Bônus % (raw): ${user.powerData.bonus_percent} -> ${(bonusPercentualAtual * 100).toFixed(2)}%`);
-    State.addDebugInfo(`Bônus power: ${Utils.formatPower(bonusPowerAtual * 1e9)}`);
-
-    // ✅ IDENTIFICAR PRIMEIRA OCORRÊNCIA DE CADA MINER_ID
-    const primeiraOcorrenciaPorMinerId = {};
-    allMiners.forEach((m, index) => {
-      if (!primeiraOcorrenciaPorMinerId[m.miner_id]) {
-        primeiraOcorrenciaPorMinerId[m.miner_id] = index;
-      }
-    });
-    
-    State.addDebugInfo(`=== IDENTIFICAÇÃO DE DUPLICATAS (por miner_id) ===`);
-    Object.entries(primeiraOcorrenciaPorMinerId).forEach(([minerId, index]) => {
-      const count = allMiners.filter(m => m.miner_id === minerId).length;
-      if (count > 1) {
-        const exemplo = allMiners.find(m => m.miner_id === minerId);
-        State.addDebugInfo(`🔢 ${exemplo.name} (${exemplo.level_label}) [${minerId}]: ${count} unidades - Primeira: índice #${index}`);
-      }
-    });
-
-    const impacts = allMiners.map((m, index) => {
-      const basePowerGHS = m.power;
-      const rackBonusFactor = rackFactorById[m.placement.user_rack_id] || 0;
-      
-      // ✅ DETERMINAR SE É A PRIMEIRA DESTE MINER_ID
-      const ehPrimeira = primeiraOcorrenciaPorMinerId[m.miner_id] === index;
-      
-      // ✅ SÓ A PRIMEIRA TEM BÔNUS NO CÁLCULO DE IMPACTO
-      const minerBonusPercent = ehPrimeira ? (m.bonus_percent / 10000) : 0;
-      
-      const novaBaseTotal = baseTotalMiners - basePowerGHS;
-      const novoBonusPercentual = bonusPercentualAtual - minerBonusPercent;
-      const novoBonusPower = novaBaseTotal * novoBonusPercentual;
-      
-      const perdaRackBonus = basePowerGHS * rackBonusFactor;
-      const novoRackBonus = user.powerData.racks - perdaRackBonus;
-      
-      const novoPoderTotal = novaBaseTotal + novoBonusPower + novoRackBonus + user.powerData.games + user.powerData.temp;
-      const impactoReal = poderTotalAtual - novoPoderTotal;
-      
-      const perdaBase = basePowerGHS;
-      const perdaBonusDeColecao = baseTotalMiners * minerBonusPercent;
-      const perdaBonusProprioBonus = basePowerGHS * bonusPercentualAtual;
-
-      // Log para duplicatas
-      if (!ehPrimeira) {
-        State.addDebugInfo(`🔄 DUPLICATA: ${m.name} (${m.level_label}) #${index} - Impacto: ${Utils.formatPower(impactoReal * 1e9)} (SEM bônus coleção)`);
-      } else {
-        const count = allMiners.filter(other => other.miner_id === m.miner_id).length;
-        if (count > 1) {
-          State.addDebugInfo(`🔷 PRIMEIRA: ${m.name} (${m.level_label}) #${index} - Impacto: ${Utils.formatPower(impactoReal * 1e9)} (COM bônus coleção)`);
-        }
-      }
-
-      return { 
-        name: m.name, 
-        level: m.level_label,
-        minerId: m.miner_id,
-        basePower: basePowerGHS,
-        minerBonusPercent: m.bonus_percent / 10000, // Valor original para exibição
-        minerBonusPercentAplicado: minerBonusPercent, // 0 se duplicata
-        rackBonus: rackBonusFactor, 
-        impact: impactoReal,
-        perdaBase: perdaBase,
-        perdaBonusBase: perdaBonusDeColecao,
-        perdaBonusPropia: perdaBonusProprioBonus,
-        perdaRackBonus: perdaRackBonus,
-        novoPoderTotal: novoPoderTotal,
-        rackId: m.placement.user_rack_id,
-        position: m.placement,
-        minerIndex: index,
-        width: m.width || 2,
-        isDuplicate: !ehPrimeira,
-        isFirstOfType: ehPrimeira
-      };
-    });
-
-    const totalImpactoCalculado = impacts.reduce((s, m) => s + m.impact, 0);
-    impacts.forEach(m => m.impactPercent = (totalImpactoCalculado > 0) ? (m.impact / totalImpactoCalculado) * 100 : 0);
-
-    return impacts.sort((a, b) => b.impact - a.impact);
-  },
+calcularImpactos(user) {
+  const racks = user.roomData.racks || [];
+  const allMiners = user.roomData.miners || [];
   
-  /**
-   * Conta miners únicas (diferentes miner_id)
-   */
+  // Criar mapa de bônus por rack
+  const rackFactorById = {};
+  racks.forEach(r => {
+    rackFactorById[r._id] = (r.bonus || 0) / 10000;
+    State.addDebugInfo(`Rack ${r.name}: Bonus = ${(r.bonus/100)}% (${r.bonus/10000})`);
+  });
+  
+  // ✅ RECALCULAR PODER TOTAL ATUAL (pode ter mudado)
+  const baseTotalMiners = allMiners.reduce((sum, m) => sum + m.power, 0);
+  const uniqueMiners = allMiners.filter((miner, index, self) =>
+    index === self.findIndex((m) => m.miner_id === miner.miner_id)
+  );
+  const bonusPercentTotal = uniqueMiners.reduce((sum, miner) => sum + miner.bonus_percent, 0);
+  const bonusPower = baseTotalMiners * (bonusPercentTotal / 10000);
+  const bonusPercentualAtual = bonusPercentTotal / 10000;
+  
+  // ✅ ATUALIZAR poder atual recalculado
+  const poderTotalAtual = baseTotalMiners + bonusPower + user.powerData.racks + 
+                          user.powerData.games + user.powerData.temp;
+  
+  State.addDebugInfo("=== ESTADO ATUAL DA REDE ===");
+  State.addDebugInfo(`🔄 Poder recalculado: ${Utils.formatPower(poderTotalAtual * 1e9)}`);
+  State.addDebugInfo(`Base miners: ${Utils.formatPower(baseTotalMiners * 1e9)}`);
+  State.addDebugInfo(`Bônus % (raw): ${bonusPercentTotal} -> ${(bonusPercentualAtual * 100).toFixed(2)}%`);
+  State.addDebugInfo(`Bônus power: ${Utils.formatPower(bonusPower * 1e9)}`);
+
+  // ✅ CRIAR MAPA DE RACKS PARA PEGAR SALA
+  const rackInfoById = {};
+  racks.forEach(r => {
+    rackInfoById[r._id] = {
+      roomLevel: r.placement?.room_level || 0,
+      rackX: r.placement?.x || 0,
+      rackY: r.placement?.y || 0
+    };
+  });
+
+  // ✅ ORDENAR MINERS POR SALA → RACK → POSIÇÃO (Sala 1 primeiro!)
+  const minersOrdenadas = allMiners.map((m, originalIndex) => ({
+    ...m,
+    originalIndex: originalIndex,
+    rackInfo: rackInfoById[m.placement.user_rack_id] || { roomLevel: 999, rackX: 0, rackY: 0 }
+  })).sort((a, b) => {
+    if (a.rackInfo.roomLevel !== b.rackInfo.roomLevel) {
+      return a.rackInfo.roomLevel - b.rackInfo.roomLevel;
+    }
+    if (a.rackInfo.rackY !== b.rackInfo.rackY) {
+      return a.rackInfo.rackY - b.rackInfo.rackY;
+    }
+    if (a.rackInfo.rackX !== b.rackInfo.rackX) {
+      return a.rackInfo.rackX - b.rackInfo.rackX;
+    }
+    if (a.placement.y !== b.placement.y) {
+      return a.placement.y - b.placement.y;
+    }
+    return a.placement.x - b.placement.x;
+  });
+
+  // ✅ IDENTIFICAR PRIMEIRA OCORRÊNCIA (NA ORDEM CORRETA)
+  const primeiraOcorrenciaPorMinerId = {};
+  minersOrdenadas.forEach((m) => {
+    if (!primeiraOcorrenciaPorMinerId[m.miner_id]) {
+      primeiraOcorrenciaPorMinerId[m.miner_id] = m.originalIndex;
+    }
+  });
+  
+  State.addDebugInfo(`=== IDENTIFICAÇÃO DE DUPLICATAS (por miner_id, ordenado por sala) ===`);
+  Object.entries(primeiraOcorrenciaPorMinerId).forEach(([minerId, originalIndex]) => {
+    const count = allMiners.filter(m => m.miner_id === minerId).length;
+    if (count > 1) {
+      const primeira = allMiners[originalIndex];
+      const rackInfo = rackInfoById[primeira.placement.user_rack_id];
+      State.addDebugInfo(`🔢 ${primeira.name} (${primeira.level_label}): ${count} unidades - Primeira: Sala ${(rackInfo?.roomLevel || 0) + 1}, índice #${originalIndex}`);
+    }
+  });
+
+  const impacts = allMiners.map((m, index) => {
+    const basePowerGHS = m.power;
+    const rackBonusFactor = rackFactorById[m.placement.user_rack_id] || 0;
+    
+    // ✅ DETERMINAR SE É A PRIMEIRA (baseado na ordem correta)
+    const ehPrimeira = primeiraOcorrenciaPorMinerId[m.miner_id] === index;
+    const minerBonusPercent = ehPrimeira ? (m.bonus_percent / 10000) : 0;
+    
+    const novaBaseTotal = baseTotalMiners - basePowerGHS;
+    const novoBonusPercentual = bonusPercentualAtual - minerBonusPercent;
+    const novoBonusPower = novaBaseTotal * novoBonusPercentual;
+    
+    // ✅ CORREÇÃO: Rack bonus NÃO muda ao remover miners!
+    const novoRackBonus = user.powerData.racks; // Permanece fixo
+    const perdaRackBonus = 0; // Sem perda de rack bonus
+    
+    const novoPoderTotal = novaBaseTotal + novoBonusPower + novoRackBonus + user.powerData.games + user.powerData.temp;
+    const impactoReal = poderTotalAtual - novoPoderTotal;
+    
+    const perdaBase = basePowerGHS;
+    const perdaBonusDeColecao = ehPrimeira ? (baseTotalMiners * minerBonusPercent) : 0;
+    const bonusQueEstaBaseRecebia = basePowerGHS * bonusPercentualAtual;
+
+    // Log para debug
+    const rackInfo = rackInfoById[m.placement.user_rack_id];
+    const sala = (rackInfo?.roomLevel || 0) + 1;
+    
+    if (!ehPrimeira) {
+      State.addDebugInfo(`🔄 DUPLICATA: ${m.name} (${m.level_label}) Sala ${sala} #${index} - Impacto: ${Utils.formatPower(impactoReal * 1e9)}`);
+    } else {
+      const count = allMiners.filter(other => other.miner_id === m.miner_id).length;
+      if (count > 1) {
+        State.addDebugInfo(`🔷 PRIMEIRA: ${m.name} (${m.level_label}) Sala ${sala} #${index} - Impacto: ${Utils.formatPower(impactoReal * 1e9)}`);
+      }
+    }
+    
+    return { 
+      name: m.name, 
+      level: m.level_label,
+      minerId: m.miner_id,
+      basePower: basePowerGHS,
+      minerBonusPercent: m.bonus_percent / 10000,
+      minerBonusPercentAplicado: minerBonusPercent,
+      rackBonus: rackBonusFactor, 
+      impact: impactoReal,
+      perdaBase: perdaBase,
+      perdaBonusBase: perdaBonusDeColecao,
+      perdaBonusPropia: 0,
+      perdaRackBonus: perdaRackBonus,
+      bonusQueRecebia: bonusQueEstaBaseRecebia,
+      novoPoderTotal: novoPoderTotal,
+      rackId: m.placement.user_rack_id,
+      position: m.placement,
+      minerIndex: index,
+      width: m.width || 2,
+      isDuplicate: !ehPrimeira,
+      isFirstOfType: ehPrimeira
+    };
+  });
+
+  const totalImpactoCalculado = impacts.reduce((s, m) => s + m.impact, 0);
+  impacts.forEach(m => m.impactPercent = (totalImpactoCalculado > 0) ? (m.impact / totalImpactoCalculado) * 100 : 0);
+
+  return impacts.sort((a, b) => b.impact - a.impact);
+},
+  
   calcularMinersUnicas(impacts) {
     const uniqueSet = new Set();
     impacts.forEach(m => {
@@ -118,9 +154,6 @@ const Calculations = {
     return uniqueSet.size;
   },
   
-  /**
-   * Recalcula poder total após remoção de miners
-   */
   recalcularPoderTotal(userData) {
     if (!userData) return;
     
@@ -142,9 +175,6 @@ const Calculations = {
     userData.powerData.racks = novoRackBonus;
   },
   
-  /**
-   * Recalcula para o poder original (desfazer remoções)
-   */
   recalcularPoderOriginal(userData) {
     if (!userData) return;
     
@@ -160,9 +190,6 @@ const Calculations = {
     userData.powerData.bonus_percent = bonusPercentTotal;
   },
   
-  /**
-   * Calcula melhor troca para uma miner do inventário
-   */
   calcularMelhorTrocaPorMiner(minerInventario, userData) {
     if (!userData) return null;
     
@@ -258,9 +285,6 @@ const Calculations = {
     };
   },
   
-  /**
-   * Encontra miners vizinhas a uma posição
-   */
   encontrarMinersVizinhas(miner, allMiners) {
     const vizinhas = [];
     const x = miner.placement.x;

@@ -40,16 +40,25 @@ const API = {
     const roomRes = await fetch(roomUrl);
     const room = await roomRes.json();
     
-    if (room.success) {
-      user.roomData = room.data;
-      
-      // Adicionar labels de level às miners
-      user.roomData.miners.forEach(m => {
-        m.level_label = CONFIG.MINER_LEVELS[m.level] || "Unknown";
-      });
-      
-      State.addDebugInfo(`Room data loaded: ${user.roomData.miners.length} miners, ${user.roomData.racks.length} racks`);
-    }
+if (room.success) {
+  user.roomData = room.data;
+  
+  // ADICIONE ESTAS LINHAS - Ordenar racks por sala
+  if (user.roomData.racks) {
+    user.roomData.racks.sort((a, b) => {
+      const salaA = a.placement?.room_level || 0;
+      const salaB = b.placement?.room_level || 0;
+      return salaA - salaB; // Ordena: Sala 1, 2, 3, 4...
+    });
+  }
+  
+  // Adicionar labels de level às miners
+  user.roomData.miners.forEach(m => {
+    m.level_label = CONFIG.MINER_LEVELS[m.level] || "Unknown";
+  });
+  
+  State.addDebugInfo(`Room data loaded: ${user.roomData.miners.length} miners, ${user.roomData.racks.length} racks`);
+}
 
     Utils.updateProgress(100, "Processando dados...");
     return user;
