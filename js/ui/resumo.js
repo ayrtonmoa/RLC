@@ -1,4 +1,4 @@
-// js/ui/resumo.js - Aba Resumo & Perfil (CORRIGIDO)
+// js/ui/resumo.js - Aba Resumo & Perfil (COM VALORES EXATOS)
 
 const UI_Resumo = {
   mostrar(user) {
@@ -53,10 +53,12 @@ const UI_Resumo = {
         <div class="summary-item">
           <h4>📊 Poder Total (Oficial)</h4>
           <p style="font-size: 1.3em; font-weight: bold; color: #007bff;">${totalApiEHS}</p>
+          <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">Exato: ${powerData.current_power.toFixed(9)} GH/s</small>
         </div>
         <div class="summary-item">
           <h4>🔧 Poder Calculado</h4>
           <p style="font-size: 1.3em; font-weight: bold;">${totalCalculadoEHS}</p>
+          <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">Exato: ${calculatedTotalPower.toFixed(9)} GH/s</small>
         </div>
         <div class="summary-item">
           <h4>📈 Diferença</h4>
@@ -72,27 +74,27 @@ const UI_Resumo = {
         <div class="summary-item">
           <strong>Miners (Base):</strong><br>
           ${Utils.formatPower(basePowerMinersFromRoom * 1e9)}<br>
-          <small>${basePowerMinersFromRoom.toFixed(3)} GH/s</small>
+          <small>${basePowerMinersFromRoom.toFixed(9)} GH/s</small>
         </div>
         <div class="summary-item">
           <strong>Bônus de Coleção:</strong><br>
           ${Utils.formatPower(bonusPowerFromApi * 1e9)}<br>
-          <small>${bonusPowerFromApi.toFixed(3)} GH/s (${(powerData.bonus_percent / 100).toFixed(2)}%)</small>
+          <small>${bonusPowerFromApi.toFixed(9)} GH/s (${(powerData.bonus_percent / 100).toFixed(2)}%)</small>
         </div>
         <div class="summary-item">
           <strong>Racks:</strong><br>
           ${Utils.formatPower(powerData.racks * 1e9)}<br>
-          <small>${powerData.racks.toFixed(3)} GH/s</small>
+          <small>${powerData.racks.toFixed(9)} GH/s</small>
         </div>
         <div class="summary-item">
           <strong>Games:</strong><br>
           ${Utils.formatPower(powerData.games * 1e9)}<br>
-          <small>${powerData.games.toFixed(3)} GH/s</small>
+          <small>${powerData.games.toFixed(9)} GH/s</small>
         </div>
         <div class="summary-item">
           <strong>Temporário:</strong><br>
           ${Utils.formatPower(powerData.temp * 1e9)}<br>
-          <small>${powerData.temp.toFixed(3)} GH/s</small>
+          <small>${powerData.temp.toFixed(9)} GH/s</small>
         </div>
         <div class="summary-item">
           <strong>Miners:</strong><br>
