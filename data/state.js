@@ -7,11 +7,16 @@ console.log('Carregando State...');
   
   const State = {
     userData: null,
+    debugInfo: [],
     minersRemovidasTemporariamente: [],
     
     // Getters
     getUserData: function() {
       return this.userData;
+    },
+    
+    getDebugInfo: function() {
+      return this.debugInfo;
     },
     
     getMinersRemovidas: function() {
@@ -21,6 +26,15 @@ console.log('Carregando State...');
     // Setters
     setUserData: function(data) {
       this.userData = data;
+    },
+    
+    addDebugInfo: function(info) {
+      this.debugInfo.push(info);
+      console.log('DEBUG:', info);
+    },
+    
+    clearDebugInfo: function() {
+      this.debugInfo = [];
     },
     
     addMinerRemovida: function(miner) {
@@ -57,6 +71,7 @@ console.log('Carregando State...');
     // Reset completo
     reset: function() {
       this.userData = null;
+      this.debugInfo = [];
       this.minersRemovidasTemporariamente = [];
     }
   };
@@ -64,6 +79,7 @@ console.log('Carregando State...');
   // Exportar para escopo global
   window.State = State;
   
-  console.log('✅ State carregado!');
+  // Log de carregamento
+  console.log('✅ State carregado com sucesso!', State);
   
 })();
