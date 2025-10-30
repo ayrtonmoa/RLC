@@ -1,0 +1,125 @@
+═══════════════════════════════════════════════════════════════
+        🔧 MERGE ANALYZER - CORREÇÕES APLICADAS v2
+═══════════════════════════════════════════════════════════════
+
+🐛 PROBLEMAS IDENTIFICADOS:
+
+  1. ❌ Bonus grudado não era detectado
+     Exemplo: "1.5%4%" (sem espaço entre os %)
+     
+  2. ❌ Parser parava após ler 1 parte
+     Resultado: Só pegava Fan, ignorava Wire e Hashboard
+     
+  3. ❌ Validação exigia bonus > 0
+     Alguns merges têm bonus 0% e são válidos
+
+═══════════════════════════════════════════════════════════════
+
+✅ CORREÇÕES APLICADAS:
+
+  1. ✅ Regex de Bonus atualizado
+     Antes: /([\d.,]+)%([\d.,]+)%/
+     Agora:  /([\d.,]+)%\s*([\d.,]+)%/
+            └─ \s* aceita 0 ou mais espaços
+     
+     Agora detecta:
+     ✓ "1.5% 4%"  (com espaço)
+     ✓ "1.5%4%"   (sem espaço)
+     ✓ "1.5%  4%" (vários espaços)
+
+  2. ✅ Loop de Components corrigido
+     Antes: break após primeira parte
+     Agora: Continua até pegar as 3 partes
+     
+     Resultado:
+     ✓ Fan: 100/1700 ❌
+     ✓ Wire: 1700/1900 ❌
+     ✓ Hashboard: 635/1700 ❌
+
+  3. ✅ Validação flexibilizada
+     Antes: Exigia bonus > 0
+     Agora: Aceita bonus = 0
+     
+     Merges válidos agora:
+     ✓ Com bonus (1.5% → 4%)
+     ✓ Sem bonus (0% → 0%)
+
+═══════════════════════════════════════════════════════════════
+
+📦 ARQUIVOS ATUALIZADOS:
+
+  ✅ mergeParser_v2.js
+     └─ Parser corrigido (bonus + parts)
+     
+  ✅ mergeAnalyzer_FINAL.js  
+     └─ Interface sem dependência do MergeCalculator
+     
+  ⚠️  mergePrices.js
+     └─ Use seu arquivo atual (não mudou)
+
+═══════════════════════════════════════════════════════════════
+
+🚀 INSTALAÇÃO:
+
+  1. Substitua seu arquivo atual:
+     mergeParser.js → mergeParser_v2.js
+     
+  2. Adicione (se não tiver):
+     mergeAnalyzer_FINAL.js → js/ui/mergeAnalyzer.js
+
+  3. Scripts necessários no index.html:
+     <script src="js/mergeParser.js"></script>
+     <script src="js/mergePrices.js"></script>
+     <script src="js/ui/mergeAnalyzer.js"></script>
+
+═══════════════════════════════════════════════════════════════
+
+🧪 TESTE COM SEU EXEMPLO:
+
+Uncommon
+Frostfort
+Level
+Power
+3.720 Ph/s9.770 Ph/s
+Bonus Power
+1.5%4%                    ← ✅ Detecta agora!
+Components:
+3/2
+100/1700                  ← ✅ Fan
+1700/1900                 ← ✅ Wire
+635/1700                  ← ✅ Hashboard
+Price
+2.7 RLT
+
+RESULTADO ESPERADO:
+✅ Nome: Frostfort
+✅ Level: Uncommon
+✅ Power: 3.72 → 9.77 Th/s (ganho: 6.05 Th/s)
+✅ Bonus: 1.5% → 4% (ganho: 2.5%)
+✅ Miners: 3/2 ✅
+✅ Fan: 100/1700 ❌
+✅ Wire: 1700/1900 ❌
+✅ Hashboard: 635/1700 ❌
+✅ Status: ❌ Impossível (faltam partes)
+
+═══════════════════════════════════════════════════════════════
+
+📥 DOWNLOAD:
+
+  merge_analyzer_FIXED.zip (8.8 KB)
+  └─ mergeParser_v2.js
+  └─ mergeAnalyzer_FINAL.js
+
+═══════════════════════════════════════════════════════════════
+
+💡 DICA:
+
+Após instalar, abra o Console (F12) e veja os logs:
+  💎 Bonus: 1.5% → 4%
+  🔩 Fan: 100/1700 ❌
+  🔩 Wire: 1700/1900 ❌
+  🔩 Hashboard: 635/1700 ❌
+
+Se aparecer isso = FUNCIONOU! ✅
+
+═══════════════════════════════════════════════════════════════

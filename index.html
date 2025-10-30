@@ -34,6 +34,7 @@
       <div class="tab" data-tab="resumo">Resumo & Perfil</div>
       <div class="tab" data-tab="miners">Impact Analyzer</div>
       <div class="tab" data-tab="buyanalyzer">Buy Analyzer</div>
+      <div class="tab" data-tab="mergeanalyzer">Merge Analyzer</div>
       <div class="tab" data-tab="inventario">Inventário & Troca</div>
       <div class="tab" data-tab="debug">Debug Info</div>
       <div class="tab" data-tab="racks">Racks</div>
@@ -43,6 +44,7 @@
     <div id="resumo" class="card tab-content"></div>
     <div id="miners" class="card tab-content"></div>
     <div id="buyanalyzer" class="card tab-content"></div>
+    <div id="mergeanalyzer" class="card tab-content"></div>
     <div id="inventario" class="card tab-content"></div>
     <div id="debug" class="card tab-content"></div>
     <div id="racks" class="card tab-content"></div>
@@ -55,11 +57,16 @@
   <script src="js/api.js"></script>
   <script src="js/calculations.js"></script>
   
+  <!-- Merge Analyzer Dependencies (ANTES do mergeAnalyzer.js!) -->
+  <script src="js/mergePrices.js"></script>
+  <script src="js/mergeParser.js"></script>
+  
   <!-- UI Components -->
   <script src="js/ui/guia.js"></script>
   <script src="js/ui/resumo.js"></script>
   <script src="js/ui/miners.js"></script>
   <script src="js/ui/buyAnalyzer.js"></script>
+  <script src="js/ui/mergeAnalyzer.js"></script>
   <script src="js/ui/inventario.js"></script>
   <script src="js/ui/debug.js"></script>
   <script src="js/ui/racks.js"></script>
@@ -83,6 +90,8 @@
         UI_Debug.mostrar(user);
         UI_Racks.mostrar(user);
         
+        // Merge Analyzer é inicializado sob demanda (ao clicar na aba)
+        
         Utils.hideProgress();
         document.getElementById('status').innerHTML = '<span class="success">Análise concluída com sucesso!</span>';
       } catch (err) {
@@ -103,10 +112,13 @@
       console.log('Utils:', typeof Utils !== 'undefined' ? '✅' : '❌');
       console.log('API:', typeof API !== 'undefined' ? '✅' : '❌');
       console.log('Calculations:', typeof Calculations !== 'undefined' ? '✅' : '❌');
+      console.log('MergePrices:', typeof MergePrices !== 'undefined' ? '✅' : '❌');
+      console.log('MergeParser:', typeof MergeParser !== 'undefined' ? '✅' : '❌');
       console.log('UI_Guia:', typeof UI_Guia !== 'undefined' ? '✅' : '❌');
       console.log('UI_Resumo:', typeof UI_Resumo !== 'undefined' ? '✅' : '❌');
       console.log('UI_Miners:', typeof UI_Miners !== 'undefined' ? '✅' : '❌');
       console.log('UI_BuyAnalyzer:', typeof UI_BuyAnalyzer !== 'undefined' ? '✅' : '❌');
+      console.log('UI_MergeAnalyzer:', typeof UI_MergeAnalyzer !== 'undefined' ? '✅' : '❌');
       console.log('UI_Inventario:', typeof UI_Inventario !== 'undefined' ? '✅' : '❌');
       console.log('UI_Debug:', typeof UI_Debug !== 'undefined' ? '✅' : '❌');
       console.log('UI_Racks:', typeof UI_Racks !== 'undefined' ? '✅' : '❌');
