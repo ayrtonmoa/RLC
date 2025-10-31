@@ -1,4 +1,4 @@
-// js/ui/mergeCalculator.js - Calculadora de Merge (FASE 1)
+// js/ui/mergeCalculator.js - Calculadora de Merge (FASE 1 + Calculadora Reversa)
 
 const UI_MergeCalculator = {
   // Taxas oficiais do RollerCoin
@@ -24,7 +24,9 @@ const UI_MergeCalculator = {
         </ul>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+      <!-- SEÇÃO 1: CALCULADORA NORMAL -->
+      <h3>📈 Calculadora Normal (O que consigo fazer?)</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;">
         <div class="summary-item">
           <h4>📥 Suas Peças</h4>
           
@@ -93,6 +95,69 @@ const UI_MergeCalculator = {
       </div>
 
       <div id="resultadoMergeCalc"></div>
+
+      <hr style="margin: 40px 0; border: 0; border-top: 2px solid #ddd;">
+
+      <!-- SEÇÃO 2: CALCULADORA REVERSA -->
+      <h3>📉 Calculadora Reversa (O que preciso ter?)</h3>
+      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3; margin-bottom: 20px;">
+        <h4>💡 Sugestão do XnegX</h4>
+        <p style="font-size: 13px;">Quer fazer um merge específico? Descubra <strong>quantas peças você precisa</strong> e o <strong>custo total</strong>!</p>
+        <p style="font-size: 13px; margin-top: 5px;"><strong>Exemplo:</strong> "Quero 2 Legendary Fan + 1 Epic Wire" → Sistema calcula tudo que você precisa!</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="summary-item">
+          <h4>🎯 Seu Objetivo</h4>
+          
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px;"><strong>Tipo de Peça:</strong></label>
+            <select id="reversePartType" style="width: 100%; padding: 10px;">
+              <option value="fan">🌀 Fan</option>
+              <option value="wire">🔌 Wire</option>
+              <option value="hashboard">💾 Hashboard</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px;"><strong>Tier Desejado:</strong></label>
+            <select id="reverseTargetTier" style="width: 100%; padding: 10px;">
+              <option value="uncommon">🟢 Uncommon</option>
+              <option value="rare">🔵 Rare</option>
+              <option value="epic">🟣 Epic</option>
+              <option value="legendary">🟡 Legendary</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px;"><strong>Quantidade desejada:</strong></label>
+            <input type="number" id="reverseQuantity" placeholder="Ex: 2" min="1" style="width: 100%; padding: 10px;">
+          </div>
+
+          <button onclick="UI_MergeCalculator.calcularReverso()" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold; background: #2196F3;">
+            🔍 Calcular Requisitos
+          </button>
+        </div>
+
+        <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800;">
+          <h4>📋 Exemplo de Uso</h4>
+          <p style="font-size: 13px; line-height: 1.8;">
+            <strong>Objetivo:</strong> 2x Legendary Fan<br>
+            <strong>Você verá:</strong>
+          </p>
+          <ul style="font-size: 12px; margin: 10px 0; line-height: 1.8;">
+            <li>🟣 Opção 1: Partir de 10 Epic</li>
+            <li>🔵 Opção 2: Partir de 100 Rare</li>
+            <li>🟢 Opção 3: Partir de 2000 Uncommon</li>
+            <li>⚪ Opção 4: Partir de 100000 Common</li>
+          </ul>
+          <p style="font-size: 12px; color: #666; margin-top: 10px;">
+            💰 Cada opção mostra o custo total em RLT!
+          </p>
+        </div>
+      </div>
+
+      <div id="resultadoReverso"></div>
     `;
   },
 
@@ -254,6 +319,190 @@ const UI_MergeCalculator = {
           ✅ <strong>Merge sempre compensa!</strong> Fazer merge de peças comuns é muito mais barato que comprar direto no marketplace.<br>
           📊 Você tem <strong>controle total</strong> dos gastos: pode fazer 20, 30 ou 50 peças verdes e usar as comuns para outros merges.<br>
           💰 Quanto mais alta a qualidade da peça, <strong>mais cara</strong> ela é, mas o merge no inventário <strong>sempre compensa mais</strong>!
+        </p>
+      </div>
+    `;
+    
+    resultDiv.innerHTML = html;
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  },
+
+  // ========== CALCULADORA REVERSA ==========
+  calcularReverso() {
+    const partType = document.getElementById('reversePartType').value;
+    const targetTier = document.getElementById('reverseTargetTier').value;
+    const quantity = parseInt(document.getElementById('reverseQuantity').value);
+    
+    const resultDiv = document.getElementById('resultadoReverso');
+    
+    // Validações
+    if (!quantity || quantity <= 0) {
+      resultDiv.innerHTML = `
+        <div class="summary-item" style="background: #ffebee; border-left: 4px solid #f44336;">
+          <h4>⚠️ Erro</h4>
+          <p>Por favor, digite uma quantidade válida!</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Calcular todas as rotas possíveis
+    const routes = this.calcularRotas(targetTier, quantity);
+    
+    // Renderizar resultado
+    this.mostrarResultadoReverso(routes, partType, targetTier, quantity);
+  },
+
+  calcularRotas(targetTier, targetQuantity) {
+    const tiers = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+    const targetIndex = tiers.indexOf(targetTier);
+    const routes = [];
+    
+    // Para cada tier anterior ao alvo, calcular rota
+    for (let i = targetIndex - 1; i >= 0; i--) {
+      const startTier = tiers[i];
+      
+      // Calcular requisitos
+      let currentQty = targetQuantity;
+      let totalCost = 0;
+      const steps = [];
+      
+      // Retroceder do alvo até o tier inicial
+      for (let j = targetIndex - 1; j >= i; j--) {
+        const tierFrom = tiers[j];
+        const tierTo = tiers[j + 1];
+        const mergeInfo = this.mergeCosts[tierFrom];
+        
+        // Quantidade necessária do tier anterior
+        const neededQty = currentQty * mergeInfo.need;
+        const cost = currentQty * mergeInfo.cost;
+        
+        steps.unshift({
+          from: tierFrom,
+          to: tierTo,
+          neededQty: neededQty,
+          outputQty: currentQty,
+          cost: cost,
+          mergeCount: currentQty
+        });
+        
+        totalCost += cost;
+        currentQty = neededQty;
+      }
+      
+      routes.push({
+        startTier: startTier,
+        startQuantity: currentQty,
+        totalCost: totalCost,
+        steps: steps
+      });
+    }
+    
+    return routes;
+  },
+
+  mostrarResultadoReverso(routes, partType, targetTier, targetQuantity) {
+    const resultDiv = document.getElementById('resultadoReverso');
+    
+    const partEmojis = { fan: '🌀', wire: '🔌', hashboard: '💾' };
+    const tierEmojis = { 
+      common: '⚪', 
+      uncommon: '🟢', 
+      rare: '🔵', 
+      epic: '🟣', 
+      legendary: '🟡' 
+    };
+    
+    let html = `
+      <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50;">
+        <h3>🎯 Requisitos para Seu Objetivo</h3>
+        
+        <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
+          <h4 style="margin: 0 0 10px 0;">Seu Objetivo:</h4>
+          <p style="font-size: 20px; font-weight: bold; color: #2196F3;">
+            ${targetQuantity}x ${tierEmojis[targetTier]} ${this.getTierName(targetTier)} ${partEmojis[partType]} ${this.capitalize(partType)}
+          </p>
+        </div>
+
+        <h4 style="margin: 20px 0 10px 0;">📋 Rotas Possíveis (escolha uma):</h4>
+    `;
+    
+    // Cada rota
+    routes.forEach((route, index) => {
+      const routeNum = index + 1;
+      const efficiency = routes[0].totalCost > 0 ? ((route.totalCost / routes[0].totalCost) * 100) : 100;
+      
+      html += `
+        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border: 2px solid ${index === 0 ? '#4CAF50' : '#ddd'};">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4 style="margin: 0;">
+              ${index === 0 ? '⭐ ' : ''}Opção ${routeNum}: Partir de ${tierEmojis[route.startTier]} ${this.getTierName(route.startTier)}
+            </h4>
+            <span style="background: ${index === 0 ? '#4CAF50' : '#FF9800'}; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+              ${route.totalCost.toFixed(4)} RLT
+            </span>
+          </div>
+
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+            <p style="font-size: 18px; font-weight: bold; margin: 0;">
+              📦 Você precisa de: <span style="color: #2196F3;">${route.startQuantity} ${tierEmojis[route.startTier]} ${this.getTierName(route.startTier)}</span>
+            </p>
+          </div>
+
+          <div style="font-size: 13px; color: #666;">
+            <strong>Passos:</strong>
+          </div>
+          <div style="margin: 10px 0;">
+    `;
+      
+      // Passos da rota
+      route.steps.forEach((step, stepIndex) => {
+        html += `
+          <div style="display: flex; align-items: center; padding: 8px 0; ${stepIndex < route.steps.length - 1 ? 'border-bottom: 1px dashed #ddd;' : ''}">
+            <div style="flex: 1;">
+              ${tierEmojis[step.from]} ${step.neededQty} ${this.getTierName(step.from)}
+            </div>
+            <div style="padding: 0 15px; color: #2196F3; font-size: 18px;">→</div>
+            <div style="flex: 1;">
+              ${tierEmojis[step.to]} ${step.outputQty} ${this.getTierName(step.to)}
+            </div>
+            <div style="text-align: right; color: #666; font-size: 12px;">
+              ${step.cost.toFixed(4)} RLT
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `
+          </div>
+
+          ${index === 0 ? '<p style="margin: 15px 0 0 0; font-size: 12px; color: #4CAF50; font-weight: bold;">✅ Opção mais rápida!</p>' : ''}
+        </div>
+      `;
+    });
+    
+    // Total comparativo
+    const cheapestRoute = routes.reduce((min, route) => route.totalCost < min.totalCost ? route : min, routes[0]);
+    
+    html += `
+        <div style="background: #2196F3; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px;">
+          <h3 style="margin: 0 0 10px 0;">💡 Melhor Opção</h3>
+          <p style="font-size: 16px; margin: 10px 0;">
+            Partir de <strong>${cheapestRoute.startQuantity} ${tierEmojis[cheapestRoute.startTier]} ${this.getTierName(cheapestRoute.startTier)}</strong>
+          </p>
+          <p style="font-size: 28px; font-weight: bold; margin: 10px 0;">${cheapestRoute.totalCost.toFixed(4)} RLT</p>
+          <p style="font-size: 13px; margin: 5px 0; opacity: 0.9;">
+            Para conseguir ${targetQuantity}x ${tierEmojis[targetTier]} ${this.getTierName(targetTier)}
+          </p>
+        </div>
+      </div>
+
+      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3; margin-top: 20px;">
+        <h4>💡 Dica do XnegX</h4>
+        <p style="font-size: 13px; line-height: 1.6;">
+          🎯 Use a <strong>calculadora reversa</strong> para planejar seus merges com antecedência!<br>
+          📊 Compare as <strong>diferentes rotas</strong> e escolha a que você tem mais peças.<br>
+          💰 Sempre considere o <strong>custo vs disponibilidade</strong> das suas peças!
         </p>
       </div>
     `;
