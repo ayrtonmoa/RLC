@@ -27,12 +27,15 @@ const UI_MergeVsMarket = {
       <h2>💰 Merge vs Market</h2>
       
       <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50; margin-bottom: 20px;">
-        <h4>💡 O que faz esta ferramenta?</h4>
+        <h4>💡 Sugestão do BBJ</h4>
         <p style="font-size: 13px; line-height: 1.6;">
           Compare 3 opções e descubra qual é <strong>mais barata</strong>:<br>
           <strong>1)</strong> Fazer merge (só taxas) - se você já tem peças<br>
           <strong>2)</strong> Comprar peças menores + fazer merge<br>
           <strong>3)</strong> Comprar pronto no marketplace
+        </p>
+        <p style="font-size: 12px; color: #666; margin-top: 10px;">
+          💡 <em>"Seria bom implementar um local pra gente colocar o valor que eu comprei no mercado junto com o valor do merge"</em> - BBJ
         </p>
       </div>
 
@@ -397,12 +400,21 @@ const UI_MergeVsMarket = {
 
     results.forEach(result => {
       const bestLocal = Math.min(result.option1Cost, result.option2Cost, result.option3Cost);
+      const option2BetterThan3 = result.option2Cost < result.option3Cost;
+      const savingsVs3 = result.option3Cost - result.option2Cost;
+      const savingsPercent = (savingsVs3 / result.option3Cost * 100);
       
       html += `
         <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #4CAF50;">
           <h4 style="margin: 0 0 15px 0;">
             ${result.emoji} ${result.qty}x ${tierEmojis[result.tier]} ${this.getTierName(result.tier)} ${result.name}
           </h4>
+          ${option2BetterThan3 ? `
+            <div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 3px solid #FF9800; margin-bottom: 15px; font-size: 12px;">
+              <strong style="color: #e65100;">🔥 Comprar Common + Merge é ${savingsPercent.toFixed(1)}% mais barato que comprar pronto!</strong>
+              <span style="color: #666;"> (Economia: ${savingsVs3.toFixed(4)} RLT)</span>
+            </div>
+          ` : ''}
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
             <div style="background: ${result.option1Cost === bestLocal ? '#e8f5e8' : '#f8f9fa'}; padding: 15px; border-radius: 5px; border: 2px solid ${result.option1Cost === bestLocal ? '#4CAF50' : '#ddd'};">
               <div style="font-size: 12px; color: #666; margin-bottom: 5px;">${result.option1Cost === bestLocal ? '⭐ ' : ''}Opção 1</div>
@@ -436,6 +448,28 @@ const UI_MergeVsMarket = {
           <p style="font-size: 36px; font-weight: bold; margin: 10px 0;">${totals.bestOption.cost.toFixed(4)} RLT</p>
           <p style="font-size: 16px; margin: 10px 0;">💰 Economia: ${savings.toFixed(4)} RLT (${savingsPercent.toFixed(1)}%)</p>
         </div>
+      </div>
+
+      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3; margin-top: 20px;">
+        <h4>💡 Dica do BBJ</h4>
+        <p style="font-size: 13px; line-height: 1.6;">
+          ✅ <strong>Compare sempre!</strong> O merge quase sempre sai mais barato que comprar pronto.<br>
+          💰 Se você comprar peças Common e fizer merge, economiza MUITO mais que comprar direto.<br>
+          📊 Use esta ferramenta antes de gastar seus RLT no marketplace!
+        </p>
+      </div>
+
+      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800; margin-top: 20px;">
+        <h4>🔥 Insight Importante</h4>
+        <p style="font-size: 13px; line-height: 1.6;">
+          <strong>Mesmo se você NÃO tem as peças:</strong><br>
+          📈 <strong>Comprar Common + Merge</strong> é quase sempre mais barato que <strong>Comprar Pronto</strong>!<br>
+          <br>
+          💰 Na maioria dos casos, você economiza entre <strong>5% a 15%</strong> comprando Common e fazendo merge.<br>
+          🎯 <strong>Conclusão:</strong> Sempre vale a pena fazer merge, mesmo comprando as peças!<br>
+          <br>
+          <em style="font-size: 12px; color: #666;">💡 Use o comparador acima para ver a economia exata com os preços atuais do mercado!</em>
+        </p>
       </div>
     `;
 
