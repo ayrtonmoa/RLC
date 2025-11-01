@@ -1,4 +1,4 @@
-// js/ui/mergeCalculator.js - Calculadora de Merge (FASE 1 + Calculadora Reversa)
+// js/ui/mergeCalculator.js - Calculadora de Merge (3 peças simultâneas)
 
 const UI_MergeCalculator = {
   // Taxas oficiais do RollerCoin
@@ -16,42 +16,63 @@ const UI_MergeCalculator = {
       
       <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50; margin-bottom: 20px;">
         <h4>💡 Como Usar</h4>
-        <p>Calcule quanto custa fazer merges das suas peças. Compare: <strong>Fazer merge vs Comprar no market!</strong></p>
-        <ul style="font-size: 13px; line-height: 1.6;">
-          <li>✅ <strong>Merge sempre compensa mais</strong> que comprar pronto</li>
-          <li>💰 Você tem <strong>controle total</strong> sobre seus gastos</li>
-          <li>📊 Veja toda a <strong>cadeia de merges</strong> possível</li>
-        </ul>
+        <p style="font-size: 13px; line-height: 1.6;">
+          Calcule quanto custa fazer merges das suas peças! Pode calcular <strong>1, 2 ou 3 peças ao mesmo tempo</strong>.<br>
+          ✅ Deixe em branco as que não quer calcular<br>
+          💰 Sistema mostra custo individual + total
+        </p>
       </div>
 
       <!-- SEÇÃO 1: CALCULADORA NORMAL -->
       <h3>📈 Calculadora Normal (O que consigo fazer?)</h3>
+      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800; margin-bottom: 20px;">
+        <h4>💡 Sugestão do SilverGuns</h4>
+        <p style="font-size: 13px;">Você tem peças e quer saber <strong>até onde consegue chegar</strong>? Digite quantas peças você tem e veja!</p>
+      </div>
+
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;">
         <div class="summary-item">
           <h4>📥 Suas Peças</h4>
           
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px;"><strong>Tipo de Peça:</strong></label>
-            <select id="partType" style="width: 100%; padding: 10px;">
-              <option value="fan">🌀 Fan</option>
-              <option value="wire">🔌 Wire</option>
-              <option value="hashboard">💾 Hashboard</option>
-            </select>
-          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+            <!-- Fan -->
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🌀 Fan</strong></label>
+              <select id="fanStartTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                <option value="">-- Nenhum --</option>
+                <option value="common">⚪ Common</option>
+                <option value="uncommon">🟢 Uncommon</option>
+                <option value="rare">🔵 Rare</option>
+                <option value="epic">🟣 Epic</option>
+              </select>
+              <input type="number" id="fanQuantity" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            </div>
 
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px;"><strong>Tier Inicial:</strong></label>
-            <select id="startTier" style="width: 100%; padding: 10px;">
-              <option value="common">⚪ Common</option>
-              <option value="uncommon">🟢 Uncommon</option>
-              <option value="rare">🔵 Rare</option>
-              <option value="epic">🟣 Epic</option>
-            </select>
-          </div>
+            <!-- Wire -->
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🔌 Wire</strong></label>
+              <select id="wireStartTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                <option value="">-- Nenhum --</option>
+                <option value="common">⚪ Common</option>
+                <option value="uncommon">🟢 Uncommon</option>
+                <option value="rare">🔵 Rare</option>
+                <option value="epic">🟣 Epic</option>
+              </select>
+              <input type="number" id="wireQuantity" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            </div>
 
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px;"><strong>Quantidade que você tem:</strong></label>
-            <input type="number" id="partQuantity" placeholder="Ex: 1000" min="1" style="width: 100%; padding: 10px;">
+            <!-- Hashboard -->
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>💾 Hashboard</strong></label>
+              <select id="hashStartTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                <option value="">-- Nenhum --</option>
+                <option value="common">⚪ Common</option>
+                <option value="uncommon">🟢 Uncommon</option>
+                <option value="rare">🔵 Rare</option>
+                <option value="epic">🟣 Epic</option>
+              </select>
+              <input type="number" id="hashQuantity" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            </div>
           </div>
 
           <button onclick="UI_MergeCalculator.calcular()" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold;">
@@ -103,35 +124,61 @@ const UI_MergeCalculator = {
       <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3; margin-bottom: 20px;">
         <h4>💡 Sugestão do XnegX</h4>
         <p style="font-size: 13px;">Quer fazer um merge específico? Descubra <strong>quantas peças você precisa</strong> e o <strong>custo total</strong>!</p>
-        <p style="font-size: 13px; margin-top: 5px;"><strong>Exemplo:</strong> "Quero 2 Legendary Fan + 1 Epic Wire" → Sistema calcula tudo que você precisa!</p>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
         <div class="summary-item">
           <h4>🎯 Seu Objetivo</h4>
           
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px;"><strong>Tipo de Peça:</strong></label>
-            <select id="reversePartType" style="width: 100%; padding: 10px;">
-              <option value="fan">🌀 Fan</option>
-              <option value="wire">🔌 Wire</option>
-              <option value="hashboard">💾 Hashboard</option>
-            </select>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+            <!-- Fan -->
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🌀 Fan</strong></label>
+              <select id="fanTargetTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                <option value="">-- Nenhum --</option>
+                <option value="uncommon">🟢 Uncommon</option>
+                <option value="rare">🔵 Rare</option>
+                <option value="epic">🟣 Epic</option>
+                <option value="legendary">🟡 Legendary</option>
+              </select>
+              <input type="number" id="fanTargetQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            </div>
+
+            <!-- Wire -->
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🔌 Wire</strong></label>
+              <select id="wireTargetTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                <option value="">-- Nenhum --</option>
+                <option value="uncommon">🟢 Uncommon</option>
+                <option value="rare">🔵 Rare</option>
+                <option value="epic">🟣 Epic</option>
+                <option value="legendary">🟡 Legendary</option>
+              </select>
+              <input type="number" id="wireTargetQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            </div>
+
+            <!-- Hashboard -->
+            <div>
+              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>💾 Hashboard</strong></label>
+              <select id="hashTargetTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+                <option value="">-- Nenhum --</option>
+                <option value="uncommon">🟢 Uncommon</option>
+                <option value="rare">🔵 Rare</option>
+                <option value="epic">🟣 Epic</option>
+                <option value="legendary">🟡 Legendary</option>
+              </select>
+              <input type="number" id="hashTargetQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            </div>
           </div>
 
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px;"><strong>Tier Desejado:</strong></label>
-            <select id="reverseTargetTier" style="width: 100%; padding: 10px;">
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px;"><strong>Partir de qual tier?</strong></label>
+            <select id="reverseStartTier" style="width: 100%; padding: 10px;">
+              <option value="common">⚪ Common</option>
               <option value="uncommon">🟢 Uncommon</option>
               <option value="rare">🔵 Rare</option>
               <option value="epic">🟣 Epic</option>
-              <option value="legendary">🟡 Legendary</option>
             </select>
-          </div>
-
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px;"><strong>Quantidade desejada:</strong></label>
-            <input type="number" id="reverseQuantity" placeholder="Ex: 2" min="1" style="width: 100%; padding: 10px;">
           </div>
 
           <button onclick="UI_MergeCalculator.calcularReverso()" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold; background: #2196F3;">
@@ -142,18 +189,19 @@ const UI_MergeCalculator = {
         <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800;">
           <h4>📋 Exemplo de Uso</h4>
           <p style="font-size: 13px; line-height: 1.8;">
-            <strong>Objetivo:</strong> 2x Legendary Fan<br>
-            <strong>Você verá:</strong>
+            <strong>Objetivo:</strong><br>
+            • 2x Legendary Fan<br>
+            • 1x Epic Wire<br>
+            • 3x Rare Hashboard
+          </p>
+          <p style="font-size: 13px; margin-top: 10px;">
+            <strong>Sistema mostra:</strong>
           </p>
           <ul style="font-size: 12px; margin: 10px 0; line-height: 1.8;">
-            <li>🟣 Opção 1: Partir de 10 Epic</li>
-            <li>🔵 Opção 2: Partir de 100 Rare</li>
-            <li>🟢 Opção 3: Partir de 2000 Uncommon</li>
-            <li>⚪ Opção 4: Partir de 100000 Common</li>
+            <li>Quantas peças de cada precisa</li>
+            <li>Custo individual de cada merge</li>
+            <li>💰 Custo total em RLT</li>
           </ul>
-          <p style="font-size: 12px; color: #666; margin-top: 10px;">
-            💰 Cada opção mostra o custo total em RLT!
-          </p>
         </div>
       </div>
 
@@ -161,39 +209,71 @@ const UI_MergeCalculator = {
     `;
   },
 
+  // ========== CALCULADORA NORMAL ==========
   calcular() {
-    const partType = document.getElementById('partType').value;
-    const startTier = document.getElementById('startTier').value;
-    const quantity = parseInt(document.getElementById('partQuantity').value);
-    
+    // Coletar dados das peças
+    const parts = [
+      {
+        type: 'fan',
+        emoji: '🌀',
+        name: 'Fan',
+        startTier: document.getElementById('fanStartTier').value,
+        quantity: parseInt(document.getElementById('fanQuantity').value) || 0
+      },
+      {
+        type: 'wire',
+        emoji: '🔌',
+        name: 'Wire',
+        startTier: document.getElementById('wireStartTier').value,
+        quantity: parseInt(document.getElementById('wireQuantity').value) || 0
+      },
+      {
+        type: 'hashboard',
+        emoji: '💾',
+        name: 'Hashboard',
+        startTier: document.getElementById('hashStartTier').value,
+        quantity: parseInt(document.getElementById('hashQuantity').value) || 0
+      }
+    ];
+
+    // Filtrar apenas as peças selecionadas
+    const selectedParts = parts.filter(p => p.startTier && p.quantity > 0);
+
     const resultDiv = document.getElementById('resultadoMergeCalc');
-    
-    // Validações
-    if (!quantity || quantity <= 0) {
+
+    // Validação
+    if (selectedParts.length === 0) {
       resultDiv.innerHTML = `
         <div class="summary-item" style="background: #ffebee; border-left: 4px solid #f44336;">
-          <h4>⚠️ Erro</h4>
-          <p>Por favor, digite uma quantidade válida!</p>
+          <h4>⚠️ Nenhuma Peça Selecionada</h4>
+          <p>Por favor, selecione pelo menos uma peça, tier e quantidade!</p>
         </div>
       `;
       return;
     }
 
-    // Calcular cadeia de merges
-    const mergeChain = this.calcularCadeia(startTier, quantity);
-    
-    if (mergeChain.length === 0) {
-      resultDiv.innerHTML = `
-        <div class="summary-item" style="background: #fff3cd; border-left: 4px solid #ffc107;">
-          <h4>⚠️ Quantidade Insuficiente</h4>
-          <p>Você precisa de pelo menos <strong>${this.mergeCosts[startTier].need} ${this.getTierName(startTier)}</strong> para fazer 1 merge.</p>
-        </div>
-      `;
-      return;
-    }
+    // Calcular cada peça
+    const results = [];
+    let totalCost = 0;
+
+    selectedParts.forEach(part => {
+      const mergeChain = this.calcularCadeia(part.startTier, part.quantity);
+      
+      if (mergeChain.length > 0) {
+        const chainCost = mergeChain.reduce((sum, step) => sum + step.totalCost, 0);
+        results.push({
+          ...part,
+          chain: mergeChain,
+          chainCost: chainCost,
+          finalTier: mergeChain[mergeChain.length - 1].to,
+          finalQty: mergeChain[mergeChain.length - 1].outputQty
+        });
+        totalCost += chainCost;
+      }
+    });
 
     // Renderizar resultado
-    this.mostrarResultado(mergeChain, partType, startTier, quantity);
+    this.mostrarResultadoNormal(results, totalCost);
   },
 
   calcularCadeia(startTier, quantity) {
@@ -209,12 +289,10 @@ const UI_MergeCalculator = {
       const nextTier = tiers[i + 1];
       const mergeInfo = this.mergeCosts[currentTier];
       
-      // Quantos merges conseguimos fazer?
       const possibleMerges = Math.floor(currentQuantity / mergeInfo.need);
       
       if (possibleMerges === 0) break;
       
-      // Calcular custo
       const totalCost = possibleMerges * mergeInfo.cost;
       const leftover = currentQuantity % mergeInfo.need;
       
@@ -229,23 +307,15 @@ const UI_MergeCalculator = {
         needed: mergeInfo.need
       });
       
-      // Próximo tier começa com a quantidade produzida
       currentQuantity = possibleMerges;
     }
     
     return chain;
   },
 
-  mostrarResultado(chain, partType, startTier, quantity) {
+  mostrarResultadoNormal(results, totalCost) {
     const resultDiv = document.getElementById('resultadoMergeCalc');
-    
-    // Calcular totais
-    const totalCost = chain.reduce((sum, step) => sum + step.totalCost, 0);
-    const finalTier = chain[chain.length - 1].to;
-    const finalQty = chain[chain.length - 1].outputQty;
-    
-    // Emojis
-    const partEmojis = { fan: '🌀', wire: '🔌', hashboard: '💾' };
+
     const tierEmojis = { 
       common: '⚪', 
       uncommon: '🟢', 
@@ -253,62 +323,75 @@ const UI_MergeCalculator = {
       epic: '🟣', 
       legendary: '🟡' 
     };
-    
+
     let html = `
       <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3;">
         <h3>🎯 Resultado da Cadeia de Merges</h3>
-        
-        <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
-          <h4 style="margin: 0 0 10px 0;">${partEmojis[partType]} ${this.capitalize(partType)}</h4>
-          <p style="font-size: 14px; margin: 5px 0;">
-            <strong>Início:</strong> ${quantity} ${tierEmojis[startTier]} ${this.getTierName(startTier)}
-          </p>
-          <p style="font-size: 14px; margin: 5px 0;">
-            <strong>Final:</strong> ${finalQty} ${tierEmojis[finalTier]} ${this.getTierName(finalTier)}
-          </p>
-        </div>
-
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
-          <h4 style="margin: 0 0 15px 0;">📋 Passos do Merge:</h4>
     `;
-    
-    // Cada passo
-    chain.forEach((step, index) => {
-      const stepNum = index + 1;
-      const arrow = '→';
-      
+
+    // Cada peça
+    results.forEach(result => {
       html += `
-        <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #4CAF50;">
-          <div style="display: grid; grid-template-columns: 2fr 1fr 2fr; gap: 10px; align-items: center;">
+        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #4CAF50;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <div>
-              <strong style="font-size: 16px;">${tierEmojis[step.from]} ${step.inputQty} ${this.getTierName(step.from)}</strong>
-              ${step.leftover > 0 ? `<br><small style="color: #999;">Sobra: ${step.leftover}</small>` : ''}
+              <h4 style="margin: 0;">${result.emoji} ${result.name}</h4>
+              <p style="font-size: 14px; margin: 5px 0;">
+                <strong>Início:</strong> ${result.quantity} ${tierEmojis[result.startTier]} ${this.getTierName(result.startTier)}
+              </p>
+              <p style="font-size: 14px; margin: 5px 0;">
+                <strong>Final:</strong> ${result.finalQty} ${tierEmojis[result.finalTier]} ${this.getTierName(result.finalTier)}
+              </p>
             </div>
-            <div style="text-align: center;">
-              <span style="font-size: 20px; color: #2196F3;">${arrow}</span>
-            </div>
-            <div>
-              <strong style="font-size: 16px;">${tierEmojis[step.to]} ${step.outputQty} ${this.getTierName(step.to)}</strong>
+            <div style="text-align: right;">
+              <span style="background: #FF9800; color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                ${result.chainCost.toFixed(4)} RLT
+              </span>
             </div>
           </div>
-          <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
-          <div style="display: flex; justify-content: space-between; font-size: 13px;">
-            <span>📦 Precisa: <strong>${step.needed} por merge</strong></span>
-            <span>💰 Custo: <strong>${step.totalCost.toFixed(4)} RLT</strong></span>
-            <span>🔢 Merges: <strong>${step.outputQty}x</strong></span>
+
+          <details style="margin-top: 15px;">
+            <summary style="cursor: pointer; font-size: 13px; color: #666; padding: 5px;">
+              📋 Ver passos detalhados
+            </summary>
+            <div style="margin-top: 10px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+    `;
+
+      result.chain.forEach((step, index) => {
+        html += `
+          <div style="padding: 10px 0; ${index < result.chain.length - 1 ? 'border-bottom: 1px dashed #ddd;' : ''}">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 2fr; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <div>
+                <strong>${tierEmojis[step.from]} ${step.inputQty} ${this.getTierName(step.from)}</strong>
+                ${step.leftover > 0 ? `<br><small style="color: #999;">Sobra: ${step.leftover}</small>` : ''}
+              </div>
+              <div style="text-align: center; color: #2196F3; font-size: 18px;">→</div>
+              <div>
+                <strong>${tierEmojis[step.to]} ${step.outputQty} ${this.getTierName(step.to)}</strong>
+              </div>
+            </div>
+            <div style="font-size: 12px; color: #666; display: flex; justify-content: space-between;">
+              <span>📦 ${step.needed} por merge</span>
+              <span>🔢 ${step.outputQty} merges</span>
+              <span>💰 ${step.totalCost.toFixed(4)} RLT</span>
+            </div>
           </div>
+        `;
+      });
+
+      html += `
+            </div>
+          </details>
         </div>
       `;
     });
-    
-    html += `
-        </div>
 
+    html += `
         <div style="background: #4CAF50; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px;">
           <h3 style="margin: 0 0 10px 0;">💰 CUSTO TOTAL</h3>
-          <p style="font-size: 32px; font-weight: bold; margin: 10px 0;">${totalCost.toFixed(4)} RLT</p>
+          <p style="font-size: 36px; font-weight: bold; margin: 10px 0;">${totalCost.toFixed(4)} RLT</p>
           <p style="font-size: 14px; margin: 5px 0; opacity: 0.9;">
-            Para transformar ${quantity} ${tierEmojis[startTier]} ${this.getTierName(startTier)} em ${finalQty} ${tierEmojis[finalTier]} ${this.getTierName(finalTier)}
+            Para fazer ${results.length} ${results.length === 1 ? 'peça' : 'peças'}
           </p>
         </div>
       </div>
@@ -322,89 +405,120 @@ const UI_MergeCalculator = {
         </p>
       </div>
     `;
-    
+
     resultDiv.innerHTML = html;
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 
   // ========== CALCULADORA REVERSA ==========
   calcularReverso() {
-    const partType = document.getElementById('reversePartType').value;
-    const targetTier = document.getElementById('reverseTargetTier').value;
-    const quantity = parseInt(document.getElementById('reverseQuantity').value);
-    
+    const startTier = document.getElementById('reverseStartTier').value;
+
+    // Coletar dados das peças
+    const parts = [
+      {
+        type: 'fan',
+        emoji: '🌀',
+        name: 'Fan',
+        targetTier: document.getElementById('fanTargetTier').value,
+        quantity: parseInt(document.getElementById('fanTargetQty').value) || 0
+      },
+      {
+        type: 'wire',
+        emoji: '🔌',
+        name: 'Wire',
+        targetTier: document.getElementById('wireTargetTier').value,
+        quantity: parseInt(document.getElementById('wireTargetQty').value) || 0
+      },
+      {
+        type: 'hashboard',
+        emoji: '💾',
+        name: 'Hashboard',
+        targetTier: document.getElementById('hashTargetTier').value,
+        quantity: parseInt(document.getElementById('hashTargetQty').value) || 0
+      }
+    ];
+
+    // Filtrar apenas as peças selecionadas
+    const selectedParts = parts.filter(p => p.targetTier && p.quantity > 0);
+
     const resultDiv = document.getElementById('resultadoReverso');
-    
-    // Validações
-    if (!quantity || quantity <= 0) {
+
+    // Validação
+    if (selectedParts.length === 0) {
       resultDiv.innerHTML = `
         <div class="summary-item" style="background: #ffebee; border-left: 4px solid #f44336;">
-          <h4>⚠️ Erro</h4>
-          <p>Por favor, digite uma quantidade válida!</p>
+          <h4>⚠️ Nenhuma Peça Selecionada</h4>
+          <p>Por favor, selecione pelo menos uma peça, tier e quantidade!</p>
         </div>
       `;
       return;
     }
 
-    // Calcular todas as rotas possíveis
-    const routes = this.calcularRotas(targetTier, quantity);
-    
-    // Renderizar resultado
-    this.mostrarResultadoReverso(routes, partType, targetTier, quantity);
-  },
+    // Calcular cada peça
+    const results = [];
+    let totalCost = 0;
 
-  calcularRotas(targetTier, targetQuantity) {
-    const tiers = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
-    const targetIndex = tiers.indexOf(targetTier);
-    const routes = [];
-    
-    // Para cada tier anterior ao alvo, calcular rota
-    for (let i = targetIndex - 1; i >= 0; i--) {
-      const startTier = tiers[i];
+    selectedParts.forEach(part => {
+      const route = this.calcularRota(startTier, part.targetTier, part.quantity);
       
-      // Calcular requisitos
-      let currentQty = targetQuantity;
-      let totalCost = 0;
-      const steps = [];
-      
-      // Retroceder do alvo até o tier inicial
-      for (let j = targetIndex - 1; j >= i; j--) {
-        const tierFrom = tiers[j];
-        const tierTo = tiers[j + 1];
-        const mergeInfo = this.mergeCosts[tierFrom];
-        
-        // Quantidade necessária do tier anterior
-        const neededQty = currentQty * mergeInfo.need;
-        const cost = currentQty * mergeInfo.cost;
-        
-        steps.unshift({
-          from: tierFrom,
-          to: tierTo,
-          neededQty: neededQty,
-          outputQty: currentQty,
-          cost: cost,
-          mergeCount: currentQty
+      if (route) {
+        results.push({
+          ...part,
+          route: route
         });
-        
-        totalCost += cost;
-        currentQty = neededQty;
+        totalCost += route.totalCost;
       }
-      
-      routes.push({
-        startTier: startTier,
-        startQuantity: currentQty,
-        totalCost: totalCost,
-        steps: steps
-      });
-    }
-    
-    return routes;
+    });
+
+    // Renderizar resultado
+    this.mostrarResultadoReverso(results, totalCost, startTier);
   },
 
-  mostrarResultadoReverso(routes, partType, targetTier, targetQuantity) {
+  calcularRota(startTier, targetTier, targetQty) {
+    const tiers = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+    const startIndex = tiers.indexOf(startTier);
+    const targetIndex = tiers.indexOf(targetTier);
+
+    if (startIndex === -1 || targetIndex === -1 || startIndex >= targetIndex) {
+      return null;
+    }
+
+    // Calcular requisitos (de trás pra frente)
+    let currentQty = targetQty;
+    let totalCost = 0;
+    const steps = [];
+
+    for (let i = targetIndex - 1; i >= startIndex; i--) {
+      const tierFrom = tiers[i];
+      const tierTo = tiers[i + 1];
+      const mergeInfo = this.mergeCosts[tierFrom];
+
+      const neededQty = currentQty * mergeInfo.need;
+      const cost = currentQty * mergeInfo.cost;
+
+      steps.unshift({
+        from: tierFrom,
+        to: tierTo,
+        neededQty: neededQty,
+        outputQty: currentQty,
+        cost: cost
+      });
+
+      totalCost += cost;
+      currentQty = neededQty;
+    }
+
+    return {
+      startQuantity: currentQty,
+      totalCost: totalCost,
+      steps: steps
+    };
+  },
+
+  mostrarResultadoReverso(results, totalCost, startTier) {
     const resultDiv = document.getElementById('resultadoReverso');
-    
-    const partEmojis = { fan: '🌀', wire: '🔌', hashboard: '💾' };
+
     const tierEmojis = { 
       common: '⚪', 
       uncommon: '🟢', 
@@ -412,87 +526,75 @@ const UI_MergeCalculator = {
       epic: '🟣', 
       legendary: '🟡' 
     };
-    
+
     let html = `
       <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50;">
         <h3>🎯 Requisitos para Seu Objetivo</h3>
-        
-        <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
-          <h4 style="margin: 0 0 10px 0;">Seu Objetivo:</h4>
-          <p style="font-size: 20px; font-weight: bold; color: #2196F3;">
-            ${targetQuantity}x ${tierEmojis[targetTier]} ${this.getTierName(targetTier)} ${partEmojis[partType]} ${this.capitalize(partType)}
-          </p>
-        </div>
-
-        <h4 style="margin: 20px 0 10px 0;">📋 Rotas Possíveis (escolha uma):</h4>
     `;
-    
-    // Cada rota
-    routes.forEach((route, index) => {
-      const routeNum = index + 1;
-      const efficiency = routes[0].totalCost > 0 ? ((route.totalCost / routes[0].totalCost) * 100) : 100;
-      
+
+    // Cada peça
+    results.forEach(result => {
       html += `
-        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border: 2px solid ${index === 0 ? '#4CAF50' : '#ddd'};">
+        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #2196F3;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h4 style="margin: 0;">
-              ${index === 0 ? '⭐ ' : ''}Opção ${routeNum}: Partir de ${tierEmojis[route.startTier]} ${this.getTierName(route.startTier)}
-            </h4>
-            <span style="background: ${index === 0 ? '#4CAF50' : '#FF9800'}; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
-              ${route.totalCost.toFixed(4)} RLT
-            </span>
+            <div>
+              <h4 style="margin: 0;">${result.emoji} ${result.quantity}x ${tierEmojis[result.targetTier]} ${this.getTierName(result.targetTier)} ${result.name}</h4>
+            </div>
+            <div style="text-align: right;">
+              <span style="background: #FF9800; color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+                ${result.route.totalCost.toFixed(4)} RLT
+              </span>
+            </div>
           </div>
 
           <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-            <p style="font-size: 18px; font-weight: bold; margin: 0;">
-              📦 Você precisa de: <span style="color: #2196F3;">${route.startQuantity} ${tierEmojis[route.startTier]} ${this.getTierName(route.startTier)}</span>
+            <p style="margin: 0; font-size: 16px;">
+              <strong>📦 Você precisa de:</strong> 
+              <span style="color: #2196F3; font-weight: bold; font-size: 18px;">
+                ${result.route.startQuantity} ${tierEmojis[startTier]} ${this.getTierName(startTier)} ${result.name}
+              </span>
             </p>
           </div>
 
-          <div style="font-size: 13px; color: #666;">
-            <strong>Passos:</strong>
-          </div>
-          <div style="margin: 10px 0;">
+          <details style="margin-top: 15px;">
+            <summary style="cursor: pointer; font-size: 13px; color: #666; padding: 5px;">
+              📋 Ver passos detalhados
+            </summary>
+            <div style="margin-top: 10px; padding: 15px; background: #f8f9fa; border-radius: 5px; font-size: 13px;">
     `;
-      
-      // Passos da rota
-      route.steps.forEach((step, stepIndex) => {
+
+      result.route.steps.forEach((step, index) => {
         html += `
-          <div style="display: flex; align-items: center; padding: 8px 0; ${stepIndex < route.steps.length - 1 ? 'border-bottom: 1px dashed #ddd;' : ''}">
-            <div style="flex: 1;">
-              ${tierEmojis[step.from]} ${step.neededQty} ${this.getTierName(step.from)}
-            </div>
-            <div style="padding: 0 15px; color: #2196F3; font-size: 18px;">→</div>
-            <div style="flex: 1;">
-              ${tierEmojis[step.to]} ${step.outputQty} ${this.getTierName(step.to)}
-            </div>
-            <div style="text-align: right; color: #666; font-size: 12px;">
-              ${step.cost.toFixed(4)} RLT
+          <div style="padding: 8px 0; ${index < result.route.steps.length - 1 ? 'border-bottom: 1px dashed #ddd;' : ''}">
+            <div style="display: flex; align-items: center;">
+              <div style="flex: 1;">
+                ${tierEmojis[step.from]} ${step.neededQty} ${this.getTierName(step.from)}
+              </div>
+              <div style="padding: 0 15px; color: #2196F3; font-size: 18px;">→</div>
+              <div style="flex: 1;">
+                ${tierEmojis[step.to]} ${step.outputQty} ${this.getTierName(step.to)}
+              </div>
+              <div style="text-align: right; color: #666; font-size: 12px;">
+                ${step.cost.toFixed(4)} RLT
+              </div>
             </div>
           </div>
         `;
       });
-      
-      html += `
-          </div>
 
-          ${index === 0 ? '<p style="margin: 15px 0 0 0; font-size: 12px; color: #4CAF50; font-weight: bold;">✅ Opção mais rápida!</p>' : ''}
+      html += `
+            </div>
+          </details>
         </div>
       `;
     });
-    
-    // Total comparativo
-    const cheapestRoute = routes.reduce((min, route) => route.totalCost < min.totalCost ? route : min, routes[0]);
-    
+
     html += `
         <div style="background: #2196F3; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px;">
-          <h3 style="margin: 0 0 10px 0;">💡 Melhor Opção</h3>
-          <p style="font-size: 16px; margin: 10px 0;">
-            Partir de <strong>${cheapestRoute.startQuantity} ${tierEmojis[cheapestRoute.startTier]} ${this.getTierName(cheapestRoute.startTier)}</strong>
-          </p>
-          <p style="font-size: 28px; font-weight: bold; margin: 10px 0;">${cheapestRoute.totalCost.toFixed(4)} RLT</p>
-          <p style="font-size: 13px; margin: 5px 0; opacity: 0.9;">
-            Para conseguir ${targetQuantity}x ${tierEmojis[targetTier]} ${this.getTierName(targetTier)}
+          <h3 style="margin: 0 0 10px 0;">💰 CUSTO TOTAL</h3>
+          <p style="font-size: 36px; font-weight: bold; margin: 10px 0;">${totalCost.toFixed(4)} RLT</p>
+          <p style="font-size: 14px; margin: 5px 0; opacity: 0.9;">
+            Para fazer ${results.length} ${results.length === 1 ? 'peça' : 'peças'} partindo de ${tierEmojis[startTier]} ${this.getTierName(startTier)}
           </p>
         </div>
       </div>
@@ -506,7 +608,7 @@ const UI_MergeCalculator = {
         </p>
       </div>
     `;
-    
+
     resultDiv.innerHTML = html;
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
