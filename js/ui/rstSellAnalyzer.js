@@ -117,7 +117,7 @@ const UI_RSTSellAnalyzer = {
       <!-- SEÇÃO 2: SELL ANALYZER -->
       <h3>💰 Sell Analyzer</h3>
       <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50; margin-bottom: 20px;">
-        <h4>💡 Visão Geral por Tipo de Peça (Sugestão BBJ & Edu Godinho)</h4>
+        <h4>💡 Visão Geral por Tipo de Peça </h4>
         <p style="font-size: 13px; line-height: 1.6;">
           Veja de uma vez todos os tiers e descubra quais vale a pena vender!<br>
           Sistema mostra: <strong>Mercado | Custo | Venda Mínima | Vale Vender?</strong>
