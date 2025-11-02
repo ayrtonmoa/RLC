@@ -43,11 +43,14 @@ const UI_MergeVsMarket = {
       <div class="summary-item" style="background: #fff3cd; border-left: 4px solid #ffc107; margin-bottom: 20px;">
         <h4>🔄 Atualizar Preços do Marketplace</h4>
         <p style="font-size: 13px;">Cole o conteúdo da página do marketplace para atualizar os preços automaticamente!</p>
+        <p style="font-size: 12px; color: #666; margin: 5px 0;">
+          ✅ Funciona tanto no <strong>Desktop</strong> quanto no <strong>Mobile</strong>!
+        </p>
         <ol style="font-size: 12px; line-height: 1.8; margin: 10px 0;">
           <li>Vá em <a href="https://rollercoin.com/marketplace/buy" target="_blank" style="font-weight: bold;">Marketplace > Buy > Parts</a></li>
           <li>⚠️ <strong>IMPORTANTE:</strong> Altere de <strong>12 para 24 resultados por página</strong></li>
           <li>Marque <strong>apenas "Parts"</strong> (desmarque Miners, Racks, etc)</li>
-          <li>Pressione <kbd>Ctrl+A</kbd> e <kbd>Ctrl+C</kbd></li>
+          <li>Pressione <kbd>Ctrl+A</kbd> e <kbd>Ctrl+C</kbd> (ou pressione e segure na tela no mobile)</li>
           <li>Cole abaixo e clique em "Atualizar Preços"</li>
         </ol>
         
@@ -204,23 +207,36 @@ const UI_MergeVsMarket = {
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      
+      // Detectar padrão: "Tier Part" (ex: "Common Fan", "Rare Wire")
       const match = line.match(/^(Common|Uncommon|Rare|Epic|Legendary)\s+(Fan|Wire|Hashboard)$/i);
       
       if (match) {
         const tier = tierMap[match[1]];
         const part = partMap[match[2]];
         
+        // Procurar preço nas próximas 10 linhas
         for (let j = i + 1; j < i + 10 && j < lines.length; j++) {
-          if (lines[j] === 'From' && j + 1 < lines.length) {
-            const priceMatch = lines[j + 1].match(/([\d\s.,]+)\s*RLT/i);
+          const priceLine = lines[j];
+          
+          // FORMATO MOBILE: "From: 2.152499 RLT" (tudo na mesma linha)
+          const mobileMatch = priceLine.match(/^From:\s*([\d\s.,]+)\s*RLT/i);
+          if (mobileMatch) {
+            const price = this.parsePrice(mobileMatch[1]);
+            if (price > 0) {
+              prices[tier][part] = price;
+              break;
+            }
+          }
+          
+          // FORMATO DESKTOP: "From" numa linha, preço na próxima
+          if (priceLine === 'From' && j + 1 < lines.length) {
+            const nextLine = lines[j + 1];
+            const desktopMatch = nextLine.match(/([\d\s.,]+)\s*RLT/i);
             
-            if (priceMatch) {
-              let priceStr = priceMatch[1].replace(/\s/g, '');
-              if (priceStr.includes(',') && !priceStr.includes('.')) {
-                priceStr = priceStr.replace(',', '.');
-              }
-              const price = parseFloat(priceStr);
-              if (!isNaN(price) && price > 0) {
+            if (desktopMatch) {
+              const price = this.parsePrice(desktopMatch[1]);
+              if (price > 0) {
                 prices[tier][part] = price;
                 break;
               }
@@ -230,6 +246,7 @@ const UI_MergeVsMarket = {
       }
     }
     
+    // Validar se todos os preços foram encontrados
     let missing = [];
     Object.keys(prices).forEach(tier => {
       Object.keys(prices[tier]).forEach(part => {
@@ -244,6 +261,26 @@ const UI_MergeVsMarket = {
     }
     
     return prices;
+  },
+
+  parsePrice(priceStr) {
+    // Remove espaços
+    priceStr = priceStr.replace(/\s/g, '');
+    
+    // Converter vírgula para ponto
+    if (priceStr.includes(',') && !priceStr.includes('.')) {
+      priceStr = priceStr.replace(',', '.');
+    } else if (priceStr.includes('.') && priceStr.includes(',')) {
+      // Se tem ambos, último é decimal
+      if (priceStr.lastIndexOf(',') > priceStr.lastIndexOf('.')) {
+        priceStr = priceStr.replace(/\./g, '').replace(',', '.');
+      } else {
+        priceStr = priceStr.replace(/,/g, '');
+      }
+    }
+    
+    const price = parseFloat(priceStr);
+    return (!isNaN(price) && price > 0) ? price : 0;
   },
 
   mostrarPrecosAtuais() {
