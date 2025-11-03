@@ -602,18 +602,6 @@ calcular: function(miners, userData) {
     html += '<th>Info</th>'; // NOVA COLUNA para dados extras
     html += '</tr>';
     
-    for (let i = 0; i < miners.length; i++) {
-      const m = miners[i];
-      const cor = i < 5 ? 'high-impact' : (i < 15 ? 'medium-impact' : '');
-      
-      const emoji = {
-        'Common': '⚪',
-        'Uncommon': '🟢',
-        'Rare': '🔵',
-        'Epic': '🟣',
-        'Legendary': '🟡',
-        'Unreal': '🔴'
-      }[m.level] || '❓';
       
       for (let i = 0; i < miners.length; i++) {
   const m = miners[i];
@@ -658,7 +646,7 @@ calcular: function(miners, userData) {
   html += '<td>' + infoIcon + '</td>';
   html += '</tr>';
 }
-    }
+    
     
     html += '</table></div>';
     html += '</div>';
