@@ -1,27 +1,25 @@
-// js/ui/inventario.js - Versão Completa e Corrigida
+// js/ui/inventario.js - Versão com APIData Integrado - FINAL CORRIGIDA
 
 const UI_Inventario = {
   currentSort: { column: 'impacto', direction: 'desc' },
   currentFilter: 'all', // 'all', 'nao_possui', 'possui_outra', 'possui_exata'
   instaladaSort: { column: 'impacto', direction: 'asc' }, // Para miners instaladas (mais fracas primeiro)
   
-  mostrar: function(user) {
+mostrar: function(user) {
     const div = document.getElementById('inventario');
     div.innerHTML = `
       <h2>Inventário</h2>
       
       <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50;">
         <h4>💡 Como Usar</h4>
-        <p>1. Vá em <a href="https://rollercoin.com/storage/inventory/miners" target="_blank" style="color: #007bff; font-weight: bold; text-decoration: underline;">Storage > Miners no RollerCoin 🔗</a></p>
+        <p>1. Vá em <a href="https://rollercoin.com/storage/inventory/miners" target="_blank">Storage > Miners no RollerCoin</a></p>
         <p>2. Clique "Load more" até carregar tudo</p>
-        <p>3. Ctrl+A para selecionar, Ctrl+C para copiar</p>
+        <p>3. Ctrl+A, Ctrl+C para copiar</p>
         <p>4. Cole abaixo e clique em Analisar</p>
-        <p style="font-size: 12px; color: #666; margin-top: 10px;">💡 <strong>Debug:</strong> Pressione F12 para ver logs detalhados</p>
       </div>
 
       <textarea id="inventarioText" rows="8" placeholder="Cole aqui..." style="width: 100%; padding: 10px; margin: 15px 0;"></textarea>
       <button onclick="UI_Inventario.analisar()">🔍 Analisar Inventário</button>
-      <button onclick="UI_Inventario.debugParsing()" style="background: #6c757d;">🐛 Debug Parsing</button>
       
       <div id="resultadoInventario" style="margin-top: 20px;"></div>
     `;
@@ -42,11 +40,16 @@ const UI_Inventario = {
       return;
     }
 
+    if (typeof APIData === 'undefined' || !APIData.miners) {
+      resultDiv.innerHTML = '<p class="error">❌ APIData não carregado!</p>';
+      return;
+    }
+
     try {
       const minersAgrupadas = this.extrair(texto);
       
       if (minersAgrupadas.length === 0) {
-        resultDiv.innerHTML = '<p class="warning">Nenhuma miner encontrada. Copiou da página certa? <a href="https://rollercoin.com/storage/inventory/miners" target="_blank">Clique aqui</a></p>';
+        resultDiv.innerHTML = '<p class="warning">Nenhuma miner encontrada.</p>';
         return;
       }
 
@@ -68,234 +71,261 @@ const UI_Inventario = {
     return fracas.sort((a, b) => a.impact - b.impact);
   },
   
-  extrair: function(texto) {
-    const miners = [];
-    const linhas = texto.split('\n').map(l => l.trim()).filter(l => l);
+extrair: function(texto) {
+  const miners = [];
+  const linhas = texto.split('\n').map(l => l.trim()).filter(l => l);
+  
+  console.log('📋 Total de linhas:', linhas.length);
+  console.log('🎯 APIData disponível:', typeof APIData !== 'undefined' && APIData.miners ? 'SIM' : 'NÃO');
+  
+  for (let i = 0; i < linhas.length; i++) {
+    if (linhas[i + 1] !== 'Set') continue;
     
-    console.log('📋 Total de linhas:', linhas.length);
+    const nome = linhas[i];
+    let cells = 2, power = 0, bonus = 0, quantity = 1, level = 'Unknown';
     
-    for (let i = 0; i < linhas.length; i++) {
-      if (linhas[i + 1] !== 'Set') continue;
+    console.log('\n🔍 Processando:', nome);
+    
+    const blocoCompleto = linhas.slice(i, Math.min(i + 40, linhas.length)).join(' | ');
+    console.log('  📄 Bloco completo:', blocoCompleto);
+    
+    for (let j = i; j < i + 40 && j < linhas.length; j++) {
+      const linha = linhas[j];
+      const linhaLower = linha.toLowerCase().trim();
+      const linhaSemEspacos = linha.replace(/\s+/g, '').toLowerCase();
       
-      const nome = linhas[i];
-      let cells = 2, power = 0, bonus = 0, quantity = 1, level = 'Unknown';
-      
-      console.log('\n🔍 Processando:', nome);
-      
-      const blocoCompleto = linhas.slice(i, Math.min(i + 40, linhas.length)).join(' | ');
-      console.log('  📄 Bloco completo:', blocoCompleto);
-      
-      for (let j = i; j < i + 40 && j < linhas.length; j++) {
-        const linha = linhas[j];
-        const linhaLower = linha.toLowerCase().trim();
-        const linhaSemEspacos = linha.replace(/\s+/g, '').toLowerCase();
+      if (level === 'Unknown') {
+        if (linha === 'Common') level = 'Common';
+        else if (linha === 'Uncommon') level = 'Uncommon';
+        else if (linha === 'Rare') level = 'Rare';
+        else if (linha === 'Epic') level = 'Epic';
+        else if (linha === 'Legendary') level = 'Legendary';
+        else if (linha === 'Unreal') level = 'Unreal';
+        else if (/^common$/i.test(linha)) level = 'Common';
+        else if (/^uncommon$/i.test(linha)) level = 'Uncommon';
+        else if (/^rare$/i.test(linha)) level = 'Rare';
+        else if (/^epic$/i.test(linha)) level = 'Epic';
+        else if (/^legendary$/i.test(linha)) level = 'Legendary';
+        else if (/^unreal$/i.test(linha)) level = 'Unreal';
+        else if (linhaLower.includes('epic') && !linhaLower.includes('set')) level = 'Epic';
+        else if (linhaLower.includes('legendary') && !linhaLower.includes('set')) level = 'Legendary';
+        else if (linhaLower.includes('unreal') && !linhaLower.includes('set')) level = 'Unreal';
+        else if (linhaLower.includes('rare') && !linhaLower.includes('set') && !linhaLower.includes('rare set')) level = 'Rare';
+        else if (linhaLower.includes('uncommon') && !linhaLower.includes('set')) level = 'Uncommon';
+        else if (linhaLower.includes('common') && !linhaLower.includes('uncommon') && !linhaLower.includes('set')) level = 'Common';
+        else if (linhaSemEspacos === 'epic') level = 'Epic';
+        else if (linhaSemEspacos === 'legendary') level = 'Legendary';
+        else if (linhaSemEspacos === 'unreal') level = 'Unreal';
+        else if (linhaSemEspacos === 'rare') level = 'Rare';
+        else if (linhaSemEspacos === 'uncommon') level = 'Uncommon';
+        else if (linhaSemEspacos === 'common') level = 'Common';
         
-        if (level === 'Unknown') {
-          if (linha === 'Common') level = 'Common';
-          else if (linha === 'Uncommon') level = 'Uncommon';
-          else if (linha === 'Rare') level = 'Rare';
-          else if (linha === 'Epic') level = 'Epic';
-          else if (linha === 'Legendary') level = 'Legendary';
-          else if (linha === 'Unreal') level = 'Unreal';
-          else if (/^common$/i.test(linha)) level = 'Common';
-          else if (/^uncommon$/i.test(linha)) level = 'Uncommon';
-          else if (/^rare$/i.test(linha)) level = 'Rare';
-          else if (/^epic$/i.test(linha)) level = 'Epic';
-          else if (/^legendary$/i.test(linha)) level = 'Legendary';
-          else if (/^unreal$/i.test(linha)) level = 'Unreal';
-          else if (linhaLower.includes('epic') && !linhaLower.includes('set')) level = 'Epic';
-          else if (linhaLower.includes('legendary') && !linhaLower.includes('set')) level = 'Legendary';
-          else if (linhaLower.includes('unreal') && !linhaLower.includes('set')) level = 'Unreal';
-          else if (linhaLower.includes('rare') && !linhaLower.includes('set') && !linhaLower.includes('rare set')) level = 'Rare';
-          else if (linhaLower.includes('uncommon') && !linhaLower.includes('set')) level = 'Uncommon';
-          else if (linhaLower.includes('common') && !linhaLower.includes('uncommon') && !linhaLower.includes('set')) level = 'Common';
-          else if (linhaSemEspacos === 'epic') level = 'Epic';
-          else if (linhaSemEspacos === 'legendary') level = 'Legendary';
-          else if (linhaSemEspacos === 'unreal') level = 'Unreal';
-          else if (linhaSemEspacos === 'rare') level = 'Rare';
-          else if (linhaSemEspacos === 'uncommon') level = 'Uncommon';
-          else if (linhaSemEspacos === 'common') level = 'Common';
-          
-          if (j < linhas.length - 1) {
-            const duasLinhas = (linha + linhas[j + 1]).toLowerCase().replace(/\s+/g, '');
-            if (duasLinhas.includes('epic') && !duasLinhas.includes('set')) level = 'Epic';
-            else if (duasLinhas.includes('legendary') && !duasLinhas.includes('set')) level = 'Legendary';
-            else if (duasLinhas.includes('unreal') && !duasLinhas.includes('set')) level = 'Unreal';
-          }
-          
-          if (level !== 'Unknown') {
-            console.log('  ✅ Level detectado:', level, '(linha ' + j + ':', linha + ')');
-          }
+        if (j < linhas.length - 1) {
+          const duasLinhas = (linha + linhas[j + 1]).toLowerCase().replace(/\s+/g, '');
+          if (duasLinhas.includes('epic') && !duasLinhas.includes('set')) level = 'Epic';
+          else if (duasLinhas.includes('legendary') && !duasLinhas.includes('set')) level = 'Legendary';
+          else if (duasLinhas.includes('unreal') && !duasLinhas.includes('set')) level = 'Unreal';
         }
         
-        const cellsMatch = linha.match(/^(\d+)\s+Cells?$/i);
-        if (cellsMatch) {
-          cells = parseInt(cellsMatch[1]);
-          console.log('  📦 Células:', cells);
-        }
-        
-        if (linha === 'Power' || linha === 'power') {
-          const powerLine = linhas[j + 1];
-          const match = powerLine.match(/([\d\s.,]+)\s*(Eh\/s|Ph\/s|Th\/s|Gh\/s|Mh\/s)/i);
-          if (match) {
-            let numberStr = match[1].replace(/\s/g, ''); // Remove espaços
-            
-            // CORREÇÃO: Detectar se ponto/vírgula é decimal ou milhar
-            const temPonto = numberStr.includes('.');
-            const temVirgula = numberStr.includes(',');
-            
-            if (temPonto && temVirgula) {
-              // Ambos: último é decimal
-              const ultimoPonto = numberStr.lastIndexOf('.');
-              const ultimaVirgula = numberStr.lastIndexOf(',');
-              
-              if (ultimaVirgula > ultimoPonto) {
-                // "1.234,56" → "1234.56"
-                numberStr = numberStr.replace(/\./g, '').replace(',', '.');
-              } else {
-                // "1,234.56" → "1234.56"
-                numberStr = numberStr.replace(/,/g, '');
-              }
-            } else if (temVirgula) {
-              // Só vírgula: decimal em pt-BR
-              // "3,14" → "3.14"
-              numberStr = numberStr.replace(',', '.');
-            } else if (temPonto) {
-              // Só ponto: verificar se é decimal ou milhar
-              const partes = numberStr.split('.');
-              
-              if (partes.length === 2 && partes[1].length === 3 && partes[0].length > 3) {
-                // "12.345" (5+ dígitos, 3 após ponto) → milhar
-                numberStr = numberStr.replace('.', '');
-              }
-              // Senão: "5.513" → mantém como decimal (4 dígitos)
-            }
-            
-            power = parseFloat(numberStr);
-            const unit = match[2].toLowerCase();
-            
-            console.log('  📝 Original:', match[1], '→ Processado:', numberStr, '→ Valor:', power);
-            
-            // CORREÇÃO: Converter para GH/s (mesma unidade da API)
-            if (unit.includes('eh')) power *= 1000000000; // Eh → GH
-            else if (unit.includes('ph')) power *= 1000000;  // Ph → GH
-            else if (unit.includes('th')) power *= 1000;     // Th → GH
-            else if (unit.includes('gh')) power *= 1;        // GH → GH (já está)
-            else if (unit.includes('mh')) power *= 0.001;    // Mh → GH
-            
-            console.log('  ⚡ Power:', power.toFixed(3), 'GH/s (original:', powerLine + ')');
-          }
-        }
-        
-        if (linha === 'Bonus' || linha === 'bonus') {
-          const bonusLine = linhas[j + 1];
-          const match = bonusLine.match(/([\d.,]+)/);
-          if (match) {
-            bonus = parseFloat(match[1].replace(',', '.'));
-            console.log('  💎 Bonus:', bonus + '%');
-          }
-        }
-        
-        if (linha === 'Quantity:' && linhas[j + 1].match(/^\d+$/)) {
-          quantity = parseInt(linhas[j + 1]);
-          console.log('  🔢 Quantity:', quantity);
-          break;
+        if (level !== 'Unknown') {
+          console.log('  ✅ Level detectado:', level, '(linha ' + j + ':', linha + ')');
         }
       }
       
-      if (power > 0) {
-        console.log('  ✅ ADICIONADA:', { nome, level, cells, power: power.toFixed(3) + ' GH/s', bonus, quantity });
-        miners.push({ 
-          name: nome, 
-          cells: cells, 
-          power: power, // Em GH/s (mesma unidade da API)
-          bonus: bonus, 
-          quantity: quantity, 
-          level: level 
-        });
-      } else {
-        console.log('  ❌ IGNORADA (power = 0)');
+      const cellsMatch = linha.match(/^(\d+)\s+Cells?$/i);
+      if (cellsMatch) {
+        cells = parseInt(cellsMatch[1]);
+        console.log('  📦 Células:', cells);
+      }
+      
+      if (linha === 'Power' || linha === 'power') {
+        const powerLine = linhas[j + 1];
+        const match = powerLine.match(/([\d\s.,]+)\s*(Eh\/s|Ph\/s|Th\/s|Gh\/s|Mh\/s)/i);
+        if (match) {
+          let numberStr = match[1].replace(/\s/g, '');
+          
+          const temPonto = numberStr.includes('.');
+          const temVirgula = numberStr.includes(',');
+          
+          if (temPonto && temVirgula) {
+            const ultimoPonto = numberStr.lastIndexOf('.');
+            const ultimaVirgula = numberStr.lastIndexOf(',');
+            
+            if (ultimaVirgula > ultimoPonto) {
+              numberStr = numberStr.replace(/\./g, '').replace(',', '.');
+            } else {
+              numberStr = numberStr.replace(/,/g, '');
+            }
+          } else if (temVirgula) {
+            numberStr = numberStr.replace(',', '.');
+          } else if (temPonto) {
+            const partes = numberStr.split('.');
+            
+            if (partes.length === 2 && partes[1].length === 3 && partes[0].length > 3) {
+              numberStr = numberStr.replace('.', '');
+            }
+          }
+          
+          power = parseFloat(numberStr);
+          const unit = match[2].toLowerCase();
+          
+          console.log('  📝 Original:', match[1], '→ Processado:', numberStr, '→ Valor:', power);
+          
+          if (unit.includes('eh')) power *= 1000000000;
+          else if (unit.includes('ph')) power *= 1000000;
+          else if (unit.includes('th')) power *= 1000;
+          else if (unit.includes('gh')) power *= 1;
+          else if (unit.includes('mh')) power *= 0.001;
+          
+          console.log('  ⚡ Power:', power.toFixed(3), 'GH/s (original:', powerLine + ')');
+        }
+      }
+      
+      if (linha === 'Bonus' || linha === 'bonus') {
+        const bonusLine = linhas[j + 1];
+        const match = bonusLine.match(/([\d.,]+)/);
+        if (match) {
+          bonus = parseFloat(match[1].replace(',', '.'));
+          console.log('  💎 Bonus:', bonus + '%');
+        }
+      }
+      
+      if (linha === 'Quantity:' && linhas[j + 1].match(/^\d+$/)) {
+        quantity = parseInt(linhas[j + 1]);
+        console.log('  🔢 Quantity:', quantity);
+        break;
       }
     }
     
-    console.log('\n📊 RESULTADO FINAL:', miners.length, 'miners extraídas');
-    return miners;
-  },
+if (power > 0) {
+  let levelCorrigido = level; // Usa o que pegou do texto (se houver)
+  let catalogData = null;
   
-  calcular: function(miners, userData) {
-    const baseAtual = userData.roomData.miners.reduce((s, m) => s + m.power, 0);
-    const bonusPercentualAtual = userData.powerData.bonus_percent / 10000;
-    const totalAtual = userData.powerData.current_power;
+  if (typeof APIData !== 'undefined' && APIData.miners) {
+    catalogData = APIData.findByNameAndPower(nome, power);
     
-    console.log('🔍 Iniciando verificação de miners instaladas...');
-    console.log('   ⚠️ IMPORTANTE: Valores em GH/s (API) vs GH/s (inventário)');
-    
-    return miners.map(m => {
-      // Verificar se já possui
-      let jaPossui = false;
-      let minerInstalada = null;
-      let tipoMatch = null;
-      let levelDetectado = m.level;
-      
-      const nomeInventario = m.name.toLowerCase().trim();
-      const powerInventario = m.power;
-      
-      const minersComMesmoNome = userData.roomData.miners.filter(mi => 
-        mi.name.toLowerCase().trim() === nomeInventario
-      );
-      
-      if (minersComMesmoNome.length > 0) {
-        console.log('  📦', m.name, '→ Encontrei', minersComMesmoNome.length, 'com mesmo nome');
-        
-        // CORREÇÃO: Tolerância de 0.1% para GH/s (mínimo 1 GH/s)
-        const tolerancia = Math.max(1, powerInventario * 0.001);
-        console.log('    🔍 Tolerância:', tolerancia.toFixed(3), 'GH/s');
-        
-        const minerComMesmoPower = minersComMesmoNome.find(mi => {
-          const diferenca = Math.abs(mi.power - powerInventario);
-          console.log('    🔢 Comparando:', mi.power.toFixed(3), 'GH/s vs', powerInventario.toFixed(3), 'GH/s → Diff:', diferenca.toFixed(3), 'GH/s');
-          return diferenca < tolerancia;
-        });
-        
-        if (minerComMesmoPower) {
-          jaPossui = true;
-          minerInstalada = minerComMesmoPower;
-          tipoMatch = 'exato';
-          levelDetectado = minerComMesmoPower.level_label;
-          console.log('    ✅ MATCH EXATO! Level:', levelDetectado);
-        } else {
-          jaPossui = false;
-          minerInstalada = minersComMesmoNome[0];
-          tipoMatch = 'nome_diferente_tier';
-          levelDetectado = 'Unknown (diferente de ' + minerInstalada.level_label + ')';
-          console.log('    ⚠️ Mesmo nome, mas tier diferente!');
-        }
-      } else {
-        console.log('  ❌', m.name, '→ NÃO possui');
+if (catalogData) {
+  // 1. Se tem rarityGroup, usa ele (miners normais)
+  if (catalogData.rarityGroup?.title) {
+    levelCorrigido = catalogData.rarityGroup.title;
+  } 
+  // 2. Se é basic, mostrar como Common
+  else if (catalogData.type === 'basic') {
+    levelCorrigido = 'Common';
+  } 
+  // 3. Se é merge, mapear level → raridade
+  else if (catalogData.type === 'merge') {
+    const rarityMap = {
+      0: 'Common',      // Não deveria existir, mas por segurança
+      1: 'Uncommon',
+      2: 'Rare',
+      3: 'Epic',
+      4: 'Legendary',
+      5: 'Unreal'
+    };
+    levelCorrigido = rarityMap[catalogData.level] || 'Unknown';
+    console.log('  ✅ Merge level', catalogData.level, '→', levelCorrigido);
+  } 
+  else {
+    levelCorrigido = 'Unknown';
+  }
+}else {
+      console.log('  ❌ NÃO encontrado no APIData. Power:', power.toFixed(3), 'GH/s');
+      // Mantém o level do texto
+      if (level !== 'Unknown') {
+        levelCorrigido = level;
       }
+    }
+  }
+  
+  miners.push({ 
+    name: nome, 
+    cells: cells, 
+    power: power,
+    bonus: bonus, 
+    quantity: quantity, 
+    level: levelCorrigido,
+    catalogData: catalogData
+  });
+} else {
+      console.log('  ❌ IGNORADA (power = 0)');
+    }
+  }
+  
+  console.log('\n📊 RESULTADO FINAL:', miners.length, 'miners extraídas');
+  
+  const totalUnknown = miners.filter(m => m.level === 'Unknown').length;
+  const totalComCatalog = miners.filter(m => m.catalogData !== null).length;
+  console.log('📈 Estatísticas:');
+  console.log('  - Com dados do catálogo:', totalComCatalog, '(' + ((totalComCatalog/miners.length)*100).toFixed(1) + '%)');
+  console.log('  - Ainda com "Unknown":', totalUnknown, '(' + ((totalUnknown/miners.length)*100).toFixed(1) + '%)');
+  
+  return miners;
+},
+  
+calcular: function(miners, userData) {
+  const baseAtual = userData.roomData.miners.reduce((s, m) => s + m.power, 0);
+  const bonusPercentualAtual = userData.powerData.bonus_percent / 10000;
+  const totalAtual = userData.powerData.current_power;
+  
+  return miners.map(m => {
+    // Verificar se já possui (silenciosamente)
+    let jaPossui = false;
+    let minerInstalada = null;
+    let tipoMatch = null;
+    
+    const nomeInventario = m.name.toLowerCase().trim();
+    const powerInventario = m.power;
+    
+    const minersComMesmoNome = userData.roomData.miners.filter(mi => 
+      mi.name.toLowerCase().trim() === nomeInventario
+    );
+    
+    if (minersComMesmoNome.length > 0) {
+      const tolerancia = Math.max(1, powerInventario * 0.001);
       
-      // CALCULAR GANHO PELA SOMA DIRETA (igual fizemos no calculations.js)
-      const ganhoBase = m.power;
-      const ganhoBonusQueReceberá = m.power * bonusPercentualAtual;
-      const ganhoBonusDeColecao = jaPossui ? 0 : (baseAtual * (m.bonus / 100));
+      const minerComMesmoPower = minersComMesmoNome.find(mi => {
+        const diferenca = Math.abs(mi.power - powerInventario);
+        return diferenca < tolerancia;
+      });
       
-      // Ganho total = soma dos ganhos
-      const impacto = ganhoBase + ganhoBonusQueReceberá + ganhoBonusDeColecao;
-      
-      return { 
-        name: m.name,
-        cells: m.cells,
-        power: m.power,
-        bonus: m.bonus,
-        level: levelDetectado,
-        quantity: m.quantity,
-        impacto: impacto,
-        jaPossui: jaPossui,
-        minerInstalada: minerInstalada,
-        tipoMatch: tipoMatch
-      };
-    }).sort((a, b) => b.impacto - a.impacto);
-  },
+      if (minerComMesmoPower) {
+        jaPossui = true;
+        minerInstalada = minerComMesmoPower;
+        tipoMatch = 'exato';
+      } else {
+        jaPossui = false;
+        minerInstalada = minersComMesmoNome[0];
+        tipoMatch = 'nome_diferente_tier';
+      }
+    }
+    
+    // Calcular impacto
+    const ganhoBase = m.power;
+    const ganhoBonusQueReceberá = m.power * bonusPercentualAtual;
+    const ganhoBonusDeColecao = jaPossui ? 0 : (baseAtual * (m.bonus / 100));
+    const impacto = ganhoBase + ganhoBonusQueReceberá + ganhoBonusDeColecao;
+    
+    return { 
+      name: m.name,
+      cells: m.cells,
+      power: m.power,
+      bonus: m.bonus,
+      level: m.level, // ✅ Mantém o level ORIGINAL do inventário!
+      quantity: m.quantity,
+      impacto: impacto,
+      jaPossui: jaPossui,
+      minerInstalada: minerInstalada,
+      tipoMatch: tipoMatch,
+      description: m.catalogData?.description,
+      collection: m.catalogData?.collectionDescription,
+      supply: m.catalogData?.supply,
+      canBeSold: m.catalogData?.canBeSold,
+      rarityGroup: m.catalogData?.rarityGroup,
+      catalogData: m.catalogData
+    };
+  }).sort((a, b) => b.impacto - a.impacto);
+},
   
   mostrarResultado: function(miners, minersFracas) {
     const div = document.getElementById('resultadoInventario');
@@ -474,8 +504,21 @@ const UI_Inventario = {
     
     console.log('🏠 Espaço: Total=' + capacidadeTotal + ', Ocupado=' + celulasOcupadas + ', Livre=' + espacoLivre);
     
+    // NOVO: Estatísticas do catálogo
+    const comCatalogo = miners.filter(m => m.catalogData).length;
+    const semCatalogo = miners.length - comCatalogo;
+    
     let html = '<h3>📦 ' + totalUnidades + ' unidades encontradas (' + minersUnicas + ' miners únicas)</h3>';
     html += '<p style="font-size: 12px; color: #666;">Miners agrupadas por tipo | Mostrando: ' + miners.length + ' miners</p>';
+    
+    // NOVO: Info do catálogo
+    if (typeof APIData !== 'undefined' && APIData.miners) {
+      html += '<p style="font-size: 12px; color: #28a745;">✅ Catálogo: ' + comCatalogo + ' miners com dados completos';
+      if (semCatalogo > 0) {
+        html += ' | ⚠️ ' + semCatalogo + ' não encontradas no catálogo';
+      }
+      html += '</p>';
+    }
     
     // FILTROS
     html += '<div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">';
@@ -549,13 +592,14 @@ const UI_Inventario = {
     html += '<table style="font-size: 11px; width: 100%;"><tr>';
     html += '<th>#</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'nome\')" style="cursor: pointer;">Nome ' + (this.currentSort.column === 'nome' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'level\')" style="cursor: pointer;">Lvl Inv ' + (this.currentSort.column === 'level' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+    html += '<th onclick="UI_Inventario.ordenar(\'level\')" style="cursor: pointer;">Lvl ' + (this.currentSort.column === 'level' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'quantity\')" style="cursor: pointer;">Qty ' + (this.currentSort.column === 'quantity' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'cells\')" style="cursor: pointer;">Cél ' + (this.currentSort.column === 'cells' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'power\')" style="cursor: pointer;">Power ' + (this.currentSort.column === 'power' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'bonus\')" style="cursor: pointer;">Bônus ' + (this.currentSort.column === 'bonus' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'impacto\')" style="cursor: pointer;">Ganho ' + (this.currentSort.column === 'impacto' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'status\')" style="cursor: pointer;">Status ' + (this.currentSort.column === 'status' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+    html += '<th>Info</th>'; // NOVA COLUNA para dados extras
     html += '</tr>';
     
     for (let i = 0; i < miners.length; i++) {
@@ -571,35 +615,49 @@ const UI_Inventario = {
         'Unreal': '🔴'
       }[m.level] || '❓';
       
-      let statusText = '';
-      if (m.jaPossui && m.tipoMatch === 'exato') {
-        statusText = '<span style="color: #666; font-size: 10px;">✔ Possui<br>' + emoji + ' ' + m.level + '</span>';
-      } else if (m.tipoMatch === 'nome_diferente_tier' && m.minerInstalada) {
-        const emojiInstalada = {
-          'Common': '⚪',
-          'Uncommon': '🟢',
-          'Rare': '🔵',
-          'Epic': '🟣',
-          'Legendary': '🟡',
-          'Unreal': '🔴'
-        }[m.minerInstalada.level_label] || '❓';
-        
-        statusText = '<span style="color: #ff9800; font-weight: bold; font-size: 10px;">⚠️ Tem<br>' + emojiInstalada + ' ' + m.minerInstalada.level_label + '</span>';
-      } else {
-        statusText = '<span style="color: #999; font-size: 10px;">✗ Não<br>possui</span>';
-      }
-      
-      html += '<tr class="' + cor + '">';
-      html += '<td>' + (i + 1) + '</td>';
-      html += '<td><strong>' + m.name + '</strong></td>';
-      html += '<td>' + emoji + ' ' + m.level + '</td>';
-      html += '<td><strong>' + m.quantity + '</strong></td>';
-      html += '<td>' + m.cells + '</td>';
-      html += '<td>' + Utils.formatPower(m.power * 1e9) + '</td>';
-      html += '<td>' + m.bonus.toFixed(2) + '%</td>';
-      html += '<td><strong>' + Utils.formatPower(m.impacto * 1e9) + '</strong></td>';
-      html += '<td>' + statusText + '</td>';
-      html += '</tr>';
+      for (let i = 0; i < miners.length; i++) {
+  const m = miners[i];
+  const cor = i < 5 ? 'high-impact' : (i < 15 ? 'medium-impact' : '');
+  
+  // ✅ CORREÇÃO: Simplificado e seguro
+  const emojiMap = {
+    'Basic': '⚫',
+    'Common': '⚪',
+    'Uncommon': '🟢',
+    'Rare': '🔵',
+    'Epic': '🟣',
+    'Legendary': '🟡',
+    'Unreal': '🔴'
+  };
+  
+  const nivel = m.level || 'Unknown';
+  const emoji = nivel.startsWith('Merge') ? '🔀' : (emojiMap[nivel] || '❓');
+  
+  // ✅ Status simplificado
+  const statusText = m.jaPossui 
+    ? '<span style="color: #28a745;">✔ Possui</span>'
+    : '<span style="color: #999;">✗ Não possui</span>';
+  
+  // Tooltip
+  let infoIcon = '';
+  if (m.catalogData) {
+    const tooltipText = 'Supply: ' + (m.supply || 0).toLocaleString() + ' | Coleção: ' + (m.collection || 'N/A');
+    infoIcon = '<span title="' + tooltipText + '" style="cursor: help;">ℹ️</span>';
+  }
+  
+  html += '<tr class="' + cor + '">';
+  html += '<td>' + (i + 1) + '</td>';
+  html += '<td><strong>' + m.name + '</strong></td>';
+  html += '<td>' + emoji + ' ' + nivel + '</td>';
+  html += '<td><strong>' + m.quantity + '</strong></td>';
+  html += '<td>' + m.cells + '</td>';
+  html += '<td>' + Utils.formatPower(m.power * 1e9) + '</td>';
+  html += '<td>' + m.bonus.toFixed(2) + '%</td>';
+  html += '<td><strong>' + Utils.formatPower(m.impacto * 1e9) + '</strong></td>';
+  html += '<td>' + statusText + '</td>';
+  html += '<td>' + infoIcon + '</td>';
+  html += '</tr>';
+}
     }
     
     html += '</table></div>';
@@ -627,6 +685,7 @@ const UI_Inventario = {
     html += '<li><strong>Filtros:</strong> Use os botões para filtrar por status</li>';
     html += '<li><strong>Qty:</strong> Quantidade no inventário</li>';
     html += '<li><strong>Ganho:</strong> Impacto de instalar UMA unidade</li>';
+    html += '<li><strong>Info (ℹ️):</strong> Passe o mouse para ver supply, coleção, etc</li>';
     html += '<li>Clique nos <strong>cabeçalhos</strong> (↕️) para ordenar</li>';
     html += '</ul>';
     html += '</div>';
@@ -732,10 +791,11 @@ const UI_Inventario = {
     if (resultado.length > 0) {
       html += '<div style="background: white; padding: 15px; margin: 15px 0; border-radius: 5px; border: 1px solid #ddd;">';
       html += '<h4>📊 Miners Extraídas:</h4>';
-      html += '<table style="width: 100%; font-size: 11px;"><tr><th>#</th><th>Nome</th><th>Level</th><th>Cells</th><th>Power (GH/s)</th><th>Bonus</th><th>Qty</th></tr>';
+      html += '<table style="width: 100%; font-size: 11px;"><tr><th>#</th><th>Nome</th><th>Level</th><th>Cells</th><th>Power (GH/s)</th><th>Bonus</th><th>Qty</th><th>Catálogo</th></tr>';
       
       resultado.forEach((m, i) => {
         const corLinha = m.level === 'Unknown' ? 'background: #ffebee;' : '';
+        const temCatalogo = m.catalogData ? '✅' : '❌';
         html += '<tr style="' + corLinha + '">';
         html += '<td>' + (i + 1) + '</td>';
         html += '<td><strong>' + m.name + '</strong></td>';
@@ -744,12 +804,21 @@ const UI_Inventario = {
         html += '<td>' + m.power.toFixed(3) + '</td>';
         html += '<td>' + m.bonus.toFixed(2) + '%</td>';
         html += '<td>' + m.quantity + '</td>';
+        html += '<td>' + temCatalogo + '</td>';
         html += '</tr>';
       });
       
       html += '</table>';
       
       const unknownCount = resultado.filter(m => m.level === 'Unknown').length;
+      const catalogCount = resultado.filter(m => m.catalogData).length;
+      
+      html += '<div style="background: #e8f5e8; padding: 10px; margin-top: 10px; border-radius: 5px; border-left: 4px solid #4CAF50;">';
+      html += '<strong>📊 Estatísticas:</strong><br>';
+      html += '✅ Com dados do catálogo: ' + catalogCount + ' (' + ((catalogCount/resultado.length)*100).toFixed(1) + '%)<br>';
+      html += '❌ Ainda com "Unknown": ' + unknownCount + ' (' + ((unknownCount/resultado.length)*100).toFixed(1) + '%)';
+      html += '</div>';
+      
       if (unknownCount > 0) {
         html += '<div style="background: #fff3cd; padding: 10px; margin-top: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">';
         html += '<strong>⚠️ ' + unknownCount + ' miners com tier "Unknown"</strong><br>';
@@ -769,4 +838,4 @@ const UI_Inventario = {
 };
 
 window.UI_Inventario = UI_Inventario;
-console.log('✅ UI_Inventario loaded');
+console.log('✅ UI_Inventario v2 FINAL (with APIData) loaded');

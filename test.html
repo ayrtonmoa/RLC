@@ -1,129 +1,141 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teste de Módulos - RollerCoin Analyzer</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 50px auto;
-      padding: 20px;
-      background: #f4f4f4;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .module {
-      background: white;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .ok {
-      color: green;
-      font-weight: bold;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-    }
-    .info {
-      background: #e3f2fd;
-      padding: 15px;
-      border-left: 4px solid #2196F3;
-      margin: 20px 0;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Miners</title>
+    <style>
+        /* Estilos básicos para a página */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #1a2b4d;
+        }
+
+        /* O contêiner do catálogo - usando Grid Layout */
+        #miner-catalog {
+            display: grid;
+            /* Cria colunas automáticas que tentam ter 220px, mas podem encolher ou esticar */
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px; /* Espaço entre os cards */
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        /* Estilo de cada "Card" de minerador */
+        .miner-card {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            padding: 16px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .miner-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        /* Estilo da imagem do minerador */
+        .miner-card img {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 12px;
+        }
+
+        /* Estilo do nome do minerador */
+        .miner-card h3 {
+            font-size: 1.1rem;
+            color: #000;
+            margin: 8px 0;
+        }
+
+        /* Estilo dos parágrafos de estatísticas */
+        .miner-card p {
+            font-size: 0.9rem;
+            color: #555;
+            margin: 4px 0;
+        }
+        .miner-card p strong {
+            color: #111;
+        }
+    </style>
 </head>
 <body>
-  <h1>🔍 Teste de Módulos</h1>
-  
-  <div class="info">
-    <strong>Instruções:</strong> Esta página verifica se todos os módulos JavaScript estão carregando corretamente.
-    Todos devem mostrar ✅. Se algum mostrar ❌, o arquivo correspondente está faltando ou tem erro.
-  </div>
-  
-  <div id="results"></div>
-  
-  <!-- Carregar scripts na mesma ordem do index.html -->
-  <script src="js/config.js"></script>
-  <script src="data/state.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/calculations.js"></script>
-  <script src="js/ui/tabs.js"></script>
-  <script src="js/ui/guia.js"></script>
-  <script src="js/ui/resumo.js"></script>
-  <script src="js/ui/miners.js"></script>
-  <script src="js/ui/buyAnalyzer.js"></script>
-  <script src="js/ui/inventario.js"></script>
-  <script src="js/ui/debug.js"></script>
-  <script src="js/ui/racks.js"></script>
-  
-  <script>
-    const modules = [
-      { name: 'CONFIG', variable: 'CONFIG' },
-      { name: 'State', variable: 'State' },
-      { name: 'Utils', variable: 'Utils' },
-      { name: 'API', variable: 'API' },
-      { name: 'Calculations', variable: 'Calculations' },
-      { name: 'UI_Tabs', variable: 'UI_Tabs' },
-      { name: 'UI_Guia', variable: 'UI_Guia' },
-      { name: 'UI_Resumo', variable: 'UI_Resumo' },
-      { name: 'UI_Miners', variable: 'UI_Miners' },
-      { name: 'UI_BuyAnalyzer', variable: 'UI_BuyAnalyzer' },
-      { name: 'UI_Inventario', variable: 'UI_Inventario' },
-      { name: 'UI_Debug', variable: 'UI_Debug' },
-      { name: 'UI_Racks', variable: 'UI_Racks' }
-    ];
-    
-    const resultsDiv = document.getElementById('results');
-    let allOk = true;
-    
-    modules.forEach(module => {
-      const div = document.createElement('div');
-      div.className = 'module';
-      
-      const isLoaded = typeof window[module.variable] !== 'undefined';
-      
-      div.innerHTML = `
-        <span><strong>${module.name}</strong> (${module.variable})</span>
-        <span class="${isLoaded ? 'ok' : 'error'}">${isLoaded ? '✅ Carregado' : '❌ ERRO'}</span>
-      `;
-      
-      resultsDiv.appendChild(div);
-      
-      if (!isLoaded) {
-        allOk = false;
-        console.error(`❌ Módulo não carregado: ${module.name}`);
-      }
-    });
-    
-    // Resumo final
-    const summary = document.createElement('div');
-    summary.className = 'info';
-    summary.style.marginTop = '30px';
-    summary.style.background = allOk ? '#e8f5e8' : '#ffebee';
-    summary.style.borderLeft = allOk ? '4px solid #4CAF50' : '4px solid #f44336';
-    
-    if (allOk) {
-      summary.innerHTML = '<h3 style="margin-top: 0;">🎉 Todos os módulos carregados com sucesso!</h3><p>Você pode voltar para o <strong>index.html</strong> e usar o sistema normalmente.</p>';
-    } else {
-      summary.innerHTML = '<h3 style="margin-top: 0;">⚠️ Alguns módulos não foram carregados</h3><p>Verifique o console (F12) para detalhes dos erros. Certifique-se que todos os arquivos existem nos locais corretos.</p>';
-    }
-    
-    resultsDiv.appendChild(summary);
-    
-    console.log('=====================================');
-    console.log('Teste de Módulos Concluído');
-    console.log('Resultado:', allOk ? '✅ SUCESSO' : '❌ FALHA');
-    console.log('=====================================');
-  </script>
+
+    <h1>Catálogo de Miners Rollercoin</h1>
+
+    <main id="miner-catalog"></main>
+
+    <script>
+        // --- INÍCIO DOS DADOS ---
+        // Para este exemplo, colei os 20 primeiros mineradores do seu arquivo,
+        // já convertidos para JSON. Em um site real, você carregaria
+        // isso de um arquivo separado (ex: "dados.json").
+        const minerData = [
+            {"Name":"Fire Idol","Power":26000000,"Bonus Power":1700,"Image URL":"https://static.rollercoin.com/static/img/market/miners/fire_idol.gif?v=1761584685630"},
+            {"Name":"Cryptologia","Power":12000000,"Bonus Power":1200,"Image URL":"https://static.rollercoin.com/static/img/market/miners/cryptologia.gif?v=1761235514180"},
+            {"Name":"Grin Lantern","Power":1150000,"Bonus Power":125,"Image URL":"https://static.rollercoin.com/static/img/market/miners/grin_lantern.gif?v=1761042325788"},
+            {"Name":"Hamksy","Power":19000000,"Bonus Power":1300,"Image URL":"https://static.rollercoin.com/static/img/market/miners/hamksy.gif?v=1760554407940"},
+            {"Name":"Hanabi Festival","Power":17000000,"Bonus Power":900,"Image URL":"https://static.rollercoin.com/static/img/market/miners/hanabi_festival.gif?v=1760013466694"},
+            {"Name":"Air Evo","Power":14000000,"Bonus Power":250,"Image URL":"https://static.rollercoin.com/static/img/market/miners/air_evo.gif?v=1760614001410"},
+            {"Name":"AIrum","Power":36000000,"Bonus Power":1500,"Image URL":"https://static.rollercoin.com/static/img/market/miners/airum.gif?v=1759836193276"},
+            {"Name":"Duality Core","Power":1150000,"Bonus Power":100,"Image URL":"https://static.rollercoin.com/static/img/market/miners/duality_core.gif?v=1759839661678"},
+            {"Name":"Pocket Wormhole","Power":13000000,"Bonus Power":1300,"Image URL":"https://static.rollercoin.com/static/img/market/miners/pocket_wormhole.gif?v=1759397873891"},
+            {"Name":"Signal Spark","Power":2500000,"Bonus Power":200,"Image URL":"https://static.rollercoin.com/static/img/market/miners/signal_spark.gif?v=1759839602104"},
+            {"Name":"Pop-Up Hell","Power":2000000,"Bonus Power":100,"Image URL":"https://static.rollercoin.com/static/img/market/miners/pop_up_hell.gif?v=1759839593383"},
+            {"Name":"CrashLoop","Power":1750000,"Bonus Power":50,"Image URL":"https://static.rollercoin.com/static/img/market/miners/crashloop.gif?v=1759839583683"},
+            {"Name":"The Gateway","Power":1500000,"Bonus Power":50,"Image URL":"https://static.rollercoin.com/static/img/market/miners/the_gateway.gif?v=1759839573742"},
+            {"Name":"Floppy Injection","Power":1000000,"Bonus Power":100,"Image URL":"https://static.rollercoin.com/static/img/market/miners/floppy_injection.gif?v=1759839475833"},
+            {"Name":"The Awakener","Power":250000,"Bonus Power":0,"Image URL":"https://static.rollercoin.com/static/img/market/miners/the_awakener.gif?v=1759839434585"},
+            {"Name":"Crypto-Fall","Power":16000000,"Bonus Power":800,"Image URL":"https://static.rollercoin.com/static/img/market/miners/crypto_fall.gif?v=1758021364618"},
+            {"Name":"Box Buddy","Power":20000000,"Bonus Power":750,"Image URL":"https://static.rollercoin.com/static/img/market/miners/box_buddy.gif?v=1757079537945"},
+            {"Name":"ShaleRig","Power":400000,"Bonus Power":150,"Image URL":"https://static.rollercoin.com/static/img/market/miners/shalerig.gif?v=1756814379703"},
+            {"Name":"GravelRig","Power":250000,"Bonus Power":100,"Image URL":"https://static.rollercoin.com/static/img/market/miners/gravelrig.gif?v=1756814387974"},
+            {"Name":"ClayRig","Power":120000,"Bonus Power":50,"Image URL":"https://static.rollercoin.com/static/img/market/miners/clayrig.gif?v=1756814395320"}
+        ];
+        // --- FIM DOS DADOS ---
+
+        
+        // --- INÍCIO DA LÓGICA DINÂMICA ---
+
+        // 1. Encontrar o contêiner principal no HTML
+        const catalogContainer = document.getElementById('miner-catalog');
+
+        // 2. Função para formatar números grandes (ex: 12000000 -> 12.000.000)
+        function formatNumber(num) {
+            return num.toLocaleString('pt-BR');
+        }
+
+        // 3. Loop (forEach) para percorrer cada item na lista 'minerData'
+        minerData.forEach(miner => {
+            
+            // 4. Criar um novo elemento 'div' para ser o card
+            const card = document.createElement('div');
+            card.className = 'miner-card'; // Adiciona a classe CSS que estilizamos
+
+            // 5. Montar o HTML interno do card com os dados do minerador
+            //    Nota: Usamos miner['Image URL'] com colchetes porque o nome da 
+            //    coluna no seu arquivo tem um espaço.
+            card.innerHTML = `
+                <img src="${miner['Image URL']}" alt="${miner.Name}">
+                <h3>${miner.Name}</h3>
+                <p><strong>Power:</strong> ${formatNumber(miner.Power)}</p>
+                <p><strong>Bonus:</strong> ${formatNumber(miner['Bonus Power'])}</p>
+            `;
+
+            // 6. Adicionar o card recém-criado ao contêiner principal na página
+            catalogContainer.appendChild(card);
+        });
+
+    </script>
+
 </body>
 </html>
