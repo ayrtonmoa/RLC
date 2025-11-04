@@ -599,7 +599,7 @@ calcular: function(miners, userData) {
     html += '<th onclick="UI_Inventario.ordenar(\'bonus\')" style="cursor: pointer;">Bônus ' + (this.currentSort.column === 'bonus' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'impacto\')" style="cursor: pointer;">Ganho ' + (this.currentSort.column === 'impacto' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
     html += '<th onclick="UI_Inventario.ordenar(\'status\')" style="cursor: pointer;">Status ' + (this.currentSort.column === 'status' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th>Info</th>'; // NOVA COLUNA para dados extras
+    html += '<th>Negociável</th>'; // ← NOVA COLUNA
     html += '</tr>';
     
       
@@ -626,12 +626,7 @@ calcular: function(miners, userData) {
     ? '<span style="color: #28a745;">✔ Possui</span>'
     : '<span style="color: #999;">✗ Não possui</span>';
   
-  // Tooltip
-  let infoIcon = '';
-  if (m.catalogData) {
-    const tooltipText = 'Supply: ' + (m.supply || 0).toLocaleString() + ' | Coleção: ' + (m.collection || 'N/A');
-    infoIcon = '<span title="' + tooltipText + '" style="cursor: help;">ℹ️</span>';
-  }
+
   
   html += '<tr class="' + cor + '">';
   html += '<td>' + (i + 1) + '</td>';
@@ -643,7 +638,7 @@ calcular: function(miners, userData) {
   html += '<td>' + m.bonus.toFixed(2) + '%</td>';
   html += '<td><strong>' + Utils.formatPower(m.impacto * 1e9) + '</strong></td>';
   html += '<td>' + statusText + '</td>';
-  html += '<td>' + infoIcon + '</td>';
+  html += '<td style="text-align: center;">' + (m.canBeSold ? '✅ Sim' : '❌ Não') + '</td>'; // ← NOVA CÉLULA
   html += '</tr>';
 }
     

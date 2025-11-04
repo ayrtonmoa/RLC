@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +11,12 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-YY4HR4G1LV"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag() { dataLayer.push(arguments); }
   gtag('js', new Date());
 
   gtag('config', 'G-YY4HR4G1LV');
 </script>
+
 <body>
   <div class="container">
     <h1>RollerCoin Analyzer Pro</h1>
@@ -61,11 +63,11 @@
   <script src="js/utils.js"></script>
   <script src="js/api.js"></script>
   <script src="js/calculations.js"></script>
-  
+
   <!-- Merge Analyzer Dependencies (ANTES do mergeAnalyzer.js!) -->
   <script src="js/mergePrices.js"></script>
   <script src="js/mergeParser.js"></script>
-  
+
   <!-- UI Components -->
   <script src="js/ui/guia.js"></script>
   <script src="js/ui/resumo.js"></script>
@@ -79,28 +81,33 @@
   <script src="js/ui/racks.js"></script>
   <script src="js/ui/rstSellAnalyzer.js"></script>
   <script src="js/apiData.js"></script>
-  
-  
+
+
   <!-- Inicialização - Deve ser o ÚLTIMO script -->
   <script>
     // Função para analisar usuário
     async function analisarUsuario(username) {
       const button = document.getElementById('analisarBtn');
       button.disabled = true;
-      
+
       try {
         const user = await API.getUserDataByNick(username);
         State.setUserData(user);
-        
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'perfil_analisado', {
+            'username': username
+          });
+          console.log('📊 Analytics: Perfil analisado -', username);
+        }
         UI_Resumo.mostrar(user);
         UI_Miners.mostrar(user);
         UI_BuyAnalyzer.mostrar(user);
         UI_Inventario.mostrar(user);
         UI_Debug.mostrar(user);
         UI_Racks.mostrar(user);
-        
+
         // Merge Analyzer é inicializado sob demanda (ao clicar na aba)
-        
+
         Utils.hideProgress();
         document.getElementById('status').innerHTML = '<span class="success">Análise concluída com sucesso!</span>';
       } catch (err) {
@@ -111,9 +118,9 @@
         button.disabled = false;
       }
     }
-    
+
     // Inicialização quando a página carregar
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       // Verificar se todos os módulos foram carregados
       console.log('Verificando módulos carregados...');
       console.log('CONFIG:', typeof CONFIG !== 'undefined' ? '✅' : '❌');
@@ -133,12 +140,12 @@
       console.log('UI_Debug:', typeof UI_Debug !== 'undefined' ? '✅' : '❌');
       console.log('UI_Racks:', typeof UI_Racks !== 'undefined' ? '✅' : '❌');
       console.log('UI_Tabs:', typeof UI_Tabs !== 'undefined' ? '✅' : '❌');
-      
+
       // Inicializar interface
       UI_Guia.mostrar();
       UI_MergeCalculator.mostrar();
       UI_Tabs.init();
-      
+
       // Event listeners
       document.getElementById('analisarBtn').addEventListener('click', async () => {
         const username = document.getElementById('username').value.trim();
@@ -146,18 +153,19 @@
           document.getElementById('status').innerHTML = '<span class="error">Digite um username</span>';
           return;
         }
-        
+
         await analisarUsuario(username);
       });
-      
+
       document.getElementById('username').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
           document.getElementById('analisarBtn').click();
         }
       });
-      
+
       console.log('✅ Sistema inicializado com sucesso!');
     });
   </script>
 </body>
+
 </html>
