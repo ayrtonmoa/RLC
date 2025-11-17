@@ -9,14 +9,16 @@ state: {
     prices: {},
     loading: false,
     useBRL: false,
+    useEUR: false,  // ✅ ADICIONAR
     showQuantity: false,
     usdToBrl: 5.0,
+    usdToEur: 0.92,  // ✅ ADICIONAR
     history: [],
     lastUpdate: null,
     showHistory: false,
     priceStatus: 'loading',
     chartInstance: null,
-    currentUsername: null  // ADICIONAR ESTA LINHA
+    currentUsername: null
   },
 
   // Dados das ligas
@@ -395,10 +397,14 @@ const leaguesFallback = {
         this.state.history = [];
         this.state.currentUsername = null;
       }
+      
     } catch (e) {
       console.error('Erro ao carregar dados:', e);
     }
+    
   },
+
+  
 
   // Salvar dados no localStorage - COM USERNAME
   saveToStorage(power, network, result, username) {
@@ -469,12 +475,13 @@ const leaguesFallback = {
         this.state.priceStatus = 'fallback';
       }
       
-      try {
-        const brlRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-        if (brlRes.ok) {
-          const brlData = await brlRes.json();
-          this.state.usdToBrl = brlData.rates.BRL || 5.0;
-        }
+    try {
+      const brlRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      if (brlRes.ok) {
+        const brlData = await brlRes.json();
+        this.state.usdToBrl = brlData.rates.BRL;
+        this.state.usdToEur = brlData.rates.EUR;  // ✅ ADICIONAR
+      }
       } catch {}
       
     } catch (error) {
@@ -584,23 +591,23 @@ const leaguesFallback = {
         const decimals = period === 'block' ? 8 : 4;
         return `${valueQty.toFixed(decimals)} ${coin}`;
       } else {
-        // Game coins - mais decimais para "block"
-        const decimals = period === 'block' ? 6 : 2;  // MUDANÇA AQUI
+        const decimals = period === 'block' ? 6 : 2;
         return `${valueQty.toFixed(decimals)} ${coin}`;
       }
     }
     
     if (isCrypto) {
       const decimals = period === 'block' ? 4 : 2;
-      if (this.state.useBRL) {
+      if (this.state.useEUR) {  // ✅ ADICIONAR
+        return `€${(valueUSD * this.state.usdToEur).toFixed(decimals)}`;
+      } else if (this.state.useBRL) {
         return `R$ ${(valueUSD * this.state.usdToBrl).toFixed(decimals)}`;
       } else {
         return `$${valueUSD.toFixed(decimals)}`;
       }
     }
     
-    // Game coins - mais decimais para "block"
-    const decimals = period === 'block' ? 6 : 2;  // MUDANÇA AQUI
+    const decimals = period === 'block' ? 6 : 2;
     return `${valueQty.toFixed(decimals)} ${coin}`;
   },
 
@@ -914,10 +921,10 @@ const leaguesFallback = {
       // Melhor Crypto
       const currentBest = this.state.history[0].results?.find(r => !this.CONFIG.GAME_COINS.includes(r.coin));
       const currentBestProfit = currentBest?.monthly || 0;
-      html += '<div>';
+html += '<div>';
       html += `<div style="font-size: 12px; color: #666;">Melhor Crypto (${comparison.currentBestCoin})</div>`;
-      html += `<div style="font-size: 18px; color: #28a745; font-weight: bold;">${this.state.useBRL ? `R$ ${(currentBestProfit * this.state.usdToBrl).toFixed(2)}` : `$${currentBestProfit.toFixed(2)}`}/mês</div>`;
-      html += `<div style="font-size: 13px; color: ${comparison.profitChange > 0 ? 'green' : comparison.profitChange < 0 ? 'red' : '#666'}; margin-top: 4px;">${comparison.profitDiff > 0 ? '+' : ''}${this.state.useBRL ? `R$ ${(comparison.profitDiff * this.state.usdToBrl).toFixed(2)}` : `$${comparison.profitDiff.toFixed(2)}`} (${comparison.profitChange > 0 ? '↑' : comparison.profitChange < 0 ? '↓' : '→'} ${Math.abs(comparison.profitChange).toFixed(2)}%)</div>`;
+      html += `<div style="font-size: 18px; color: #28a745; font-weight: bold;">${this.state.useEUR ? `€${(currentBestProfit * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(currentBestProfit * this.state.usdToBrl).toFixed(2)}` : `$${currentBestProfit.toFixed(2)}`}/mês</div>`;
+      html += `<div style="font-size: 13px; color: ${comparison.profitChange > 0 ? 'green' : comparison.profitChange < 0 ? 'red' : '#666'}; margin-top: 4px;">${comparison.profitDiff > 0 ? '+' : ''}${this.state.useEUR ? `€${(comparison.profitDiff * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(comparison.profitDiff * this.state.usdToBrl).toFixed(2)}` : `$${comparison.profitDiff.toFixed(2)}`} (${comparison.profitChange > 0 ? '↑' : comparison.profitChange < 0 ? '↓' : '→'} ${Math.abs(comparison.profitChange).toFixed(2)}%)</div>`;
       if (comparison.currentBestCoin !== comparison.previousBestCoin) {
         html += `<div style="font-size: 11px; color: #ff9800; margin-top: 4px;">⚠️ Antes era ${comparison.previousBestCoin}</div>`;
       }
@@ -941,19 +948,18 @@ const leaguesFallback = {
         html += `<div style="font-size: 13px; color: #666; margin-top: 8px;">💡 Esta é a crypto mais lucrativa com sua contribuição de <strong>${bestCrypto.contribution}%</strong></div>`;
         html += '</div>';
         
-        html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">';
+html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">';
         html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">';
         html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Diário</div>';
-        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${bestCrypto.dailyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useBRL ? `R$ ${(bestCrypto.daily * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.daily.toFixed(2)}`)}</div>`;
+        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${bestCrypto.dailyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.daily * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.daily * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.daily.toFixed(2)}`)}</div>`;
         html += '</div>';
         html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">';
         html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Mensal (30D)</div>';
-        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${bestCrypto.monthlyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useBRL ? `R$ ${(bestCrypto.monthly * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.monthly.toFixed(2)}`)}</div>`;
+        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${bestCrypto.monthlyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.monthly.toFixed(2)}`)}</div>`;
         html += '</div>';
         html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">';
         html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Anual (365D)</div>';
-        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${(bestCrypto.monthlyQty * 12).toFixed(4)} ${bestCrypto.coin}` : (this.state.useBRL ? `R$ ${(bestCrypto.monthly * 12 * this.state.usdToBrl).toFixed(2)}` : `$${(bestCrypto.monthly * 12).toFixed(2)}`)}</div>`;
-        html += '</div>';
+        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${(bestCrypto.monthlyQty * 12).toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * 12 * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * 12 * this.state.usdToBrl).toFixed(2)}` : `$${(bestCrypto.monthly * 12).toFixed(2)}`)}</div>`;
         html += '</div>';
         html += '</div>';
       }
@@ -976,7 +982,7 @@ const leaguesFallback = {
           html += `<div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">${coin.coin}</div>`;
           html += `<div style="font-size: 12px; color: #666; margin-bottom: 12px;">Contrib: ${coin.contribution}%</div>`;
           html += '<div style="font-size: 14px; color: #666;">Mensal:</div>';
-          html += `<div style="font-size: 16px; color: ${idx === 0 ? '#ff9800' : '#007bff'}; font-weight: bold;">${this.state.showQuantity ? `${coin.monthlyQty.toFixed(4)} ${coin.coin}` : (this.state.useBRL ? `R$ ${(coin.monthly * this.state.usdToBrl).toFixed(2)}` : `$${coin.monthly.toFixed(2)}`)}</div>`;
+          html += `<div style="font-size: 16px; color: ${idx === 0 ? '#ff9800' : '#007bff'}; font-weight: bold;">${this.state.showQuantity ? `${coin.monthlyQty.toFixed(4)} ${coin.coin}` : (this.state.useEUR ? `€${(coin.monthly * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(coin.monthly * this.state.usdToBrl).toFixed(2)}` : `$${coin.monthly.toFixed(2)}`)}</div>`;
           html += '</div>';
         });
         
@@ -985,45 +991,7 @@ const leaguesFallback = {
       }
     }
 
-    // Game vs Crypto
-    if (this.state.results) {
-      const bestGame = this.state.results.find(r => r.isGameCoin);
-      const bestCrypto = this.state.results.find(r => !r.isGameCoin);
-      if (bestGame && bestCrypto) {
-        html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
-        html += '<h3 style="margin: 0 0 15px 0;">🎮 Game vs 🪙 Crypto - Melhor de Cada</h3>';
-        html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
-        
-        // Best Game
-        html += '<div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border: 2px solid #007bff;">';
-        html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">🎮 Melhor Game Coin</div>';
-        html += `<div style="font-size: 22px; color: #007bff; font-weight: bold; margin-bottom: 8px;">${bestGame.coin}</div>`;
-        html += `<div style="font-size: 12px; color: #666; margin-bottom: 16px;">Contribuição: ${bestGame.contribution}%</div>`;
-        html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">';
-        html += '<div><div style="font-size: 11px; color: #666;">Diário</div>';
-        html += `<div style="font-size: 15px; font-weight: bold;">${bestGame.dailyQty.toFixed(2)} ${bestGame.coin}</div></div>`;
-        html += '<div><div style="font-size: 11px; color: #666;">Mensal</div>';
-        html += `<div style="font-size: 15px; font-weight: bold;">${bestGame.monthlyQty.toFixed(2)} ${bestGame.coin}</div></div>`;
-        html += '</div>';
-        html += '</div>';
-        
-        // Best Crypto
-        html += '<div style="background: #f3e5f5; padding: 15px; border-radius: 8px; border: 2px solid #6f42c1;">';
-        html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">🪙 Melhor Crypto</div>';
-        html += `<div style="font-size: 22px; color: #6f42c1; font-weight: bold; margin-bottom: 8px;">${bestCrypto.coin}</div>`;
-        html += `<div style="font-size: 12px; color: #666; margin-bottom: 16px;">Contribuição: ${bestCrypto.contribution}%</div>`;
-        html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">';
-        html += '<div><div style="font-size: 11px; color: #666;">Diário</div>';
-        html += `<div style="font-size: 15px; font-weight: bold;">${this.state.showQuantity ? `${bestCrypto.dailyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useBRL ? `R$ ${(bestCrypto.daily * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.daily.toFixed(2)}`)}</div></div>`;
-        html += '<div><div style="font-size: 11px; color: #666;">Mensal</div>';
-        html += `<div style="font-size: 15px; font-weight: bold;">${this.state.showQuantity ? `${bestCrypto.monthlyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useBRL ? `R$ ${(bestCrypto.monthly * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.monthly.toFixed(2)}`)}</div></div>`;
-        html += '</div>';
-        html += '</div>';
-        
-        html += '</div>';
-        html += '</div>';
-      }
-    }
+
 
     // Painel de Preços
     html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
@@ -1036,17 +1004,18 @@ const leaguesFallback = {
     const statusText = this.state.priceStatus === 'fallback' ? ' (fallback)' : '';
     html += `<div style="background: #e3f2fd; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 11px; color: #666;">`;
     html += `<div>${statusIcon} 📡 Fonte: <strong style="color: #007bff;">CryptoCompare API</strong>${statusText}</div>`;
-    html += `<div>💱 Câmbio: <strong style="color: #007bff;">ExchangeRate-API</strong> (R$ ${this.state.usdToBrl.toFixed(2)})</div>`;
+    html += `<div>💱 Câmbio: <strong style="color: #007bff;">ExchangeRate-API</strong> (R$ ${this.state.usdToBrl.toFixed(2)} | €${this.state.usdToEur.toFixed(2)})</div>`;  // ✅ ADICIONAR EUR
     html += '</div>';
     
     html += '<div style="max-height: 300px; overflow-y: auto;">';
-    Object.entries(this.state.prices).forEach(([coin, price]) => {
+Object.entries(this.state.prices).forEach(([coin, price]) => {
       html += '<div style="background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd;">';
       html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
       html += `<span style="font-weight: 600;">${coin}</span>`;
       html += '<div style="text-align: right;">';
       html += `<div style="color: #ff9800; font-size: 14px; font-weight: bold;">$${price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
       html += `<div style="color: #666; font-size: 12px;">R$ ${(price * this.state.usdToBrl).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+      html += `<div style="color: #666; font-size: 12px;">€${(price * this.state.usdToEur).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;  // ✅ ADICIONAR
       html += '</div>';
       html += '</div>';
       html += '</div>';
@@ -1075,8 +1044,9 @@ const leaguesFallback = {
       html += '<button onclick="UI_FarmCalculator.exportCSV()" style="padding: 8px 16px; background: #28a745; font-size: 14px;">📥 Exportar CSV</button>';
       
       html += '<div style="display: flex; background: #f8f9fa; border-radius: 8px; padding: 4px; border: 1px solid #ddd;">';
-      html += `<button onclick="UI_FarmCalculator.state.useBRL = false; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${!this.state.useBRL ? '#007bff' : 'transparent'}; color: ${!this.state.useBRL ? 'white' : '#333'}; font-weight: ${!this.state.useBRL ? 'bold' : 'normal'};">USD $</button>`;
-      html += `<button onclick="UI_FarmCalculator.state.useBRL = true; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${this.state.useBRL ? '#007bff' : 'transparent'}; color: ${this.state.useBRL ? 'white' : '#333'}; font-weight: ${this.state.useBRL ? 'bold' : 'normal'};">BRL R$</button>`;
+      html += `<button onclick="UI_FarmCalculator.state.useBRL = false; UI_FarmCalculator.state.useEUR = false; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${!this.state.useBRL && !this.state.useEUR ? '#007bff' : 'transparent'}; color: ${!this.state.useBRL && !this.state.useEUR ? 'white' : '#333'}; font-weight: ${!this.state.useBRL && !this.state.useEUR ? 'bold' : 'normal'};">USD $</button>`;
+      html += `<button onclick="UI_FarmCalculator.state.useBRL = true; UI_FarmCalculator.state.useEUR = false; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${this.state.useBRL ? '#007bff' : 'transparent'}; color: ${this.state.useBRL ? 'white' : '#333'}; font-weight: ${this.state.useBRL ? 'bold' : 'normal'};">BRL R$</button>`;
+      html += `<button onclick="UI_FarmCalculator.state.useBRL = false; UI_FarmCalculator.state.useEUR = true; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${this.state.useEUR ? '#007bff' : 'transparent'}; color: ${this.state.useEUR ? 'white' : '#333'}; font-weight: ${this.state.useEUR ? 'bold' : 'normal'};">EUR €</button>`;
       html += '</div>';
       
       html += '<div style="display: flex; background: #f8f9fa; border-radius: 8px; padding: 4px; border: 1px solid #ddd;">';
