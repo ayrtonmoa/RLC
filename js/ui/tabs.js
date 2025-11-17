@@ -31,6 +31,15 @@ const UI_Tabs = {
             console.error('❌ UI_MergeAnalyzer não está definido!');
           }
         }
+
+
+        // Se for a aba farmcalculator, recarregar o power
+if (targetTab === 'farmcalculator') {
+  const user = State.getUserData();
+  if (user && typeof UI_FarmCalculator !== 'undefined') {
+    UI_FarmCalculator.mostrar(user);
+  }
+}
         
         // Merge Calculator
         else if (targetTab === 'mergecalculator') {
