@@ -1,4 +1,4 @@
-// js/ui/guia.js - Aba Guia de Uso
+// js/ui/guia.js - Aba Guia de Uso - ATUALIZADO
 
 const UI_Guia = {
   mostrar() {
@@ -8,7 +8,7 @@ const UI_Guia = {
       
       <div class="summary-item" style="margin-bottom: 20px; background: #e8f5e8; border-left: 4px solid #4CAF50;">
         <h4>💡 O que é o RollerCoin Analyzer Pro?</h4>
-        <p>Uma ferramenta que calcula o <strong>impacto real</strong> de cada miner na sua rede RollerCoin. Descubra quais miners são mais valiosas e tome decisões estratégicas baseadas em dados precisos.</p>
+        <p>Uma ferramenta completa que analisa o <strong>impacto real</strong> de cada miner, calcula <strong>rentabilidade de farming</strong>, simula <strong>merges</strong> e compara com o <strong>mercado</strong>. Tome decisões estratégicas baseadas em dados precisos.</p>
       </div>
 
       <h3>Como Usar</h3>
@@ -38,7 +38,21 @@ const UI_Guia = {
         </div>
         
         <div class="summary-item">
-          <h4>🎯 Impact Analyzer (Principal)</h4>
+          <h4>⚡ Farm Calculator (NOVO!)</h4>
+          <p><strong>Calcule quanto você ganha farmando cada crypto</strong><br>
+          • Sistema de ligas com block rewards reais<br>
+          • Recomendação da melhor crypto para farmar<br>
+          • Top 3 cryptos mais lucrativas<br>
+          • Comparação Game Coins vs Cryptos<br>
+          • Histórico de consultas por usuário<br>
+          • Gráfico de evolução do poder e rede<br>
+          • Cotações em tempo real (USD/BRL)<br>
+          • Exportar resultados em CSV<br>
+          • Indicação de moedas não sacáveis (ALGO, LTC)</p>
+        </div>
+        
+        <div class="summary-item">
+          <h4>🎯 Impact Analyzer</h4>
           <p><strong>Ranking</strong> das miners por impacto real<br>
           <strong>Impacto Real</strong>: Quanto poder você perderia ao remover cada miner<br>
           <strong>Posição</strong>: Sala, Rack e coordenadas exatas<br>
@@ -52,20 +66,90 @@ const UI_Guia = {
         </div>
 
         <div class="summary-item">
+          <h4>🔀 Merge Analyzer</h4>
+          <p><strong>Simule merges antes de fazer</strong><br>
+          • Cole dados de 2-5 miners do inventário<br>
+          • Veja poder total após o merge<br>
+          • Compare com poder individual<br>
+          • Calcule ganho/perda real do merge<br>
+          • Considera bônus de coleção no cálculo</p>
+        </div>
+
+        <div class="summary-item">
+          <h4>⚖️ Merge vs Market (NOVO!)</h4>
+          <p><strong>Descubra se é melhor fazer merge ou vender</strong><br>
+          • Compare valor do merge vs venda no mercado<br>
+          • Analise ROI de comprar a miner final pronta<br>
+          • Veja recomendação automática (Merge/Vender/Comprar)<br>
+          • Considera taxas e custos reais</p>
+        </div>
+
+        <div class="summary-item">
+          <h4>💰 RST Sell Analyzer</h4>
+          <p><strong>Otimize suas vendas de RST</strong><br>
+          • Calcule quanto RST você tem<br>
+          • Veja valor em USD e BRL<br>
+          • Compare preços RST vs RLT<br>
+          • Descubra melhor estratégia de venda</p>
+        </div>
+
+        <div class="summary-item">
           <h4>📦 Inventário & Troca Inteligente</h4>
           <p><strong>Inventário</strong>: Cole o conteúdo da página Storage e veja o impacto de cada miner<br>
           <strong>Troca Inteligente</strong>: Descubra qual miner remover para colocar uma nova (considera salas cheias)</p>
         </div>
         
         <div class="summary-item">
-          <h4>🔧 Debug Info</h4>
-          <p>Dados técnicos do processo de análise, útil para verificar se os cálculos estão corretos.</p>
-        </div>
-        
-        <div class="summary-item">
           <h4>🏠 Racks</h4>
           <p>Análise da eficiência dos seus racks, capacidade vs ocupação, identificação de racks subutilizados.</p>
         </div>
+
+        <div class="summary-item">
+          <h4>🔧 Debug Info</h4>
+          <p>Dados técnicos do processo de análise, útil para verificar se os cálculos estão corretos.</p>
+        </div>
+      </div>
+
+      <h3>Farm Calculator - Como Usar (NOVO!)</h3>
+
+      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3;">
+        <h4>⚡ Passo a Passo</h4>
+        <ol>
+          <li><strong>Analise seu perfil primeiro</strong> (para detectar sua liga)</li>
+          <li>Acesse a aba <strong>Farm Calculator</strong></li>
+          <li><strong>Mining Power</strong>: Já vem preenchido automaticamente com seu poder atual</li>
+          <li><strong>Rede das moedas</strong>: Copie da página de farming do RollerCoin:
+            <ul>
+              <li>Vá em <a href="https://rollercoin.com/game/choose-cryptocurrency" target="_blank">Choose Cryptocurrency</a></li>
+              <li>Pressione Ctrl+A → Ctrl+C</li>
+              <li>Cole no campo "Rede das moedas"</li>
+            </ul>
+          </li>
+          <li>Clique em <strong>"💰 Calcular"</strong></li>
+        </ol>
+
+        <h4>📊 O que você verá:</h4>
+        <ul>
+          <li><strong>🏆 Sua Liga</strong>: Liga atual e block rewards aplicados</li>
+          <li><strong>📊 Comparação</strong>: Mudanças desde última análise (Rede, Poder, Lucro)</li>
+          <li><strong>🏆 Melhor Crypto</strong>: Recomendação da crypto mais lucrativa para você</li>
+          <li><strong>🥇🥈🥉 Top 3</strong>: As 3 cryptos mais lucrativas (exclui não sacáveis)</li>
+          <li><strong>🎮 Game vs Crypto</strong>: Melhor game coin vs melhor crypto</li>
+          <li><strong>💰 Cotações</strong>: Preços atuais em USD e BRL</li>
+          <li><strong>📈 Gráfico</strong>: Evolução do seu poder e da rede total</li>
+          <li><strong>📊 Resultados Detalhados</strong>: Tabela completa com todas as moedas</li>
+          <li><strong>📜 Histórico</strong>: Suas consultas anteriores (por usuário)</li>
+        </ul>
+
+        <h4>💡 Recursos Especiais:</h4>
+        <ul>
+          <li><strong>USD $ / BRL R$</strong>: Alterne entre dólares e reais</li>
+          <li><strong>💰 Valor / 🪙 Quantidade</strong>: Veja em dinheiro ou quantidade de moedas</li>
+          <li><strong>📥 Exportar CSV</strong>: Baixe todos os dados para Excel/Sheets</li>
+          <li><strong>🚫 Não sacável</strong>: ALGO e LTC marcados (não aparecem no Top 3)</li>
+          <li><strong>📜 Histórico separado</strong>: Cada usuário tem seu próprio histórico</li>
+          <li><strong>🗑️ Deletar</strong>: Remova consultas individuais ou limpe tudo</li>
+        </ul>
       </div>
 
       <h3>Interpretando os Resultados</h3>
@@ -82,11 +166,20 @@ const UI_Guia = {
         </ul>
       </div>
 
-      <h4>Exemplo Prático</h4>
+      <h4>Exemplo Prático - Impact Analyzer</h4>
       <p>Se uma miner mostra "Impacto Real: 475 Ph/s":</p>
       <ul>
         <li>Remover ela causaria uma perda de 475 Ph/s no seu poder total</li>
         <li>Essa perda é maior que o poder base dela devido aos bônus compostos</li>
+      </ul>
+
+      <h4>Exemplo Prático - Farm Calculator</h4>
+      <p>Se você tem 100 Eh/s de poder e a rede de BTC é 2500 Eh/s:</p>
+      <ul>
+        <li>Sua contribuição: 100 ÷ 2500 = 4%</li>
+        <li>Se o block reward de BTC na sua liga é 0.00021790 BTC</li>
+        <li>Você recebe: 0.00021790 × 4% = 0.00000872 BTC por bloco</li>
+        <li>Por dia (144.9664 blocos): 0.00126 BTC ≈ $120 USD</li>
       </ul>
 
       <h4>Sistema de Cores</h4>
@@ -123,6 +216,56 @@ const UI_Guia = {
         </ol>
       </div>
 
+      <h3>Merge Analyzer - Como Usar</h3>
+
+      <div class="summary-item" style="background: #f3e5f5; border-left: 4px solid #9C27B0;">
+        <h4>🔀 Simulação de Merge</h4>
+        <ol>
+          <li>Vá no <strong>Storage</strong> do RollerCoin</li>
+          <li>Selecione 2-5 miners que quer fazer merge</li>
+          <li>Copie (Ctrl+C) as informações</li>
+          <li>Cole no campo do Merge Analyzer</li>
+          <li>Clique em "Analisar Merge"</li>
+          <li>Veja:
+            <ul>
+              <li>Poder total atual das miners</li>
+              <li>Poder após o merge</li>
+              <li>Ganho/Perda líquida</li>
+              <li>Bônus de coleção impactado</li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+
+      <h3>Merge vs Market - Como Usar (NOVO!)</h3>
+
+      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800;">
+        <h4>⚖️ Decidir: Merge, Vender ou Comprar?</h4>
+        <ol>
+          <li>Cole as miners que planeja fazer merge</li>
+          <li>Cole o preço de venda médio de cada tier no mercado</li>
+          <li>Cole o preço de compra da miner final (resultado do merge)</li>
+          <li>Clique em "Analisar Merge vs Market"</li>
+          <li>Veja:
+            <ul>
+              <li><strong>Cenário 1:</strong> Fazer merge (custo + resultado)</li>
+              <li><strong>Cenário 2:</strong> Vender tudo no mercado (lucro total)</li>
+              <li><strong>Cenário 3:</strong> Comprar a miner final pronta</li>
+              <li><strong>Recomendação:</strong> Qual é a melhor opção financeiramente</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h4>💡 Exemplo Prático:</h4>
+        <p>Você tem 3x Legendary tier 6 que pode fazer merge para tier 7:</p>
+        <ul>
+          <li><strong>Fazer merge:</strong> Custo 15 RLT + ganha tier 7</li>
+          <li><strong>Vender:</strong> 3 × $8 = $24 no mercado</li>
+          <li><strong>Comprar tier 7:</strong> $30 no mercado</li>
+          <li><strong>Recomendação:</strong> Vender (maior lucro)</li>
+        </ul>
+      </div>
+
       <h3>Inventário - Como Usar</h3>
 
       <div class="summary-item" style="background: #f3e5f5; border-left: 4px solid #9C27B0;">
@@ -140,13 +283,23 @@ const UI_Guia = {
 
       <div class="summary-grid">
         <div class="summary-item">
+          <h4>⚡ Otimizar Farming</h4>
+          <p>Use Farm Calculator para descobrir qual crypto é mais lucrativa para você. Compare Game Coins vs Cryptos. Acompanhe evolução do lucro no histórico. Evite farmar moedas não sacáveis (ALGO, LTC).</p>
+        </div>
+
+        <div class="summary-item">
           <h4>🔧 Otimização de Setup</h4>
           <p>Identifique miners de baixo impacto para substituir. Priorize melhores racks para miners de alto impacto. Use filtro de duplicadas para encontrar oportunidades de merge.</p>
         </div>
         
         <div class="summary-item">
           <h4>💰 Planejamento de Compras</h4>
-          <p>Use o Buy Analyzer para comparar miners do marketplace. Calcule ROI baseado no seu perfil específico.</p>
+          <p>Use o Buy Analyzer para comparar miners do marketplace. Calcule ROI baseado no seu perfil específico. Use Merge vs Market antes de comprar componentes.</p>
+        </div>
+
+        <div class="summary-item">
+          <h4>🔀 Estratégia de Merge</h4>
+          <p>Simule merges antes de fazer (Merge Analyzer). Compare se é melhor fazer merge ou vender (Merge vs Market). Calcule se vale mais comprar a miner pronta.</p>
         </div>
         
         <div class="summary-item">
@@ -161,7 +314,7 @@ const UI_Guia = {
         
         <div class="summary-item">
           <h4>💸 Decisões de Venda</h4>
-          <p>Identifique miners seguras para vender sem grande impacto. Evite vender miners com alto impacto relativo. Use dados de posição para reorganização.</p>
+          <p>Identifique miners seguras para vender sem grande impacto. Evite vender miners com alto impacto relativo. Use RST Sell Analyzer para otimizar vendas de tokens.</p>
         </div>
 
         <div class="summary-item">
@@ -177,6 +330,17 @@ const UI_Guia = {
         <p>Os valores de impacto <strong>não podem ser somados</strong>. Cada valor mostra o impacto de remover apenas aquela miner específica, mas os bônus se afetam mutuamente.</p>
       </div>
 
+      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800;">
+        <h4>⚠️ Farm Calculator - Notas Importantes</h4>
+        <ul>
+          <li><strong>Sistema de Ligas:</strong> Cada liga tem block rewards diferentes</li>
+          <li><strong>Network Power:</strong> A rede muda constantemente, recalcule periodicamente</li>
+          <li><strong>Cotações:</strong> Preços de cryptos são atualizados a cada 5 minutos</li>
+          <li><strong>Blocos/dia:</strong> Valor fixo de 144.9664 blocos (pode variar ligeiramente)</li>
+          <li><strong>Moedas não sacáveis:</strong> ALGO e LTC não podem ser sacados (apenas trocados)</li>
+        </ul>
+      </div>
+
       <h4>Outras Considerações</h4>
       <ul>
         <li><strong>Dados em Tempo Real:</strong> A análise usa dados atuais da API do RollerCoin</li>
@@ -184,6 +348,7 @@ const UI_Guia = {
         <li><strong>Funcionalidade CSV:</strong> Baixe todos os dados para análise no Excel/Sheets</li>
         <li><strong>Buy Analyzer:</strong> ROI calculado considera seu perfil específico (base atual + bônus)</li>
         <li><strong>Simulação de Remoção:</strong> Teste remover miners temporariamente e veja o impacto em tempo real</li>
+        <li><strong>Histórico por Usuário:</strong> Farm Calculator salva histórico separado para cada usuário analisado</li>
       </ul>
 
       <h3>Problemas Comuns</h3>
@@ -214,6 +379,16 @@ const UI_Guia = {
             <li>Aceita diversos formatos: "13 000 000 Gh/s", "**2.00%**", etc.</li>
           </ul>
         </div>
+
+        <div class="summary-item">
+          <h4>❌ Erro no Farm Calculator</h4>
+          <ul>
+            <li>Certifique-se de colar TODA a página de Choose Cryptocurrency</li>
+            <li>O sistema aceita tanto Zh/s quanto Eh/s</li>
+            <li>Analise o perfil primeiro para detectar sua liga</li>
+            <li>Verifique se sua liga foi detectada corretamente</li>
+          </ul>
+        </div>
       </div>
 
       <hr style="margin: 30px 0;">
@@ -223,7 +398,7 @@ const UI_Guia = {
       </p>
       
       <p style="text-align: center; font-size: 12px; color: #999;">
-        <em>Ferramenta criada pela comunidade RollerCoin para análise de impacto de miners. Não afiliada oficialmente ao RollerCoin.</em>
+        <em>Ferramenta criada pela comunidade RollerCoin para análise completa de miners e farming. Não afiliada oficialmente ao RollerCoin.</em>
       </p>
     `;
   }

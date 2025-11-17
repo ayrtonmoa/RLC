@@ -26,6 +26,7 @@ state: {
   CONFIG: {
     BLOCKS_PER_DAY: 144.9664,
     GAME_COINS: ['RLT', 'RST', 'HMT'],
+    NON_WITHDRAWABLE: ['ALGO', 'LTC'],
     FIXED_PRICES: {
       RLT: 1.00,
       RST: 0.01,
@@ -625,8 +626,8 @@ const leaguesFallback = {
     const powerChange = ((current.power - previous.power) / previous.power) * 100;
     const networkChange = ((current.networkTotal - previous.networkTotal) / previous.networkTotal) * 100;
     
-    const currentBest = current.results?.find(r => !this.CONFIG.GAME_COINS.includes(r.coin));
-    const previousBest = previous.results?.find(r => !this.CONFIG.GAME_COINS.includes(r.coin));
+    const currentBest = current.results?.find(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin));  // ✅ FILTRAR
+    const previousBest = previous.results?.find(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin));  // ✅ FILTRAR
     
     const currentBestProfit = currentBest?.monthly || 0;
     const previousBestProfit = previousBest?.monthly || 0;
@@ -928,7 +929,9 @@ const leaguesFallback = {
 
     // Melhor Crypto
     if (this.state.results) {
-      const bestCrypto = this.state.results.find(r => !r.isGameCoin);
+      const bestCrypto = this.state.results
+        .find(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin));  // ✅ FILTRAR
+      
       if (bestCrypto) {
         html += '<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin-bottom: 20px;">';
         html += '<h3 style="margin: 0 0 15px 0;">🏆 Melhor Crypto para Farmar</h3>';
@@ -958,7 +961,9 @@ const leaguesFallback = {
 
     // Top 3 Cryptos
     if (this.state.results) {
-      const topCryptos = this.state.results.filter(r => !r.isGameCoin).slice(0, 3);
+      const topCryptos = this.state.results
+        .filter(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))  // ✅ FILTRAR
+        .slice(0, 3);
       if (topCryptos.length >= 3) {
         html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
         html += '<h3 style="margin: 0 0 15px 0;">🥇🥈🥉 Top 3 Cryptos</h3>';
@@ -1093,11 +1098,13 @@ const leaguesFallback = {
       html += '</tr></thead><tbody>';
       
       this.state.results.forEach((r, idx) => {
-        const isTopCrypto = !r.isGameCoin && this.state.results.filter(coin => !coin.isGameCoin).indexOf(r) === 0;
+        const isTopCrypto = !r.isGameCoin && this.state.results.filter(coin => !coin.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(coin.coin)).indexOf(r) === 0;
         const rowClass = isTopCrypto ? ' style="background: #fff3cd;"' : '';
+        const isNonWithdrawable = this.CONFIG.NON_WITHDRAWABLE.includes(r.coin);  // ✅ VERIFICAR
         
         html += `<tr${rowClass}>`;
-        html += `<td><strong>${r.coin}</strong> <span style="background: ${r.isGameCoin ? '#e3f2fd' : '#f3e5f5'}; color: ${r.isGameCoin ? '#007bff' : '#6f42c1'}; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">${r.isGameCoin ? 'Game' : 'Crypto'}</span>${isTopCrypto ? ' <span style="background: #fff3cd; color: #ff9800; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🏆 TOP</span>' : ''}</td>`;
+        html += `<td><strong>${r.coin}</strong> <span style="background: ${r.isGameCoin ? '#e3f2fd' : '#f3e5f5'}; color: ${r.isGameCoin ? '#007bff' : '#6f42c1'}; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">${r.isGameCoin ? 'Game' : 'Crypto'}</span>${isTopCrypto ? ' <span style="background: #fff3cd; color: #ff9800; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🏆 TOP</span>' : ''}${isNonWithdrawable ? ' <span style="background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🚫 Não sacável</span>' : ''}</td>`;  // ✅ BADGE
+        //
         html += `<td style="text-align: right; font-size: 13px;">${r.contribution}%</td>`;
         html += `<td style="text-align: right;">${this.formatValue(r.block, r.blockQty, !r.isGameCoin, r.coin, 'block')}</td>`;
         html += `<td style="text-align: right;">${this.formatValue(r.daily, r.dailyQty, !r.isGameCoin, r.coin, 'daily')}</td>`;
