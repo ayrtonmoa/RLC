@@ -116,23 +116,71 @@ const Utils = {
   /**
    * Parse de power text do marketplace
    */
-  parsePowerText(powerText) {
-    let power = 0;
-    const powerClean = powerText.replace(/[^\d\s.,]/g, '').trim();
-    const powerNumber = parseFloat(powerClean.replace(/\s/g, '').replace(',', '.'));
+parsePowerText(powerText) {
+  let power = 0;
+  const powerClean = powerText.replace(/[^\d\s.,]/g, '').trim();
+  
+  // ✅ CORREÇÃO: Tratar separadores de milhares corretamente
+  let numberStr = powerClean.replace(/\s/g, ''); // Remove espaços
+  
+  const temPonto = numberStr.includes('.');
+  const temVirgula = numberStr.includes(',');
+  const qtdPontos = (numberStr.match(/\./g) || []).length;
+  const qtdVirgulas = (numberStr.match(/,/g) || []).length;
+  
+  // Se tem múltiplos pontos ou múltiplas vírgulas → são separadores de milhares
+  if (qtdPontos > 1) {
+    // "41.350.000" → "41350000"
+    numberStr = numberStr.replace(/\./g, '');
+  } else if (qtdVirgulas > 1) {
+    // "41,350,000" → "41350000"
+    numberStr = numberStr.replace(/,/g, '');
+  } else if (temPonto && temVirgula) {
+    // Ambos: último é decimal
+    const ultimoPonto = numberStr.lastIndexOf('.');
+    const ultimaVirgula = numberStr.lastIndexOf(',');
     
-    if (!isNaN(powerNumber)) {
-      power = powerNumber;
-      const powerLower = powerText.toLowerCase();
-      if (powerLower.includes('eh/s')) power *= 1000000000;
-      else if (powerLower.includes('ph/s')) power *= 1000000;
-      else if (powerLower.includes('th/s')) power *= 1000;
-      else if (powerLower.includes('gh/s')) power *= 1;
-      else if (powerLower.includes('mh/s')) power /= 1000;
+    if (ultimaVirgula > ultimoPonto) {
+      // "1.234,56" → "1234.56"
+      numberStr = numberStr.replace(/\./g, '').replace(',', '.');
+    } else {
+      // "1,234.56" → "1234.56"
+      numberStr = numberStr.replace(/,/g, '');
     }
-    
-    return power;
-  },
+  } else if (temVirgula) {
+    // Só vírgula: pode ser decimal OU milhar
+    const partes = numberStr.split(',');
+    if (partes.length === 2 && partes[1].length === 3 && partes[0].length > 3) {
+      // "12345,000" → milhar
+      numberStr = numberStr.replace(',', '');
+    } else {
+      // "3,14" → decimal
+      numberStr = numberStr.replace(',', '.');
+    }
+  } else if (temPonto) {
+    // Só ponto: pode ser decimal OU milhar
+    const partes = numberStr.split('.');
+    if (partes.length === 2 && partes[1].length === 3 && partes[0].length > 3) {
+      // "12345.000" → milhar
+      numberStr = numberStr.replace('.', '');
+    }
+    // Senão: "5.513" → mantém como decimal
+  }
+  
+  const powerNumber = parseFloat(numberStr);
+  
+  if (!isNaN(powerNumber)) {
+    power = powerNumber;
+    const powerLower = powerText.toLowerCase();
+    if (powerLower.includes('eh/s')) power *= 1000000000;
+    else if (powerLower.includes('ph/s')) power *= 1000000;
+    else if (powerLower.includes('th/s')) power *= 1000;
+    else if (powerLower.includes('gh/s')) power *= 1;
+    else if (powerLower.includes('mh/s')) power /= 1000;
+  }
+  
+  return power;
+},
   
   /**
    * Parse de bonus text
