@@ -9,8 +9,6 @@ const UI_Tabs = {
       tab.addEventListener('click', function() {
         const targetTab = this.dataset.tab;
         
-        console.log('🔍 Aba clicada:', targetTab);  // ✅ DEBUG
-        
         // Remove active de todas
         tabs.forEach(t => t.classList.remove('active'));
         tabContents.forEach(tc => tc.classList.remove('active'));
@@ -18,6 +16,10 @@ const UI_Tabs = {
         // Adiciona active na selecionada
         this.classList.add('active');
         document.getElementById(targetTab).classList.add('active');
+        
+        // ⬇️ ADICIONE ESTAS LINHAS AQUI
+      
+    
         
         // ========== CHAMAR MOSTRAR() DOS MÓDULOS ==========
         
@@ -110,14 +112,20 @@ if (targetTab === 'farmcalculator') {
           }
         }
         
-        // Inventário
-        else if (targetTab === 'inventario') {
-          console.log('🎯 Aba: Inventário');
-          if (typeof UI_Inventario !== 'undefined' && typeof UI_Inventario.mostrar === 'function') {
-            console.log('✅ Chamando UI_Inventario.mostrar()');
-            UI_Inventario.mostrar();
-          }
-        }
+// Inventário
+else if (targetTab === 'inventario') {
+  console.log('🎯 Aba: Inventário');
+  if (typeof UI_Inventario !== 'undefined') {
+    // ⬇️ MUDANÇA AQUI: recarregar() se tiver dados, senão mostrar()
+    if (UI_Inventario.minersCached && UI_Inventario.minersCached.length > 0) {
+      console.log('✅ Recarregando dados do inventário');
+      UI_Inventario.recarregar();
+    } else {
+      console.log('✅ Mostrando formulário inicial');
+      UI_Inventario.mostrar();
+    }
+  }
+}
         
         // Racks
         else if (targetTab === 'racks') {
