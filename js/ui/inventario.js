@@ -280,6 +280,18 @@ const UI_Inventario = {
     this.renderResultado();
   },
   
+  // ========== FUNÇÕES AUXILIARES PARA IDENTIFICAÇÃO ÚNICA ==========
+  
+  getMinerUniqueId: function(miner) {
+    // Cria ID único: nome|power|level
+    return miner.name + '|' + miner.power.toFixed(2) + '|' + miner.level;
+  },
+  
+  findMinerByUniqueId: function(uniqueId) {
+    // Encontra índice da miner no cache original (não ordenado)
+    return this.minersCached.findIndex(m => this.getMinerUniqueId(m) === uniqueId);
+  },
+  
   // ========== SIMULAÇÃO ==========
   
   toggleRemoverMiner: function(minerIndex) {
@@ -310,7 +322,13 @@ const UI_Inventario = {
     this.renderResultado();
   },
   
-  mostrarModalQuantidade: function(inventoryIndex) {
+  mostrarModalQuantidade: function(uniqueId) {
+    const inventoryIndex = this.findMinerByUniqueId(uniqueId);
+    if (inventoryIndex === -1) {
+      Utils.mostrarNotificacao('❌ Miner não encontrada!', 'error');
+      return;
+    }
+    
     const miner = this.minersCached[inventoryIndex];
     if (!miner) return;
     
@@ -402,12 +420,13 @@ const UI_Inventario = {
     
     // Verificação de segurança
     if (!userData || !userData.roomData || !userData.roomData.miners || !userData.powerData) {
+      const cells = miner.cells || 2;
       return {
         impactoTotal: 0,
         impactoPrimeira: 0,
         impactoDemais: 0,
         comBonus: false,
-        celulasTotal: quantidade * (miner.cells || 2)
+        celulasTotal: quantidade * cells
       };
     }
     
@@ -423,12 +442,23 @@ const UI_Inventario = {
     const impactoDemais = (quantidade - 1) * impactoPorDuplicata;
     const impactoTotal = impactoPrimeira + impactoDemais;
     
+    const cells = miner.cells || 2;
+    const celulasTotal = quantidade * cells;
+    
+    // Debug
+    console.log('🔍 calcularImpactoMultiplo:', {
+      miner: miner.name,
+      cells: cells,
+      quantidade: quantidade,
+      celulasTotal: celulasTotal
+    });
+    
     return {
       impactoTotal,
       impactoPrimeira,
       impactoDemais,
       comBonus: !miner.jaPossui,
-      celulasTotal: quantidade * miner.cells
+      celulasTotal: celulasTotal
     };
   },
   
@@ -1171,7 +1201,10 @@ const UI_Inventario = {
       html += '<td>' + statusText + '</td>';
       html += '<td>' + vendeText + '</td>';
       html += '<td style="text-align: center;">';
-      html += '<button onclick="UI_Inventario.mostrarModalQuantidade(' + i + ')" style="padding: 5px 10px; background: ' + (isAdded ? '#6c757d' : '#28a745') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
+      
+      // Usar uniqueId ao invés de índice para evitar problemas com ordenação
+      const uniqueId = this.getMinerUniqueId(m);
+      html += '<button onclick="UI_Inventario.mostrarModalQuantidade(\'' + uniqueId + '\')" style="padding: 5px 10px; background: ' + (isAdded ? '#6c757d' : '#28a745') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
       html += isAdded ? '🔄' : '✅';
       html += '</button>';
       html += '</td>';
@@ -1225,4 +1258,4 @@ const UI_Inventario = {
 };
 
 window.UI_Inventario = UI_Inventario;
-console.log('✅ UI_Inventario v10 FINAL (Filtro Vendíveis + Adicionar Miner Manual) loaded');
+console.log('✅ UI_Inventario v11 FINAL (Corrigido: Ordenação + Células de 1) loaded');
