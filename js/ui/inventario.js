@@ -1202,9 +1202,10 @@ const UI_Inventario = {
       html += '<td>' + vendeText + '</td>';
       html += '<td style="text-align: center;">';
       
-      // Usar uniqueId ao invés de índice para evitar problemas com ordenação
+      // Usar data-attribute para evitar problemas com caracteres especiais
       const uniqueId = this.getMinerUniqueId(m);
-      html += '<button onclick="UI_Inventario.mostrarModalQuantidade(\'' + uniqueId + '\')" style="padding: 5px 10px; background: ' + (isAdded ? '#6c757d' : '#28a745') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
+      const btnId = 'btn-inv-' + i;
+      html += '<button id="' + btnId + '" data-minerid="' + uniqueId + '" style="padding: 5px 10px; background: ' + (isAdded ? '#6c757d' : '#28a745') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
       html += isAdded ? '🔄' : '✅';
       html += '</button>';
       html += '</td>';
@@ -1216,6 +1217,15 @@ const UI_Inventario = {
     html += '</div>';
     
     div.innerHTML = html;
+    
+    // Adicionar event listeners para botões do inventário (usar data-attribute)
+    const inventoryButtons = div.querySelectorAll('button[data-minerid]');
+    inventoryButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const minerId = btn.getAttribute('data-minerid');
+        this.mostrarModalQuantidade(minerId);
+      });
+    });
     
     // Restaurar posição do scroll
     setTimeout(() => {
@@ -1258,4 +1268,4 @@ const UI_Inventario = {
 };
 
 window.UI_Inventario = UI_Inventario;
-console.log('✅ UI_Inventario v11 FINAL (Corrigido: Ordenação + Células de 1) loaded');
+console.log('✅ UI_Inventario v11.1 FINAL (Corrigido: Apóstrofos em nomes) loaded');

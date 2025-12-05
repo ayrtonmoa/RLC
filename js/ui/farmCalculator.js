@@ -1,4 +1,5 @@
 // js/ui/farmCalculator.js - Calculadora de Farming Completa com Sistema de Ligas
+// v2.3 - CoinGecko API usando polygon-ecosystem-token (testado e confirmado!)
 
 const UI_FarmCalculator = {
   // Estado interno
@@ -9,10 +10,10 @@ state: {
     prices: {},
     loading: false,
     useBRL: false,
-    useEUR: false,  // ✅ ADICIONAR
+    useEUR: false,
     showQuantity: false,
     usdToBrl: 5.0,
-    usdToEur: 0.92,  // ✅ ADICIONAR
+    usdToEur: 0.92,
     history: [],
     lastUpdate: null,
     showHistory: false,
@@ -26,7 +27,8 @@ state: {
 
   // Configurações
   CONFIG: {
-    BLOCKS_PER_DAY: 144.9664,
+    BLOCKS_PER_DAY: 144.9664, // 09:56 segundos por bloco (padrão)
+    BLOCKS_PER_DAY_LTC_TRX: 143.5215, // 10:02 segundos por bloco para LTC e TRX
     GAME_COINS: ['RLT', 'RST', 'HMT'],
     NON_WITHDRAWABLE: ['ALGO', 'LTC'],
     FIXED_PRICES: {
@@ -58,7 +60,7 @@ state: {
     const conversions = {
       'RLT': 1e6,
       'RST': 1e6,
-      'SAT': 1e10,  // ✅ CORRIGIDO: era 1e8
+      'SAT': 1e10,
       'LTC_SMALL': 1e8,
       'BNB_SMALL': 1e10,
       'MATIC_SMALL': 1e10,
@@ -101,224 +103,221 @@ const leaguesFallback = {
   '68af01ce48490927df92d687': { 
     name: 'Bronze I', 
     rewards: { 
-      RLT: 0.74,       // 740000 / 1e6
-      RST: 46,         // 46000000 / 1e6
-      BTC: 0.00001790, // 17900 / 1e9 (5 zeros)
-      LTC: 0.00120     // 120000 / 1e8
+      RLT: 0.73828,
+      RST: 46,
+      BTC: 0.00000179,
+      LTC: 0.00119
     } 
   },
   '68af01ce48490927df92d686': { 
     name: 'Bronze II', 
     rewards: { 
-      RLT: 1.33984,    // 1339840 / 1e6
-      RST: 83,         // 83000000 / 1e6
-      BTC: 0.00003890, // 38900 / 1e9 (4 zeros)
-      LTC: 0.00253,    // 253000 / 1e8
-      BNB: 0.00067     // 6700000 / 1e10
+      RLT: 1.33984,
+      RST: 83,
+      BTC: 0.00003890,
+      LTC: 0.00253,
+      BNB: 0.00067
     } 
   },
   '68af01ce48490927df92d685': { 
     name: 'Bronze III', 
     rewards: { 
-      RLT: 1.3125,     // 1312500 / 1e6
-      RST: 81,         // 81000000 / 1e6
-      BTC: 0.00004130, // 41300 / 1e9 (4 zeros)
-      LTC: 0.00242,    // 242000 / 1e8
-      BNB: 0.00061,    // 6100000 / 1e10
-      POL: 2.16918     // 21691800000 / 1e10
+      RLT: 1.3125,
+      RST: 81,
+      BTC: 0.00000413,
+      LTC: 0.00242,
+      BNB: 0.00061,
+      POL: 2.16918
     } 
   },
   '68af01ce48490927df92d684': { 
     name: 'Silver I', 
     rewards: { 
-      RLT: 0.67274,    // 672740 / 1e6
-      RST: 42,         // 42000000 / 1e6
-      BTC: 0.00002340, // 23400 / 1e9 (4 zeros)
-      LTC: 0.00131,    // 131000 / 1e8
-      BNB: 0.00031,    // 3100000 / 1e10
-      POL: 1.05593,    // 10559300000 / 1e10
-      XRP: 0.11639     // 116390 / 1e6
+      RLT: 0.67274,
+      RST: 42,
+      BTC: 0.00000234,
+      LTC: 0.00131,
+      BNB: 0.00031,
+      POL: 1.05593,
+      XRP: 0.11639
     } 
   },
   '68af01ce48490927df92d683': { 
     name: 'Silver II', 
     rewards: { 
-      RLT: 0.85851,    // 858510 / 1e6
-      RST: 53,         // 53000000 / 1e6
-      BTC: 0.00002710, // 27100 / 1e9 (4 zeros)
-      LTC: 0.00143,    // 143000 / 1e8
-      BNB: 0.00033,    // 3300000 / 1e10
-      POL: 1.04648,    // 10464800000 / 1e10
-      XRP: 0.10958,    // 109580 / 1e6
-      DOGE: 2.5646     // 25646 / 1e4
+      RLT: 0.85851,
+      RST: 53,
+      BTC: 0.00000271,
+      LTC: 0.00143,
+      BNB: 0.00033,
+      POL: 1.04648,
+      XRP: 0.10958,
+      DOGE: 2.5646
     } 
   },
   '68af01ce48490927df92d682': { 
     name: 'Silver III', 
     rewards: { 
-      RLT: 0.52083,    // 520830 / 1e6
-      RST: 32,         // 32000000 / 1e6
-      BTC: 0.00001790, // 17900 / 1e9 (4 zeros)
-      LTC: 0.00090,    // 90000 / 1e8
-      BNB: 0.00020,    // 2000000 / 1e10
-      POL: 0.59467,    // 5946700000 / 1e10
-      XRP: 0.05916,    // 59160 / 1e6
-      DOGE: 1.3153,    // 13153 / 1e4
-      ETH: 0.00008     // 800000 / 1e10
+      RLT: 0.52083,
+      RST: 32,
+      BTC: 0.00000179,
+      LTC: 0.00090,
+      BNB: 0.00020,
+      POL: 0.59467,
+      XRP: 0.05916,
+      DOGE: 1.3153,
+      ETH: 0.00008
     } 
   },
   '68af01ce48490927df92d681': { 
     name: 'Gold I', 
     rewards: { 
-      RLT: 0.66406,    // 664060 / 1e6
-      RST: 41,         // 41000000 / 1e6
-      BTC: 0.00002550, // 25500 / 1e9 (4 zeros)
-      LTC: 0.00122,    // 122000 / 1e8
-      BNB: 0.00025,    // 2500000 / 1e10
-      POL: 0.72453,    // 7245300000 / 1e10
-      XRP: 0.06847,    // 68470 / 1e6
-      DOGE: 1.4463,    // 14463 / 1e4
-      ETH: 0.00008,    // 800000 / 1e10
-      TRX: 1.68883     // 16888300000 / 1e10
+      RLT: 0.66406,
+      RST: 41,
+      BTC: 0.00000255,
+      LTC: 0.00122,
+      BNB: 0.00025,
+      POL: 0.72453,
+      XRP: 0.06847,
+      DOGE: 1.4463,
+      ETH: 0.00008,
+      TRX: 1.68883
     } 
   },
   '68af01ce48490927df92d680': { 
     name: 'Gold II', 
     rewards: { 
-      RLT: 1.4974,     // 1497400 / 1e6
-      RST: 92,         // 92000000 / 1e6
-      BTC: 0.00006010, // 60100 / 1e9 (4 zeros)
-      LTC: 0.00272,    // 272000 / 1e8
-      BNB: 0.000536,   // 5360000 / 1e10
-      POL: 1.4620,     // 14620000000 / 1e10
-      XRP: 0.131,      // 131000 / 1e6
-      DOGE: 2.634,     // 26340 / 1e4
-      ETH: 0.000137,   // 1370000 / 1e10
-      TRX: 2.776,      // 27760000000 / 1e10
-      SOL: 0.00838,    // 8380000 / 1e9
-      HMT: 625         // 625000000 / 1e6
+      RLT: 1.4974,
+      RST: 92,
+      BTC: 0.00000601,
+      LTC: 0.00272,
+      BNB: 0.000536,
+      POL: 1.4620,
+      XRP: 0.131,
+      DOGE: 2.634,
+      ETH: 0.000137,
+      TRX: 2.776,
+      SOL: 0.00838,
+      HMT: 625
     } 
   },
   '68af01ce48490927df92d67f': { 
     name: 'Gold III', 
     rewards: { 
-      RLT: 3.83681,    // 3836810 / 1e6
-      RST: 236,        // 236000000 / 1e6
-      BTC: 0.000016780, // 167800 / 1e9 (4 zeros)
-      LTC: 0.00792,    // 792000 / 1e8
-      BNB: 0.001607,   // 16070000 / 1e10
-      POL: 4.598,      // 45980000000 / 1e10
-      XRP: 0.429,      // 429000 / 1e6
-      DOGE: 8.959,     // 89590 / 1e4
-      ETH: 0.00048,    // 4800000 / 1e10
-      TRX: 10.212,     // 102120000000 / 1e10
-      SOL: 0.02192,    // 21920000 / 1e9
-      HMT: 1528        // 1528000000 / 1e6
+      RLT: 3.83681,
+      RST: 236,
+      BTC: 0.00001713,
+      LTC: 0.00808,
+      BNB: 0.00164,
+      POL: 4.69293,
+      XRP: 0.43817,
+      DOGE: 9.1441,
+      ETH: 0.00049,
+      TRX: 10.42311,
+      SOL: 0.02237,
+      HMT: 1528
     } 
   },
   '68af01ce48490927df92d67e': { 
     name: 'Platinum I', 
     rewards: { 
-      RLT: 6.38021,    // 6380210 / 1e6
-      RST: 392,        // 392000000 / 1e6
-      BTC: 0.000034080, // 340800 / 1e9 (4 zeros)
-      LTC: 0.01657,    // 1657000 / 1e8
-      BNB: 0.003476,   // 34760000 / 1e10
-      POL: 10.205,     // 102050000000 / 1e10
-      XRP: 0.981,      // 981000 / 1e6
-      DOGE: 21.095,    // 210950 / 1e4
-      ETH: 0.001178,   // 11780000 / 1e10
-      TRX: 25.51,      // 255100000000 / 1e10
-      SOL: 0.05039,    // 50390000 / 1e9
-      ALGO: 20.02919,  // 20029190 / 1e6
-      HMT: 3125        // 3125000000 / 1e6
+      RLT: 6.38021,
+      RST: 392,
+      BTC: 0.00003408,
+      LTC: 0.01657,
+      BNB: 0.003476,
+      POL: 10.205,
+      XRP: 0.981,
+      DOGE: 21.095,
+      ETH: 0.001178,
+      TRX: 25.51,
+      SOL: 0.05039,
+      ALGO: 20.02919,
+      HMT: 3125
     } 
   },
   '68af01ce48490927df92d67d': { 
     name: 'Platinum II', 
     rewards: { 
-      RLT: 3.06858,    // 3068580 / 1e6
-      RST: 189,        // 189000000 / 1e6
-      BTC: 0.000021790, // 217900 / 1e9 (4 zeros)
-      LTC: 0.01081,    // 1081000 / 1e8
-      BNB: 0.00231,    // 23100000 / 1e10
-      POL: 6.923,      // 69230000000 / 1e10
-      XRP: 0.679,      // 679000 / 1e6
-      DOGE: 14.889,    // 148890 / 1e4
-      ETH: 0.000842,   // 8420000 / 1e10
-      TRX: 18.732,     // 187320000000 / 1e10
-      SOL: 0.04138,    // 41380000 / 1e9
-      ALGO: 8.600969,  // 8600969 / 1e6
-      HMT: 2430        // 2430000000 / 1e6
+      RLT: 3.06858,
+      RST: 189,
+      BTC: 0.00002179,
+      LTC: 0.01081,
+      BNB: 0.00231,
+      POL: 6.923,
+      XRP: 0.679,
+      DOGE: 14.889,
+      ETH: 0.000842,
+      TRX: 18.732,
+      SOL: 0.04138,
+      ALGO: 8.600969,
+      HMT: 2430
     } 
   },
   '68af01ce48490927df92d67c': { 
     name: 'Platinum III', 
     rewards: { 
-      RLT: 1.75781,    // 1757810 / 1e6
-      RST: 108,        // 108000000 / 1e6
-      BTC: 0.000014990, // 149900 / 1e9 (4 zeros)
-      LTC: 0.00766,    // 766000 / 1e8
-      BNB: 0.00168,    // 16800000 / 1e10
-      POL: 5.2,        // 52000000000 / 1e10
-      XRP: 0.52,       // 520000 / 1e6
-      DOGE: 11.87,     // 118700 / 1e4
-      ETH: 0.00069,    // 6900000 / 1e10
-      TRX: 15.85,      // 158500000000 / 1e10
-      SOL: 0.04,       // 40000000 / 1e9
-      ALGO: 5.51825,   // 5518250 / 1e6
-      HMT: 2084        // 2084000000 / 1e6
+      RLT: 1.75781,
+      RST: 108,
+      BTC: 0.00001499,
+      LTC: 0.00766,
+      BNB: 0.00168,
+      POL: 5.2,
+      XRP: 0.52,
+      DOGE: 11.87,
+      ETH: 0.00069,
+      TRX: 15.85,
+      SOL: 0.04,
+      ALGO: 5.51825,
+      HMT: 2084
     } 
   },
   '68af01ce48490927df92d67b': { 
     name: 'Diamond I', 
     rewards: { 
-      // SEM RLT na API
-      RST: 93,         // 93000000 / 1e6
-      BTC: 0.000012780, // 127800 / 1e9 (4 zeros)
-      LTC: 0.01282,    // 1282000 / 1e8
-      BNB: 0.00167,    // 16700000 / 1e10
-      POL: 8.51715,    // 85171500000 / 1e10
-      XRP: 0.75866,    // 758660 / 1e6
-      DOGE: 11.4355,   // 114355 / 1e4
-      ETH: 0.00059,    // 5900000 / 1e10
-      TRX: 8.13289,    // 81328900000 / 1e10
-      SOL: 0.01607,    // 16070000 / 1e9
-      ALGO: 11.854008  // 11854008 / 1e6
+      RST: 93,
+      BTC: 0.00001278,
+      LTC: 0.01282,
+      BNB: 0.00167,
+      POL: 8.51715,
+      XRP: 0.75866,
+      DOGE: 11.4355,
+      ETH: 0.00059,
+      TRX: 8.13289,
+      SOL: 0.01607,
+      ALGO: 11.854008
     } 
   },
   '68af01ce48490927df92d67a': { 
     name: 'Diamond II', 
     rewards: { 
-      // SEM RLT na API
-      RST: 84,         // 84000000 / 1e6
-      BTC: 0.000015430, // 154300 / 1e9 (4 zeros)
-      LTC: 0.01547,    // 1547000 / 1e8
-      BNB: 0.00231,    // 23100000 / 1e10
-      POL: 10.27932,   // 102793200000 / 1e10
-      XRP: 0.91562,    // 915620 / 1e6
-      DOGE: 13.8015,   // 138015 / 1e4
-      ETH: 0.00071,    // 7100000 / 1e10
-      TRX: 9.81555,    // 98155500000 / 1e10
-      SOL: 0.01939,    // 19390000 / 1e9
-      ALGO: 14.30656   // 14306560 / 1e6
+      RST: 84,
+      BTC: 0.00001543,
+      LTC: 0.01547,
+      BNB: 0.00231,
+      POL: 10.27932,
+      XRP: 0.91562,
+      DOGE: 13.8015,
+      ETH: 0.00071,
+      TRX: 9.81555,
+      SOL: 0.01939,
+      ALGO: 14.30656
     } 
   },
   '68af01ce48490927df92d679': { 
     name: 'Diamond III', 
     rewards: { 
-      // SEM RLT na API
-      RST: 11,         // 11000000 / 1e6
-      BTC: 0.00001980, // 19800 / 1e9 (4 zeros)
-      LTC: 0.00199,    // 199000 / 1e8
-      BNB: 0.0003,     // 3000000 / 1e10
-      POL: 1.32163,    // 13216300000 / 1e10
-      XRP: 0.11772,    // 117720 / 1e6
-      DOGE: 1.7745,    // 17745 / 1e4
-      ETH: 0.00009,    // 900000 / 1e10
-      TRX: 1.262,      // 12620000000 / 1e10
-      SOL: 0.00249,    // 2490000 / 1e9
-      ALGO: 1.83942    // 1839420 / 1e6
+      RST: 11,
+      BTC: 0.00001980,
+      LTC: 0.00199,
+      BNB: 0.0003,
+      POL: 1.32163,
+      XRP: 0.11772,
+      DOGE: 1.7745,
+      ETH: 0.00009,
+      TRX: 1.262,
+      SOL: 0.00249,
+      ALGO: 1.83942
     } 
   }
 };
@@ -416,7 +415,7 @@ const leaguesFallback = {
         power: parseFloat(power),
         networkTotal: Object.values(this.parseNetworkData(network)).reduce((sum, v) => sum + v, 0),
         results: result,
-        username: username  // Adicionar username
+        username: username
       };
       
       // Carregar histórico do usuário específico
@@ -449,44 +448,57 @@ const leaguesFallback = {
     this.render();
 
     try {
-      const symbols = 'BTC,ETH,BNB,SOL,XRP,DOGE,TRX,LTC,POL,ALGO';
-      const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${symbols}&tsyms=USD`;
+      // CoinGecko API - Pega cryptos em USD, BRL e EUR numa chamada só!
+      // Nota: Testado - "polygon-ecosystem-token" é o ID que funciona!
+      const ids = 'bitcoin,ethereum,binancecoin,solana,ripple,dogecoin,tron,litecoin,polygon-ecosystem-token,algorand';
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,brl,eur`;
       
       const res = await fetch(url);
       
       if (res.ok) {
         const data = await res.json();
+        
+        // Mapear IDs da CoinGecko para símbolos
         this.state.prices = {
-          BTC: data.BTC?.USD || fallback.BTC,
-          ETH: data.ETH?.USD || fallback.ETH,
-          BNB: data.BNB?.USD || fallback.BNB,
-          SOL: data.SOL?.USD || fallback.SOL,
-          XRP: data.XRP?.USD || fallback.XRP,
-          DOGE: data.DOGE?.USD || fallback.DOGE,
-          TRX: data.TRX?.USD || fallback.TRX,
-          LTC: data.LTC?.USD || fallback.LTC,
-          POL: data.POL?.USD || fallback.POL,
-          ALGO: data.ALGO?.USD || fallback.ALGO
+          BTC: data.bitcoin?.usd || fallback.BTC,
+          ETH: data.ethereum?.usd || fallback.ETH,
+          BNB: data.binancecoin?.usd || fallback.BNB,
+          SOL: data.solana?.usd || fallback.SOL,
+          XRP: data.ripple?.usd || fallback.XRP,
+          DOGE: data.dogecoin?.usd || fallback.DOGE,
+          TRX: data.tron?.usd || fallback.TRX,
+          LTC: data.litecoin?.usd || fallback.LTC,
+          POL: data['polygon-ecosystem-token']?.usd || fallback.POL,
+          ALGO: data.algorand?.usd || fallback.ALGO
         };
+        
+        // Calcular taxas de câmbio usando BTC como referência
+        if (data.bitcoin?.brl && data.bitcoin?.eur) {
+          this.state.usdToBrl = data.bitcoin.brl / data.bitcoin.usd;
+          this.state.usdToEur = data.bitcoin.eur / data.bitcoin.usd;
+          console.log('✅ CoinGecko: Preços e câmbio atualizados!', {
+            BTC: this.state.prices.BTC,
+            usdToBrl: this.state.usdToBrl.toFixed(4),
+            usdToEur: this.state.usdToEur.toFixed(4)
+          });
+        } else {
+          // Fallback para câmbio se não vier
+          this.state.usdToBrl = 5.0;
+          this.state.usdToEur = 0.92;
+          console.warn('⚠️ CoinGecko: Câmbio não disponível, usando fallback');
+        }
+        
         this.state.lastUpdate = new Date();
         this.state.priceStatus = 'success';
       } else {
-        this.state.prices = fallback;
-        this.state.priceStatus = 'fallback';
+        throw new Error('CoinGecko API retornou erro');
       }
-      
-    try {
-      const brlRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-      if (brlRes.ok) {
-        const brlData = await brlRes.json();
-        this.state.usdToBrl = brlData.rates.BRL;
-        this.state.usdToEur = brlData.rates.EUR;  // ✅ ADICIONAR
-      }
-      } catch {}
       
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('Erro ao buscar preços:', error);
       this.state.prices = fallback;
+      this.state.usdToBrl = 5.0;
+      this.state.usdToEur = 0.92;
       this.state.priceStatus = 'fallback';
     }
 
@@ -538,10 +550,6 @@ const leaguesFallback = {
     const userData = State.getUserData();
     const blockRewards = this.getBlockRewards(userData);
     
-    const blocksPerDay = this.CONFIG.BLOCKS_PER_DAY;
-    const blocksPerWeek = blocksPerDay * 7;
-    const blocksPerMonth = blocksPerDay * 30;
-    
     const calculations = [];
     
     Object.keys(blockRewards).forEach(coin => {
@@ -551,6 +559,13 @@ const leaguesFallback = {
       const contribution = (myPowerEh / networkPowerEh) * 100;
       const blockReward = blockRewards[coin];
       const myRewardPerBlock = (contribution / 100) * blockReward;
+      
+      // Usar blocos/dia específico para LTC e TRX
+      const blocksPerDay = (coin === 'LTC' || coin === 'TRX') 
+        ? this.CONFIG.BLOCKS_PER_DAY_LTC_TRX 
+        : this.CONFIG.BLOCKS_PER_DAY;
+      const blocksPerWeek = blocksPerDay * 7;
+      const blocksPerMonth = blocksPerDay * 30;
       
       const isGameCoin = this.CONFIG.GAME_COINS.includes(coin);
       const price = this.CONFIG.FIXED_PRICES[coin] || this.state.prices[coin] || 0;
@@ -598,7 +613,7 @@ const leaguesFallback = {
     
     if (isCrypto) {
       const decimals = period === 'block' ? 4 : 2;
-      if (this.state.useEUR) {  // ✅ ADICIONAR
+      if (this.state.useEUR) {
         return `€${(valueUSD * this.state.usdToEur).toFixed(decimals)}`;
       } else if (this.state.useBRL) {
         return `R$ ${(valueUSD * this.state.usdToBrl).toFixed(decimals)}`;
@@ -623,7 +638,7 @@ const leaguesFallback = {
     };
   },
 
-  // Obter comparação com histórico
+  // Obter comparação com histórico - CORRIGIDO
   getComparison() {
     if (this.state.history.length < 2) return null;
     
@@ -633,8 +648,17 @@ const leaguesFallback = {
     const powerChange = ((current.power - previous.power) / previous.power) * 100;
     const networkChange = ((current.networkTotal - previous.networkTotal) / previous.networkTotal) * 100;
     
-    const currentBest = current.results?.find(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin));  // ✅ FILTRAR
-    const previousBest = previous.results?.find(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin));  // ✅ FILTRAR
+    // Filtrar e ordenar para pegar a melhor crypto sacável
+    const currentCryptos = current.results
+      ?.filter(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
+      .sort((a, b) => b.monthly - a.monthly) || [];
+    
+    const previousCryptos = previous.results
+      ?.filter(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
+      .sort((a, b) => b.monthly - a.monthly) || [];
+    
+    const currentBest = currentCryptos[0];
+    const previousBest = previousCryptos[0];
     
     const currentBestProfit = currentBest?.monthly || 0;
     const previousBestProfit = previousBest?.monthly || 0;
@@ -845,7 +869,7 @@ const leaguesFallback = {
     
     // Linha 2: Info de blocos
     html += `<div style="text-align: center; margin-bottom: 15px; padding: 10px; background: #e3f2fd; border-radius: 6px;">`;
-    html += `<span style="font-weight: 600; color: #007bff;">📊 Blocos/dia: ${this.CONFIG.BLOCKS_PER_DAY}</span>`;
+    html += `<span style="font-weight: 600; color: #007bff;">📊 Blocos/dia: ${this.CONFIG.BLOCKS_PER_DAY} (padrão) | LTC/TRX: ${this.CONFIG.BLOCKS_PER_DAY_LTC_TRX}</span>`;
     html += '</div>';
     
     // Campo Network Data
@@ -918,10 +942,14 @@ const leaguesFallback = {
       html += `<div style="font-size: 13px; color: ${comparison.powerChange > 0 ? 'green' : comparison.powerChange < 0 ? 'red' : '#666'}; margin-top: 4px;">${comparison.powerDiff > 0 ? '+' : ''}${comparison.powerDiff.toFixed(3)} Eh/s (${comparison.powerChange > 0 ? '↑' : comparison.powerChange < 0 ? '↓' : '→'} ${Math.abs(comparison.powerChange).toFixed(2)}%)</div>`;
       html += '</div>';
       
-      // Melhor Crypto
-      const currentBest = this.state.history[0].results?.find(r => !this.CONFIG.GAME_COINS.includes(r.coin));
+      // Melhor Crypto - CORRIGIDO
+      const currentCryptos = this.state.history[0].results
+        ?.filter(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
+        .sort((a, b) => b.monthly - a.monthly) || [];
+      const currentBest = currentCryptos[0];
       const currentBestProfit = currentBest?.monthly || 0;
-html += '<div>';
+      
+      html += '<div>';
       html += `<div style="font-size: 12px; color: #666;">Melhor Crypto (${comparison.currentBestCoin})</div>`;
       html += `<div style="font-size: 18px; color: #28a745; font-weight: bold;">${this.state.useEUR ? `€${(currentBestProfit * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(currentBestProfit * this.state.usdToBrl).toFixed(2)}` : `$${currentBestProfit.toFixed(2)}`}/mês</div>`;
       html += `<div style="font-size: 13px; color: ${comparison.profitChange > 0 ? 'green' : comparison.profitChange < 0 ? 'red' : '#666'}; margin-top: 4px;">${comparison.profitDiff > 0 ? '+' : ''}${this.state.useEUR ? `€${(comparison.profitDiff * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(comparison.profitDiff * this.state.usdToBrl).toFixed(2)}` : `$${comparison.profitDiff.toFixed(2)}`} (${comparison.profitChange > 0 ? '↑' : comparison.profitChange < 0 ? '↓' : '→'} ${Math.abs(comparison.profitChange).toFixed(2)}%)</div>`;
@@ -934,10 +962,13 @@ html += '<div>';
       html += '</div>';
     }
 
-    // Melhor Crypto
+    // Melhor Crypto - CORRIGIDO
     if (this.state.results) {
-      const bestCrypto = this.state.results
-        .find(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin));  // ✅ FILTRAR
+      const withdrawableCryptos = this.state.results
+        .filter(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
+        .sort((a, b) => b.monthly - a.monthly);
+      
+      const bestCrypto = withdrawableCryptos[0];
       
       if (bestCrypto) {
         html += '<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin-bottom: 20px;">';
@@ -945,7 +976,7 @@ html += '<div>';
         html += '<div style="background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #ffc107;">';
         html += '<div style="font-size: 14px; color: #666; margin-bottom: 4px;">🎯 Recomendação</div>';
         html += `<div style="font-size: 24px; color: #ff9800; font-weight: bold;">${bestCrypto.coin} <span style="background: #e3f2fd; color: #007bff; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">Crypto</span></div>`;
-        html += `<div style="font-size: 13px; color: #666; margin-top: 8px;">💡 Esta é a crypto mais lucrativa com sua contribuição de <strong>${bestCrypto.contribution}%</strong></div>`;
+        html += `<div style="font-size: 13px; color: #666; margin-top: 8px;">💡 Esta é a crypto mais lucrativa e sacável com sua contribuição de <strong>${bestCrypto.contribution}%</strong></div>`;
         html += '</div>';
         
 html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">';
@@ -962,17 +993,18 @@ html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 
         html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${(bestCrypto.monthlyQty * 12).toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * 12 * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * 12 * this.state.usdToBrl).toFixed(2)}` : `$${(bestCrypto.monthly * 12).toFixed(2)}`)}</div>`;
         html += '</div>';
         html += '</div>';
+        html += '</div>';
       }
     }
 
-    // Top 3 Cryptos
+    // Top 3 Cryptos - CORRIGIDO
     if (this.state.results) {
       const topCryptos = this.state.results
-        .filter(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))  // ✅ FILTRAR
+        .filter(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
         .slice(0, 3);
       if (topCryptos.length >= 3) {
         html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
-        html += '<h3 style="margin: 0 0 15px 0;">🥇🥈🥉 Top 3 Cryptos</h3>';
+        html += '<h3 style="margin: 0 0 15px 0;">🥇🥈🥉 Top 3 Cryptos (Sacáveis)</h3>';
         html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">';
         
         topCryptos.forEach((coin, idx) => {
@@ -1003,8 +1035,8 @@ html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 
     const statusIcon = this.state.priceStatus === 'success' ? '🟢' : this.state.priceStatus === 'fallback' ? '🟡' : '⚪';
     const statusText = this.state.priceStatus === 'fallback' ? ' (fallback)' : '';
     html += `<div style="background: #e3f2fd; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 11px; color: #666;">`;
-    html += `<div>${statusIcon} 📡 Fonte: <strong style="color: #007bff;">CryptoCompare API</strong>${statusText}</div>`;
-    html += `<div>💱 Câmbio: <strong style="color: #007bff;">ExchangeRate-API</strong> (R$ ${this.state.usdToBrl.toFixed(2)} | €${this.state.usdToEur.toFixed(2)})</div>`;  // ✅ ADICIONAR EUR
+    html += `<div>${statusIcon} 📡 Fonte: <strong style="color: #007bff;">CoinGecko API</strong>${statusText} (1 chamada para tudo!)</div>`;
+    html += `<div>💰 Preços em tempo real | 💱 Câmbio: <strong>R$ ${this.state.usdToBrl.toFixed(4)}</strong> | <strong>€${this.state.usdToEur.toFixed(4)}</strong></div>`;
     html += '</div>';
     
     html += '<div style="max-height: 300px; overflow-y: auto;">';
@@ -1015,7 +1047,7 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
       html += '<div style="text-align: right;">';
       html += `<div style="color: #ff9800; font-size: 14px; font-weight: bold;">$${price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
       html += `<div style="color: #666; font-size: 12px;">R$ ${(price * this.state.usdToBrl).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
-      html += `<div style="color: #666; font-size: 12px;">€${(price * this.state.usdToEur).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;  // ✅ ADICIONAR
+      html += `<div style="color: #666; font-size: 12px;">€${(price * this.state.usdToEur).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
       html += '</div>';
       html += '</div>';
       html += '</div>';
@@ -1068,13 +1100,13 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
       html += '</tr></thead><tbody>';
       
       this.state.results.forEach((r, idx) => {
-        const isTopCrypto = !r.isGameCoin && this.state.results.filter(coin => !coin.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(coin.coin)).indexOf(r) === 0;
+        const withdrawableCryptos = this.state.results.filter(coin => !coin.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(coin.coin));
+        const isTopCrypto = !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin) && withdrawableCryptos.indexOf(r) === 0;
         const rowClass = isTopCrypto ? ' style="background: #fff3cd;"' : '';
-        const isNonWithdrawable = this.CONFIG.NON_WITHDRAWABLE.includes(r.coin);  // ✅ VERIFICAR
+        const isNonWithdrawable = this.CONFIG.NON_WITHDRAWABLE.includes(r.coin);
         
         html += `<tr${rowClass}>`;
-        html += `<td><strong>${r.coin}</strong> <span style="background: ${r.isGameCoin ? '#e3f2fd' : '#f3e5f5'}; color: ${r.isGameCoin ? '#007bff' : '#6f42c1'}; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">${r.isGameCoin ? 'Game' : 'Crypto'}</span>${isTopCrypto ? ' <span style="background: #fff3cd; color: #ff9800; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🏆 TOP</span>' : ''}${isNonWithdrawable ? ' <span style="background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🚫 Não sacável</span>' : ''}</td>`;  // ✅ BADGE
-        //
+        html += `<td><strong>${r.coin}</strong> <span style="background: ${r.isGameCoin ? '#e3f2fd' : '#f3e5f5'}; color: ${r.isGameCoin ? '#007bff' : '#6f42c1'}; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">${r.isGameCoin ? 'Game' : 'Crypto'}</span>${isTopCrypto ? ' <span style="background: #fff3cd; color: #ff9800; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🏆 TOP</span>' : ''}${isNonWithdrawable ? ' <span style="background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🚫 Não sacável</span>' : ''}</td>`;
         html += `<td style="text-align: right; font-size: 13px;">${r.contribution}%</td>`;
         html += `<td style="text-align: right;">${this.formatValue(r.block, r.blockQty, !r.isGameCoin, r.coin, 'block')}</td>`;
         html += `<td style="text-align: right;">${this.formatValue(r.daily, r.dailyQty, !r.isGameCoin, r.coin, 'daily')}</td>`;
