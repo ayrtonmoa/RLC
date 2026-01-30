@@ -1,7 +1,7 @@
 // js/config.js - Configurações e Constantes do Sistema
 
 const CONFIG = {
-  PROXY: "https://morning-thunder-0ce3.wminerrc.workers.dev/?",
+  PROXY: "https://rlc-proxy.ayrtonmoa.workers.dev/?",
   
   MINER_LEVELS: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Unreal'],
   
