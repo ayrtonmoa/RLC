@@ -102,7 +102,7 @@ state: {
 const leaguesFallback = {
   '68af01ce48490927df92d687': { 
     name: 'Bronze I', 
-    rewards: { RLT: 0.76, RST: 48, BTC: 0.00000201, LTC: 0.00138 } 
+    rewards: { RLT: 0.73828, RST: 46, BTC: 0.00000179, LTC: 0.00119 } 
   },
   '68af01ce48490927df92d686': { 
     name: 'Bronze II', 
@@ -110,55 +110,55 @@ const leaguesFallback = {
   },
   '68af01ce48490927df92d685': { 
     name: 'Bronze III', 
-    rewards: { RLT: 1.37, RST: 84, BTC: 0.0000052, LTC: 0.0034, BNB: 0.00064, POL: 4.61 } 
+    rewards: { RLT: 1.9, RST: 117, BTC: 0.00000759, LTC: 0.0049, BNB: 0.00087, POL: 6.73 } 
   },
   '68af01ce48490927df92d684': { 
     name: 'Silver I', 
-    rewards: { RLT: 0.71, RST: 44, BTC: 0.00000288, LTC: 0.0018, BNB: 0.00032, POL: 2.19, XRP: 0.17 } 
+    rewards: { RLT: 1.12, RST: 69, BTC: 0.00000494, LTC: 0.003, BNB: 0.00051, POL: 3.76, XRP: 0.3 } 
   },
   '68af01ce48490927df92d683': { 
     name: 'Silver II', 
-    rewards: { RLT: 0.9, RST: 55, BTC: 0.0000032, LTC: 0.0019, BNB: 0.00034, POL: 2.08, XRP: 0.16, DOGE: 3.88 } 
+    rewards: { RLT: 1.32, RST: 81, BTC: 0.00000528, LTC: 0.0031, BNB: 0.00049, POL: 3.44, XRP: 0.26, DOGE: 6.39 } 
   },
   '68af01ce48490927df92d682': { 
     name: 'Silver III', 
-    rewards: { RLT: 0.61, RST: 37, BTC: 0.00000266, LTC: 0.0015, BNB: 0.00022, POL: 1.49, XRP: 0.11, DOGE: 2.49, ETH: 0.00013 } 
+    rewards: { RLT: 1.08, RST: 66, BTC: 0.00000471, LTC: 0.0026, BNB: 0.0004, POL: 2.63, XRP: 0.19, DOGE: 4.42, ETH: 0.00024 } 
   },
   '68af01ce48490927df92d681': { 
     name: 'Gold I', 
-    rewards: { RLT: 0.69, RST: 43, BTC: 0.0000031, LTC: 0.0016, BNB: 0.00026, POL: 1.48, XRP: 0.1, DOGE: 2.24, ETH: 0.00011, TRX: 2 } 
+    rewards: { RLT: 0.81, RST: 50, BTC: 0.00000396, LTC: 0.0021, BNB: 0.0003, POL: 1.9, XRP: 0.13, DOGE: 2.87, ETH: 0.00015, TRX: 2.56 } 
   },
   '68af01ce48490927df92d680': { 
     name: 'Gold II', 
-    rewards: { RLT: 1.56, RST: 92, BTC: 0.000007, LTC: 0.003, BNB: 0.00045, POL: 2.57, XRP: 0.17, DOGE: 3.77, ETH: 0.00018, TRX: 3.18, SOL: 0.0118, HMT: 625 } 
+    rewards: { RLT: 1.3, RST: 80, BTC: 0.00000632, LTC: 0.0027, BNB: 0.0004, POL: 2.29, XRP: 0.15, DOGE: 3.39, ETH: 0.00017, TRX: 2.87, SOL: 0.0107, HMT: 625 } 
   },
   '68af01ce48490927df92d67f': { 
     name: 'Gold III', 
-    rewards: { RLT: 4, RST: 244, BTC: 0.000018, LTC: 0.00853, BNB: 0.0017, POL: 7.27, XRP: 0.49, DOGE: 11.38, ETH: 0.00058, TRX: 11.8, SOL: 0.0265, HMT: 1528 } 
+    rewards: { RLT: 3.33, RST: 204, BTC: 0.0000176, LTC: 0.0084, BNB: 0.00127, POL: 7.71, XRP: 0.52, DOGE: 12.03, ETH: 0.00061, TRX: 10.83, SOL: 0.028, HMT: 1528 } 
   },
   '68af01ce48490927df92d67e': { 
     name: 'Platinum I', 
-    rewards: { RLT: 6.73, RST: 392, BTC: 0.00003861, LTC: 0.0192, BNB: 0.00298, POL: 18.74, XRP: 1.31, DOGE: 30.88, ETH: 0.00161, TRX: 29.35, SOL: 0.0393, ALGO: 33.4, HMT: 3125 } 
+    rewards: { RLT: 5.51, RST: 338, BTC: 0.00003546, LTC: 0.0175, BNB: 0.00273, POL: 17.15, XRP: 1.2, DOGE: 28.39, ETH: 0.00148, TRX: 27.05, SOL: 0.0362, ALGO: 30.9, HMT: 3125 } 
   },
   '68af01ce48490927df92d67d': { 
     name: 'Platinum II', 
-    rewards: { RLT: 3.4, RST: 209, BTC: 0.00002928, LTC: 0.0149, BNB: 0.00236, POL: 15.16, XRP: 1.08, DOGE: 26.01, ETH: 0.00139, TRX: 25.7, SOL: 0.0528, ALGO: 17, HMT: 2430 } 
+    rewards: { RLT: 2.58, RST: 158, BTC: 0.00002172, LTC: 0.0107, BNB: 0.00174, POL: 11.11, XRP: 0.8, DOGE: 19.41, ETH: 0.00104, TRX: 19.35, SOL: 0.0398, ALGO: 12.9, HMT: 2430 } 
   },
   '68af01ce48490927df92d67c': { 
     name: 'Platinum III', 
-    rewards: { RLT: 2.69, RST: 165, BTC: 0.000028, LTC: 0.0148, BNB: 0.00241, POL: 16.03, XRP: 1.18, DOGE: 28.97, ETH: 0.00159, TRX: 30.21, SOL: 0.0777, ALGO: 15.1, HMT: 2084 } 
+    rewards: { RLT: 1.48, RST: 91, BTC: 0.00001466, LTC: 0.0073, BNB: 0.00125, POL: 8.22, XRP: 0.61, DOGE: 15.45, ETH: 0.00085, TRX: 16.42, SOL: 0.0423, ALGO: 8.3, HMT: 2084 } 
   },
   '68af01ce48490927df92d67b': { 
     name: 'Diamond I', 
-    rewards: { RST: 179, BTC: 0.00003136, LTC: 0.0347, BNB: 0.00317, POL: 35.23, XRP: 2.24, DOGE: 35.87, ETH: 0.00173, TRX: 11.14, SOL: 0.0277, ALGO: 40.9 } 
+    rewards: { RST: 81, BTC: 0.00001428, LTC: 0.0158, BNB: 0.00144, POL: 16.04, XRP: 1.02, DOGE: 16.33, ETH: 0.00079, TRX: 5.07, SOL: 0.0126, ALGO: 18.6 } 
   },
   '68af01ce48490927df92d67a': { 
     name: 'Diamond II', 
-    rewards: { RST: 168, BTC: 0.0000392, LTC: 0.0434, BNB: 0.00453, POL: 44.03, XRP: 2.8, DOGE: 44.84, ETH: 0.00216, TRX: 13.93, SOL: 0.0346, ALGO: 51.1 } 
+    rewards: { RST: 84, BTC: 0.00001746, LTC: 0.0192, BNB: 0.00201, POL: 19.5, XRP: 1.24, DOGE: 19.86, ETH: 0.00096, TRX: 6.17, SOL: 0.0153, ALGO: 22.6 } 
   },
   '68af01ce48490927df92d679': { 
     name: 'Diamond III', 
-    rewards: { RST: 19.17, BTC: 0.00000448, LTC: 0.005, BNB: 0.00052, POL: 5.03, XRP: 0.32, DOGE: 5.12, ETH: 0.00025, TRX: 1.59, SOL: 0.004, ALGO: 5.8 } 
+    rewards: { RST: 11, BTC: 0.00000198, LTC: 0.00199, BNB: 0.0003, POL: 1.32163, XRP: 0.11772, DOGE: 1.7745, ETH: 0.00009, TRX: 1.262, SOL: 0.00249, ALGO: 1.83942 } 
   }
 };
     try {
