@@ -1,5 +1,3 @@
-// js/ui/resumo.js - Aba Resumo & Perfil (COM VALORES EXATOS)
-
 const UI_Resumo = {
   mostrar(user) {
     const powerData = user.powerData;
@@ -11,23 +9,19 @@ const UI_Resumo = {
     }
 
     const avatarUrl = CONFIG.AVATAR_BASE_URL + user.avatar_id + ".png";
-
     const allMiners = roomData.miners || [];
     const uniqueMiners = allMiners.filter((miner, index, self) =>
       index === self.findIndex((m) => m.miner_id === miner.miner_id)
     );
 
     const basePowerMinersFromRoom = allMiners.reduce((sum, miner) => sum + miner.power, 0);
-    
-    // CORREÇÃO: Usar o bônus direto da API, não recalcular
     const bonusPowerFromApi = powerData.bonus;
-    
-    // Total calculado = base + bonus (da API) + racks + games + temp
     const calculatedTotalPower = basePowerMinersFromRoom + bonusPowerFromApi + powerData.racks + powerData.games + powerData.temp;
 
     const totalApiEHS = Utils.formatPower(powerData.current_power * 1e9);
     const totalCalculadoEHS = Utils.formatPower(calculatedTotalPower * 1e9);
     const difference = (powerData.current_power - calculatedTotalPower) * 1e9;
+    const diffClass = Math.abs(difference) < 1000 ? 'good' : 'warning';
 
     State.addDebugInfo(`Resumo: Base=${basePowerMinersFromRoom.toFixed(3)}, Bonus=${bonusPowerFromApi.toFixed(3)}, Total=${calculatedTotalPower.toFixed(3)}`);
 
@@ -35,7 +29,7 @@ const UI_Resumo = {
     div.innerHTML = `
       <h2>Resumo & Perfil do Usuário</h2>
       
-      <div class="summary-item" style="margin-bottom: 20px;">
+      <div class="summary-item profile-section">
         <h3>Perfil do Jogador</h3>
         <div class="profile-header">
           <img src="${avatarUrl}" alt="Avatar" class="avatar" onerror="this.style.display='none'">
@@ -45,25 +39,25 @@ const UI_Resumo = {
             <p><strong>Liga:</strong> ${user.league?.title?.pt || user.league?.title?.en || 'N/A'}</p>
           </div>
         </div>
-        ${user.league?.main_img_url ? `<img src="${user.league.main_img_url}" alt="Liga" height="60" style="margin-top: 10px;">` : ''}
+        ${user.league?.main_img_url ? `<img src="${user.league.main_img_url}" alt="Liga" class="league-image">` : ''}
       </div>
 
       <h3>Resumo de Poder</h3>
       <div class="summary-grid">
         <div class="summary-item">
           <h4>📊 Poder Total (Oficial)</h4>
-          <p style="font-size: 1.3em; font-weight: bold; color: #007bff;">${totalApiEHS}</p>
-          <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">Exato: ${powerData.current_power.toFixed(9)} GH/s</small>
+          <p class="power-value-main power-value-official">${totalApiEHS}</p>
+          <small class="power-value-small">Exato: ${powerData.current_power.toFixed(9)} GH/s</small>
         </div>
         <div class="summary-item">
           <h4>🔧 Poder Calculado</h4>
-          <p style="font-size: 1.3em; font-weight: bold;">${totalCalculadoEHS}</p>
-          <small style="color: #666; font-size: 0.85em; display: block; margin-top: 5px;">Exato: ${calculatedTotalPower.toFixed(9)} GH/s</small>
+          <p class="power-value-main">${totalCalculadoEHS}</p>
+          <small class="power-value-small">Exato: ${calculatedTotalPower.toFixed(9)} GH/s</small>
         </div>
         <div class="summary-item">
           <h4>📈 Diferença</h4>
-          <p style="font-size: 1.1em; font-weight: bold; color: ${Math.abs(difference) < 1000 ? 'green' : 'orange'};">${Utils.formatPowerSigned(difference)}</p>
-          <small style="color: #666;">${Math.abs(difference) < 1000 ? 'Precisão excelente!' : 'Pequena variação normal'}</small>
+          <p class="power-diff ${diffClass}">${Utils.formatPowerSigned(difference)}</p>
+          <small class="power-value-small">${Math.abs(difference) < 1000 ? 'Precisão excelente!' : 'Pequena variação normal'}</small>
         </div>
       </div>
       
@@ -103,10 +97,10 @@ const UI_Resumo = {
       </div>
       
       ${Math.abs(difference) > 1000 ? `
-        <div class="summary-item" style="background: #fff3cd; border-left: 4px solid #ffc107; margin-top: 20px;">
+        <div class="info-box">
           <h4>ℹ️ Sobre a Diferença</h4>
-          <p style="font-size: 13px;">Uma pequena diferença é normal devido a:</p>
-          <ul style="font-size: 12px; margin: 5px 0;">
+          <p>Uma pequena diferença é normal devido a:</p>
+          <ul>
             <li>Arredondamentos da API</li>
             <li>Bônus temporários ativos</li>
             <li>Eventos especiais</li>

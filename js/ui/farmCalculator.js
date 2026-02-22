@@ -1,9 +1,9 @@
 // js/ui/farmCalculator.js - Calculadora de Farming Completa com Sistema de Ligas
-// v2.3 - CoinGecko API usando polygon-ecosystem-token (testado e confirmado!)
+// v2.4 - CSS Cleanup
 
 const UI_FarmCalculator = {
   // Estado interno
-state: {
+  state: {
     miningPower: '',
     networkData: '',
     results: null,
@@ -96,71 +96,71 @@ state: {
     return rewards;
   },
 
-// Carregar dados das ligas da API (com fallback hardcoded)
+  // Carregar dados das ligas da API (com fallback hardcoded)
   async loadLeagueData() {
     // Fallback com dados das ligas
-const leaguesFallback = {
-  '68af01ce48490927df92d687': { 
-    name: 'Bronze I', 
-    rewards: { RLT: 0.73828, RST: 46, BTC: 0.00000179, LTC: 0.00119 } 
-  },
-  '68af01ce48490927df92d686': { 
-    name: 'Bronze II', 
-    rewards: { RLT: 1.33984, RST: 83, BTC: 0.00000389, LTC: 0.00253, BNB: 0.00067 } 
-  },
-  '68af01ce48490927df92d685': { 
-    name: 'Bronze III', 
-    rewards: { RLT: 1.9, RST: 117, BTC: 0.00000759, LTC: 0.0049, BNB: 0.00087, POL: 6.73 } 
-  },
-  '68af01ce48490927df92d684': { 
-    name: 'Silver I', 
-    rewards: { RLT: 1.12, RST: 69, BTC: 0.00000494, LTC: 0.003, BNB: 0.00051, POL: 3.76, XRP: 0.3 } 
-  },
-  '68af01ce48490927df92d683': { 
-    name: 'Silver II', 
-    rewards: { RLT: 1.32, RST: 81, BTC: 0.00000528, LTC: 0.0031, BNB: 0.00049, POL: 3.44, XRP: 0.26, DOGE: 6.39 } 
-  },
-  '68af01ce48490927df92d682': { 
-    name: 'Silver III', 
-    rewards: { RLT: 1.08, RST: 66, BTC: 0.00000471, LTC: 0.0026, BNB: 0.0004, POL: 2.63, XRP: 0.19, DOGE: 4.42, ETH: 0.00024 } 
-  },
-  '68af01ce48490927df92d681': { 
-    name: 'Gold I', 
-    rewards: { RLT: 0.81, RST: 50, BTC: 0.00000396, LTC: 0.0021, BNB: 0.0003, POL: 1.9, XRP: 0.13, DOGE: 2.87, ETH: 0.00015, TRX: 2.56 } 
-  },
-  '68af01ce48490927df92d680': { 
-    name: 'Gold II', 
-    rewards: { RLT: 1.3, RST: 80, BTC: 0.00000632, LTC: 0.0027, BNB: 0.0004, POL: 2.29, XRP: 0.15, DOGE: 3.39, ETH: 0.00017, TRX: 2.87, SOL: 0.0107, HMT: 625 } 
-  },
-  '68af01ce48490927df92d67f': { 
-    name: 'Gold III', 
-    rewards: { RLT: 3.33, RST: 204, BTC: 0.0000176, LTC: 0.0084, BNB: 0.00127, POL: 7.71, XRP: 0.52, DOGE: 12.03, ETH: 0.00061, TRX: 10.83, SOL: 0.028, HMT: 1528 } 
-  },
-  '68af01ce48490927df92d67e': { 
-    name: 'Platinum I', 
-    rewards: { RLT: 5.51, RST: 338, BTC: 0.00003546, LTC: 0.0175, BNB: 0.00273, POL: 17.15, XRP: 1.2, DOGE: 28.39, ETH: 0.00148, TRX: 27.05, SOL: 0.0362, ALGO: 30.9, HMT: 3125 } 
-  },
-  '68af01ce48490927df92d67d': { 
-    name: 'Platinum II', 
-    rewards: { RLT: 2.58, RST: 158, BTC: 0.00002172, LTC: 0.0107, BNB: 0.00174, POL: 11.11, XRP: 0.8, DOGE: 19.41, ETH: 0.00104, TRX: 19.35, SOL: 0.0398, ALGO: 12.9, HMT: 2430 } 
-  },
-  '68af01ce48490927df92d67c': { 
-    name: 'Platinum III', 
-    rewards: { RLT: 1.48, RST: 91, BTC: 0.00001466, LTC: 0.0073, BNB: 0.00125, POL: 8.22, XRP: 0.61, DOGE: 15.45, ETH: 0.00085, TRX: 16.42, SOL: 0.0423, ALGO: 8.3, HMT: 2084 } 
-  },
-  '68af01ce48490927df92d67b': { 
-    name: 'Diamond I', 
-    rewards: { RST: 81, BTC: 0.00001428, LTC: 0.0158, BNB: 0.00144, POL: 16.04, XRP: 1.02, DOGE: 16.33, ETH: 0.00079, TRX: 5.07, SOL: 0.0126, ALGO: 18.6 } 
-  },
-  '68af01ce48490927df92d67a': { 
-    name: 'Diamond II', 
-    rewards: { RST: 84, BTC: 0.00001746, LTC: 0.0192, BNB: 0.00201, POL: 19.5, XRP: 1.24, DOGE: 19.86, ETH: 0.00096, TRX: 6.17, SOL: 0.0153, ALGO: 22.6 } 
-  },
-  '68af01ce48490927df92d679': { 
-    name: 'Diamond III', 
-    rewards: { RST: 11, BTC: 0.00000198, LTC: 0.00199, BNB: 0.0003, POL: 1.32163, XRP: 0.11772, DOGE: 1.7745, ETH: 0.00009, TRX: 1.262, SOL: 0.00249, ALGO: 1.83942 } 
-  }
-};
+    const leaguesFallback = {
+      '68af01ce48490927df92d687': { 
+        name: 'Bronze I', 
+        rewards: { RLT: 0.73828, RST: 46, BTC: 0.00000179, LTC: 0.00119 } 
+      },
+      '68af01ce48490927df92d686': { 
+        name: 'Bronze II', 
+        rewards: { RLT: 1.33984, RST: 83, BTC: 0.00000389, LTC: 0.00253, BNB: 0.00067 } 
+      },
+      '68af01ce48490927df92d685': { 
+        name: 'Bronze III', 
+        rewards: { RLT: 1.9, RST: 117, BTC: 0.00000759, LTC: 0.0049, BNB: 0.00087, POL: 6.73 } 
+      },
+      '68af01ce48490927df92d684': { 
+        name: 'Silver I', 
+        rewards: { RLT: 1.12, RST: 69, BTC: 0.00000494, LTC: 0.003, BNB: 0.00051, POL: 3.76, XRP: 0.3 } 
+      },
+      '68af01ce48490927df92d683': { 
+        name: 'Silver II', 
+        rewards: { RLT: 1.32, RST: 81, BTC: 0.00000528, LTC: 0.0031, BNB: 0.00049, POL: 3.44, XRP: 0.26, DOGE: 6.39 } 
+      },
+      '68af01ce48490927df92d682': { 
+        name: 'Silver III', 
+        rewards: { RLT: 1.08, RST: 66, BTC: 0.00000471, LTC: 0.0026, BNB: 0.0004, POL: 2.63, XRP: 0.19, DOGE: 4.42, ETH: 0.00024 } 
+      },
+      '68af01ce48490927df92d681': { 
+        name: 'Gold I', 
+        rewards: { RLT: 0.81, RST: 50, BTC: 0.00000396, LTC: 0.0021, BNB: 0.0003, POL: 1.9, XRP: 0.13, DOGE: 2.87, ETH: 0.00015, TRX: 2.56 } 
+      },
+      '68af01ce48490927df92d680': { 
+        name: 'Gold II', 
+        rewards: { RLT: 1.3, RST: 80, BTC: 0.00000632, LTC: 0.0027, BNB: 0.0004, POL: 2.29, XRP: 0.15, DOGE: 3.39, ETH: 0.00017, TRX: 2.87, SOL: 0.0107, HMT: 625 } 
+      },
+      '68af01ce48490927df92d67f': { 
+        name: 'Gold III', 
+        rewards: { RLT: 3.33, RST: 204, BTC: 0.0000176, LTC: 0.0084, BNB: 0.00127, POL: 7.71, XRP: 0.52, DOGE: 12.03, ETH: 0.00061, TRX: 10.83, SOL: 0.028, HMT: 1528 } 
+      },
+      '68af01ce48490927df92d67e': { 
+        name: 'Platinum I', 
+        rewards: { RLT: 5.51, RST: 338, BTC: 0.00003546, LTC: 0.0175, BNB: 0.00273, POL: 17.15, XRP: 1.2, DOGE: 28.39, ETH: 0.00148, TRX: 27.05, SOL: 0.0362, ALGO: 30.9, HMT: 3125 } 
+      },
+      '68af01ce48490927df92d67d': { 
+        name: 'Platinum II', 
+        rewards: { RLT: 2.58, RST: 158, BTC: 0.00002172, LTC: 0.0107, BNB: 0.00174, POL: 11.11, XRP: 0.8, DOGE: 19.41, ETH: 0.00104, TRX: 19.35, SOL: 0.0398, ALGO: 12.9, HMT: 2430 } 
+      },
+      '68af01ce48490927df92d67c': { 
+        name: 'Platinum III', 
+        rewards: { RLT: 1.48, RST: 91, BTC: 0.00001466, LTC: 0.0073, BNB: 0.00125, POL: 8.22, XRP: 0.61, DOGE: 15.45, ETH: 0.00085, TRX: 16.42, SOL: 0.0423, ALGO: 8.3, HMT: 2084 } 
+      },
+      '68af01ce48490927df92d67b': { 
+        name: 'Diamond I', 
+        rewards: { RST: 81, BTC: 0.00001428, LTC: 0.0158, BNB: 0.00144, POL: 16.04, XRP: 1.02, DOGE: 16.33, ETH: 0.00079, TRX: 5.07, SOL: 0.0126, ALGO: 18.6 } 
+      },
+      '68af01ce48490927df92d67a': { 
+        name: 'Diamond II', 
+        rewards: { RST: 84, BTC: 0.00001746, LTC: 0.0192, BNB: 0.00201, POL: 19.5, XRP: 1.24, DOGE: 19.86, ETH: 0.00096, TRX: 6.17, SOL: 0.0153, ALGO: 22.6 } 
+      },
+      '68af01ce48490927df92d679': { 
+        name: 'Diamond III', 
+        rewards: { RST: 11, BTC: 0.00000198, LTC: 0.00199, BNB: 0.0003, POL: 1.32163, XRP: 0.11772, DOGE: 1.7745, ETH: 0.00009, TRX: 1.262, SOL: 0.00249, ALGO: 1.83942 } 
+      }
+    };
     try {
       const res = await fetch('https://rollercoin.com/api/game/league-list');
       if (!res.ok) throw new Error('Erro ao carregar ligas');
@@ -239,10 +239,7 @@ const leaguesFallback = {
     } catch (e) {
       console.error('Erro ao carregar dados:', e);
     }
-    
   },
-
-  
 
   // Salvar dados no localStorage - COM USERNAME
   saveToStorage(power, network, result, username) {
@@ -287,8 +284,6 @@ const leaguesFallback = {
     this.render();
 
     try {
-      // CoinGecko API - Pega cryptos em USD, BRL e EUR numa chamada só!
-      // Nota: Testado - "polygon-ecosystem-token" é o ID que funciona!
       const ids = 'bitcoin,ethereum,binancecoin,solana,ripple,dogecoin,tron,litecoin,polygon-ecosystem-token,algorand';
       const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,brl,eur`;
       
@@ -297,7 +292,6 @@ const leaguesFallback = {
       if (res.ok) {
         const data = await res.json();
         
-        // Mapear IDs da CoinGecko para símbolos
         this.state.prices = {
           BTC: data.bitcoin?.usd || fallback.BTC,
           ETH: data.ethereum?.usd || fallback.ETH,
@@ -311,7 +305,6 @@ const leaguesFallback = {
           ALGO: data.algorand?.usd || fallback.ALGO
         };
         
-        // Calcular taxas de câmbio usando BTC como referência
         if (data.bitcoin?.brl && data.bitcoin?.eur) {
           this.state.usdToBrl = data.bitcoin.brl / data.bitcoin.usd;
           this.state.usdToEur = data.bitcoin.eur / data.bitcoin.usd;
@@ -321,7 +314,6 @@ const leaguesFallback = {
             usdToEur: this.state.usdToEur.toFixed(4)
           });
         } else {
-          // Fallback para câmbio se não vier
           this.state.usdToBrl = 5.0;
           this.state.usdToEur = 0.92;
           console.warn('⚠️ CoinGecko: Câmbio não disponível, usando fallback');
@@ -344,7 +336,7 @@ const leaguesFallback = {
     this.render();
   },
 
-// Parser de dados da rede - CORRIGIDO para aceitar Zh/s e Eh/s
+  // Parser de dados da rede
   parseNetworkData(text) {
     const network = {};
     
@@ -355,22 +347,22 @@ const leaguesFallback = {
     while ((match = regexZh.exec(text)) !== null) {
       const symbol = match[2];
       const value = parseFloat(match[3]);
-      network[symbol] = value * 1000; // Zh/s -> Eh/s
+      network[symbol] = value * 1000;
     }
     
-    // Buscar Eh/s (Exahash) - já está na unidade certa
+    // Buscar Eh/s (Exahash)
     const regexEh = /([a-z]+)\s+([A-Z]+)\s+([\d.]+)\s+Eh\/s/gi;
     
     while ((match = regexEh.exec(text)) !== null) {
       const symbol = match[2];
       const value = parseFloat(match[3]);
-      network[symbol] = value; // Já está em Eh/s
+      network[symbol] = value;
     }
     
     return network;
   },
 
-  // Cálculo principal - PASSAR USERNAME
+  // Cálculo principal
   calculate() {
     const { miningPower, networkData } = this.state;
     
@@ -385,7 +377,6 @@ const leaguesFallback = {
     const myPowerEh = parseFloat(miningPower);
     const network = this.parseNetworkData(networkData);
     
-    // Obter block rewards baseado na liga do usuário
     const userData = State.getUserData();
     const blockRewards = this.getBlockRewards(userData);
     
@@ -399,7 +390,6 @@ const leaguesFallback = {
       const blockReward = blockRewards[coin];
       const myRewardPerBlock = (contribution / 100) * blockReward;
       
-      // Usar blocos/dia específico para LTC e TRX
       const blocksPerDay = (coin === 'LTC' || coin === 'TRX') 
         ? this.CONFIG.BLOCKS_PER_DAY_LTC_TRX 
         : this.CONFIG.BLOCKS_PER_DAY;
@@ -428,7 +418,6 @@ const leaguesFallback = {
     
     this.state.results = calculations;
     
-    // Salvar com username
     const username = userData?.name || 'unknown';
     this.saveToStorage(miningPower, networkData, calculations, username);
     
@@ -438,7 +427,7 @@ const leaguesFallback = {
     this.renderChart();
   },
 
-// Formatar valores
+  // Formatar valores
   formatValue(valueUSD, valueQty, isCrypto, coin, period = 'monthly') {
     if (this.state.showQuantity) {
       if (isCrypto) {
@@ -477,7 +466,7 @@ const leaguesFallback = {
     };
   },
 
-  // Obter comparação com histórico - CORRIGIDO
+  // Obter comparação com histórico
   getComparison() {
     if (this.state.history.length < 2) return null;
     
@@ -487,7 +476,6 @@ const leaguesFallback = {
     const powerChange = ((current.power - previous.power) / previous.power) * 100;
     const networkChange = ((current.networkTotal - previous.networkTotal) / previous.networkTotal) * 100;
     
-    // Filtrar e ordenar para pegar a melhor crypto sacável
     const currentCryptos = current.results
       ?.filter(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
       .sort((a, b) => b.monthly - a.monthly) || [];
@@ -543,7 +531,8 @@ const leaguesFallback = {
     const diffDays = Math.floor(diffHours / 24);
     return `há ${diffDays}d`;
   },
-// Deletar uma entrada específica do histórico
+
+  // Deletar uma entrada específica do histórico
   deleteHistoryEntry(index) {
     const username = this.state.currentUsername;
     if (!username) return;
@@ -560,6 +549,7 @@ const leaguesFallback = {
       this.render();
     }
   },
+
   // Renderizar gráfico
   renderChart() {
     if (this.state.history.length < 2) return;
@@ -642,7 +632,7 @@ const leaguesFallback = {
     });
   },
 
-  // Limpar histórico - DO USUÁRIO ATUAL
+  // Limpar histórico
   clearHistory() {
     const username = this.state.currentUsername;
     if (!username) {
@@ -657,6 +647,7 @@ const leaguesFallback = {
       this.render();
     }
   },
+
   // Exportar CSV
   exportCSV() {
     if (!this.state.results) return;
@@ -681,7 +672,7 @@ const leaguesFallback = {
     link.click();
   },
 
-// Função principal de renderização
+  // Função principal de renderização
   render() {
     const container = document.getElementById('farmcalculator');
     if (!container) return;
@@ -689,48 +680,46 @@ const leaguesFallback = {
     let html = '<h2>⚡ Farm Calculator</h2>';
 
     // Seção de Input
-    html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
-    
-    // Linha 1: Power e Botão alinhados
-    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">';
+    html += '<div class="farm-input-section">';
+    html += '<div class="farm-input-grid">';
     
     html += '<div>';
-    html += '<label style="font-weight: 600; margin-bottom: 8px; display: block;">Mining Power (Eh):</label>';
-    html += `<input type="text" id="farmMiningPower" value="${this.state.miningPower}" placeholder="100.106" style="width: 100%;">`;
+    html += '<label class="farm-input-label">Mining Power (Eh):</label>';
+    html += `<input type="text" id="farmMiningPower" value="${this.state.miningPower}" placeholder="100.106">`;
     html += '</div>';
     
     html += '<div>';
-    html += '<label style="font-weight: 600; margin-bottom: 8px; display: block;">&nbsp;</label>';
-    html += '<button onclick="UI_FarmCalculator.calculate()" style="width: 100%;">💰 Calcular</button>';
+    html += '<label class="farm-input-label">&nbsp;</label>';
+    html += '<button onclick="UI_FarmCalculator.calculate()">💰 Calcular</button>';
     html += '</div>';
     
     html += '</div>';
     
-    // Linha 2: Info de blocos
-    html += `<div style="text-align: center; margin-bottom: 15px; padding: 10px; background: #e3f2fd; border-radius: 6px;">`;
+    // Info de blocos
+    html += '<div class="farm-blocks-info">';
     html += `<span style="font-weight: 600; color: #007bff;">📊 Blocos/dia: ${this.CONFIG.BLOCKS_PER_DAY} (padrão) | LTC/TRX: ${this.CONFIG.BLOCKS_PER_DAY_LTC_TRX}</span>`;
     html += '</div>';
     
     // Campo Network Data
     html += '<div>';
-    html += '<label style="font-weight: 600; margin-bottom: 8px; display: block;">Rede das moedas:</label>';
-    html += `<textarea id="farmNetworkData" rows="3" placeholder="Total 59.869 Zh/s  rlt RLT 2.823 Zh/s rst RST 1.471 Zh/s..." style="width: 100%; font-family: monospace; font-size: 14px;">${this.state.networkData}</textarea>`;
+    html += '<label class="farm-input-label">Rede das moedas:</label>';
+    html += `<textarea id="farmNetworkData" rows="3" placeholder="Total 59.869 Zh/s  rlt RLT 2.823 Zh/s rst RST 1.471 Zh/s...">${this.state.networkData}</textarea>`;
     html += '</div>';
     
     html += '</div>';
 
-    // NOVA SEÇÃO: Informações da Liga
+    // Seção da Liga
     if (this.state.results) {
       const userData = State.getUserData();
       const leagueInfo = userData && userData.league_id ? this.leagueData[userData.league_id] : null;
       const blockRewards = this.getBlockRewards(userData);
       
-      html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px; color: white;">';
-      html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">';
+      html += '<div class="farm-league-section">';
+      html += '<div class="farm-league-header">';
       html += '<div>';
       html += '<h3 style="margin: 0; color: white;">🏆 Sua Liga</h3>';
       if (leagueInfo) {
-        html += `<div style="font-size: 24px; font-weight: bold; margin-top: 5px;">${leagueInfo.name}</div>`;
+        html += `<div class="farm-league-name">${leagueInfo.name}</div>`;
       } else {
         html += '<div style="font-size: 18px; margin-top: 5px;">Liga não detectada</div>';
       }
@@ -740,13 +729,13 @@ const leaguesFallback = {
       }
       html += '</div>';
       
-      html += '<div style="background: rgba(255,255,255,0.15); padding: 15px; border-radius: 6px; backdrop-filter: blur(10px);">';
+      html += '<div class="farm-league-rewards">';
       html += '<h4 style="margin: 0 0 12px 0; color: white;">📦 Block Rewards (sua liga)</h4>';
-      html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">';
+      html += '<div class="farm-rewards-grid">';
       
       Object.entries(blockRewards).forEach(([coin, reward]) => {
         const isGameCoin = this.CONFIG.GAME_COINS.includes(coin);
-        html += '<div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 6px; text-align: center;">';
+        html += '<div class="farm-reward-item">';
         html += `<div style="font-size: 11px; opacity: 0.9; margin-bottom: 4px;">${coin}</div>`;
         html += `<div style="font-size: 14px; font-weight: bold;">${isGameCoin ? reward.toFixed(6) : reward.toFixed(8)}</div>`;
         html += `<div style="font-size: 10px; opacity: 0.8;">${isGameCoin ? 'tokens' : 'crypto'}</div>`;
@@ -758,30 +747,30 @@ const leaguesFallback = {
       html += '</div>';
     }
 
-    // Comparação com histórico - COM VALORES ABSOLUTOS
+    // Comparação com histórico
     const comparison = this.getComparison();
     if (comparison) {
-      html += '<div style="background: #e8f4f8; border-left: 4px solid #007bff; padding: 15px; margin-bottom: 20px;">';
+      html += '<div class="farm-comparison-box">';
       html += '<h4 style="margin: 0 0 10px 0;">📊 Comparado com última pesquisa:</h4>';
-      html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">';
+      html += '<div class="farm-comparison-grid">';
       
       // Rede Total
       const currentNetworkZh = (this.state.history[0].networkTotal / 1000).toFixed(3);
       html += '<div>';
       html += '<div style="font-size: 12px; color: #666;">Rede Total</div>';
-      html += `<div style="font-size: 18px; color: #6f42c1; font-weight: bold;">${currentNetworkZh} Zh/s</div>`;
-      html += `<div style="font-size: 13px; color: ${comparison.networkChange > 0 ? 'green' : comparison.networkChange < 0 ? 'red' : '#666'}; margin-top: 4px;">${comparison.networkDiff > 0 ? '+' : ''}${comparison.networkDiff.toFixed(3)} Zh/s (${comparison.networkChange > 0 ? '↑' : comparison.networkChange < 0 ? '↓' : '→'} ${Math.abs(comparison.networkChange).toFixed(2)}%)</div>`;
+      html += `<div class="farm-comparison-value" style="color: #6f42c1;">${currentNetworkZh} Zh/s</div>`;
+      html += `<div class="farm-comparison-change" style="color: ${comparison.networkChange > 0 ? 'green' : comparison.networkChange < 0 ? 'red' : '#666'};">${comparison.networkDiff > 0 ? '+' : ''}${comparison.networkDiff.toFixed(3)} Zh/s (${comparison.networkChange > 0 ? '↑' : comparison.networkChange < 0 ? '↓' : '→'} ${Math.abs(comparison.networkChange).toFixed(2)}%)</div>`;
       html += '</div>';
       
       // Meu Power
       const currentPower = this.state.history[0].power;
       html += '<div>';
       html += '<div style="font-size: 12px; color: #666;">Meu Power</div>';
-      html += `<div style="font-size: 18px; color: #007bff; font-weight: bold;">${currentPower.toFixed(3)} Eh/s</div>`;
-      html += `<div style="font-size: 13px; color: ${comparison.powerChange > 0 ? 'green' : comparison.powerChange < 0 ? 'red' : '#666'}; margin-top: 4px;">${comparison.powerDiff > 0 ? '+' : ''}${comparison.powerDiff.toFixed(3)} Eh/s (${comparison.powerChange > 0 ? '↑' : comparison.powerChange < 0 ? '↓' : '→'} ${Math.abs(comparison.powerChange).toFixed(2)}%)</div>`;
+      html += `<div class="farm-comparison-value" style="color: #007bff;">${currentPower.toFixed(3)} Eh/s</div>`;
+      html += `<div class="farm-comparison-change" style="color: ${comparison.powerChange > 0 ? 'green' : comparison.powerChange < 0 ? 'red' : '#666'};">${comparison.powerDiff > 0 ? '+' : ''}${comparison.powerDiff.toFixed(3)} Eh/s (${comparison.powerChange > 0 ? '↑' : comparison.powerChange < 0 ? '↓' : '→'} ${Math.abs(comparison.powerChange).toFixed(2)}%)</div>`;
       html += '</div>';
       
-      // Melhor Crypto - CORRIGIDO
+      // Melhor Crypto
       const currentCryptos = this.state.history[0].results
         ?.filter(r => !this.CONFIG.GAME_COINS.includes(r.coin) && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
         .sort((a, b) => b.monthly - a.monthly) || [];
@@ -790,8 +779,8 @@ const leaguesFallback = {
       
       html += '<div>';
       html += `<div style="font-size: 12px; color: #666;">Melhor Crypto (${comparison.currentBestCoin})</div>`;
-      html += `<div style="font-size: 18px; color: #28a745; font-weight: bold;">${this.state.useEUR ? `€${(currentBestProfit * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(currentBestProfit * this.state.usdToBrl).toFixed(2)}` : `$${currentBestProfit.toFixed(2)}`}/mês</div>`;
-      html += `<div style="font-size: 13px; color: ${comparison.profitChange > 0 ? 'green' : comparison.profitChange < 0 ? 'red' : '#666'}; margin-top: 4px;">${comparison.profitDiff > 0 ? '+' : ''}${this.state.useEUR ? `€${(comparison.profitDiff * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(comparison.profitDiff * this.state.usdToBrl).toFixed(2)}` : `$${comparison.profitDiff.toFixed(2)}`} (${comparison.profitChange > 0 ? '↑' : comparison.profitChange < 0 ? '↓' : '→'} ${Math.abs(comparison.profitChange).toFixed(2)}%)</div>`;
+      html += `<div class="farm-comparison-value" style="color: #28a745;">${this.state.useEUR ? `€${(currentBestProfit * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(currentBestProfit * this.state.usdToBrl).toFixed(2)}` : `$${currentBestProfit.toFixed(2)}`}/mês</div>`;
+      html += `<div class="farm-comparison-change" style="color: ${comparison.profitChange > 0 ? 'green' : comparison.profitChange < 0 ? 'red' : '#666'};">${comparison.profitDiff > 0 ? '+' : ''}${this.state.useEUR ? `€${(comparison.profitDiff * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(comparison.profitDiff * this.state.usdToBrl).toFixed(2)}` : `$${comparison.profitDiff.toFixed(2)}`} (${comparison.profitChange > 0 ? '↑' : comparison.profitChange < 0 ? '↓' : '→'} ${Math.abs(comparison.profitChange).toFixed(2)}%)</div>`;
       if (comparison.currentBestCoin !== comparison.previousBestCoin) {
         html += `<div style="font-size: 11px; color: #ff9800; margin-top: 4px;">⚠️ Antes era ${comparison.previousBestCoin}</div>`;
       }
@@ -801,7 +790,7 @@ const leaguesFallback = {
       html += '</div>';
     }
 
-    // Melhor Crypto - CORRIGIDO
+    // Melhor Crypto
     if (this.state.results) {
       const withdrawableCryptos = this.state.results
         .filter(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
@@ -810,45 +799,45 @@ const leaguesFallback = {
       const bestCrypto = withdrawableCryptos[0];
       
       if (bestCrypto) {
-        html += '<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin-bottom: 20px;">';
+        html += '<div class="farm-best-crypto">';
         html += '<h3 style="margin: 0 0 15px 0;">🏆 Melhor Crypto para Farmar</h3>';
-        html += '<div style="background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #ffc107;">';
+        html += '<div class="farm-best-card">';
         html += '<div style="font-size: 14px; color: #666; margin-bottom: 4px;">🎯 Recomendação</div>';
-        html += `<div style="font-size: 24px; color: #ff9800; font-weight: bold;">${bestCrypto.coin} <span style="background: #e3f2fd; color: #007bff; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">Crypto</span></div>`;
+        html += `<div class="farm-best-name">${bestCrypto.coin} <span class="farm-badge-crypto">Crypto</span></div>`;
         html += `<div style="font-size: 13px; color: #666; margin-top: 8px;">💡 Esta é a crypto mais lucrativa e sacável com sua contribuição de <strong>${bestCrypto.contribution}%</strong></div>`;
         html += '</div>';
         
-html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">';
-        html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">';
+        html += '<div class="farm-stats-grid-3">';
+        html += '<div class="farm-stat-box">';
         html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Diário</div>';
-        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${bestCrypto.dailyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.daily * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.daily * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.daily.toFixed(2)}`)}</div>`;
+        html += `<div class="farm-stat-value">${this.state.showQuantity ? `${bestCrypto.dailyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.daily * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.daily * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.daily.toFixed(2)}`)}</div>`;
         html += '</div>';
-        html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">';
+        html += '<div class="farm-stat-box">';
         html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Mensal (30D)</div>';
-        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${bestCrypto.monthlyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.monthly.toFixed(2)}`)}</div>`;
+        html += `<div class="farm-stat-value">${this.state.showQuantity ? `${bestCrypto.monthlyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.monthly.toFixed(2)}`)}</div>`;
         html += '</div>';
-        html += '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">';
+        html += '<div class="farm-stat-box">';
         html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Anual (365D)</div>';
-        html += `<div style="font-size: 20px; color: #ff9800; font-weight: bold;">${this.state.showQuantity ? `${(bestCrypto.monthlyQty * 12).toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * 12 * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * 12 * this.state.usdToBrl).toFixed(2)}` : `$${(bestCrypto.monthly * 12).toFixed(2)}`)}</div>`;
+        html += `<div class="farm-stat-value">${this.state.showQuantity ? `${(bestCrypto.monthlyQty * 12).toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * 12 * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * 12 * this.state.usdToBrl).toFixed(2)}` : `$${(bestCrypto.monthly * 12).toFixed(2)}`)}</div>`;
         html += '</div>';
         html += '</div>';
         html += '</div>';
       }
     }
 
-    // Top 3 Cryptos - CORRIGIDO
+    // Top 3 Cryptos
     if (this.state.results) {
       const topCryptos = this.state.results
         .filter(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
         .slice(0, 3);
       if (topCryptos.length >= 3) {
-        html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
+        html += '<div class="farm-top3-section">';
         html += '<h3 style="margin: 0 0 15px 0;">🥇🥈🥉 Top 3 Cryptos (Sacáveis)</h3>';
-        html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">';
+        html += '<div class="farm-top3-grid">';
         
         topCryptos.forEach((coin, idx) => {
           const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-          html += `<div style="background: #fff; padding: 15px; border-radius: 8px; border: ${idx === 0 ? '2px solid #ffc107' : '1px solid #ddd'};">`;
+          html += `<div class="farm-top3-card ${idx === 0 ? 'gold' : ''}">`;
           html += `<div style="font-size: 28px; margin-bottom: 8px;">${medal}</div>`;
           html += `<div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">${coin.coin}</div>`;
           html += `<div style="font-size: 12px; color: #666; margin-bottom: 12px;">Contrib: ${coin.contribution}%</div>`;
@@ -862,26 +851,24 @@ html += '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 
       }
     }
 
-
-
     // Painel de Preços
-    html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
-    html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
+    html += '<div class="farm-prices-panel">';
+    html += '<div class="farm-prices-header">';
     html += '<h3 style="margin: 0;">💰 Cotações</h3>';
     html += '<button onclick="UI_FarmCalculator.fetchPrices()" style="padding: 6px 12px; font-size: 12px;">🔄 Atualizar</button>';
     html += '</div>';
     
     const statusIcon = this.state.priceStatus === 'success' ? '🟢' : this.state.priceStatus === 'fallback' ? '🟡' : '⚪';
     const statusText = this.state.priceStatus === 'fallback' ? ' (fallback)' : '';
-    html += `<div style="background: #e3f2fd; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 11px; color: #666;">`;
+    html += '<div class="farm-prices-info">';
     html += `<div>${statusIcon} 📡 Fonte: <strong style="color: #007bff;">CoinGecko API</strong>${statusText} (1 chamada para tudo!)</div>`;
     html += `<div>💰 Preços em tempo real | 💱 Câmbio: <strong>R$ ${this.state.usdToBrl.toFixed(4)}</strong> | <strong>€${this.state.usdToEur.toFixed(4)}</strong></div>`;
     html += '</div>';
     
-    html += '<div style="max-height: 300px; overflow-y: auto;">';
-Object.entries(this.state.prices).forEach(([coin, price]) => {
-      html += '<div style="background: #fff; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd;">';
-      html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+    html += '<div class="farm-prices-scroll">';
+    Object.entries(this.state.prices).forEach(([coin, price]) => {
+      html += '<div class="farm-price-item">';
+      html += '<div class="farm-price-row">';
       html += `<span style="font-weight: 600;">${coin}</span>`;
       html += '<div style="text-align: right;">';
       html += `<div style="color: #ff9800; font-size: 14px; font-weight: bold;">$${price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
@@ -900,29 +887,29 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
 
     // Gráfico
     if (this.state.history.length >= 2) {
-      html += '<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; height: 400px;">';
+      html += '<div class="farm-chart-container">';
       html += '<canvas id="farmChart"></canvas>';
       html += '</div>';
     }
 
     // Tabela de Resultados
     if (this.state.results) {
-      html += '<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
-      html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">';
+      html += '<div class="farm-results-section">';
+      html += '<div class="farm-results-header">';
       html += '<h3 style="margin: 0;">📊 Resultados Detalhados</h3>';
       
-      html += '<div style="display: flex; gap: 10px; flex-wrap: wrap;">';
+      html += '<div class="farm-toolbar">';
       html += '<button onclick="UI_FarmCalculator.exportCSV()" style="padding: 8px 16px; background: #28a745; font-size: 14px;">📥 Exportar CSV</button>';
       
-      html += '<div style="display: flex; background: #f8f9fa; border-radius: 8px; padding: 4px; border: 1px solid #ddd;">';
-      html += `<button onclick="UI_FarmCalculator.state.useBRL = false; UI_FarmCalculator.state.useEUR = false; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${!this.state.useBRL && !this.state.useEUR ? '#007bff' : 'transparent'}; color: ${!this.state.useBRL && !this.state.useEUR ? 'white' : '#333'}; font-weight: ${!this.state.useBRL && !this.state.useEUR ? 'bold' : 'normal'};">USD $</button>`;
-      html += `<button onclick="UI_FarmCalculator.state.useBRL = true; UI_FarmCalculator.state.useEUR = false; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${this.state.useBRL ? '#007bff' : 'transparent'}; color: ${this.state.useBRL ? 'white' : '#333'}; font-weight: ${this.state.useBRL ? 'bold' : 'normal'};">BRL R$</button>`;
-      html += `<button onclick="UI_FarmCalculator.state.useBRL = false; UI_FarmCalculator.state.useEUR = true; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${this.state.useEUR ? '#007bff' : 'transparent'}; color: ${this.state.useEUR ? 'white' : '#333'}; font-weight: ${this.state.useEUR ? 'bold' : 'normal'};">EUR €</button>`;
+      html += '<div class="farm-toggle-group">';
+      html += `<button onclick="UI_FarmCalculator.state.useBRL = false; UI_FarmCalculator.state.useEUR = false; UI_FarmCalculator.render();" class="farm-toggle-btn ${!this.state.useBRL && !this.state.useEUR ? 'active' : ''}">USD $</button>`;
+      html += `<button onclick="UI_FarmCalculator.state.useBRL = true; UI_FarmCalculator.state.useEUR = false; UI_FarmCalculator.render();" class="farm-toggle-btn ${this.state.useBRL ? 'active' : ''}">BRL R$</button>`;
+      html += `<button onclick="UI_FarmCalculator.state.useBRL = false; UI_FarmCalculator.state.useEUR = true; UI_FarmCalculator.render();" class="farm-toggle-btn ${this.state.useEUR ? 'active' : ''}">EUR €</button>`;
       html += '</div>';
       
-      html += '<div style="display: flex; background: #f8f9fa; border-radius: 8px; padding: 4px; border: 1px solid #ddd;">';
-      html += `<button onclick="UI_FarmCalculator.state.showQuantity = false; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${!this.state.showQuantity ? '#6f42c1' : 'transparent'}; color: ${!this.state.showQuantity ? 'white' : '#333'}; font-weight: ${!this.state.showQuantity ? 'bold' : 'normal'};">💰 Valor</button>`;
-      html += `<button onclick="UI_FarmCalculator.state.showQuantity = true; UI_FarmCalculator.render();" style="padding: 8px 16px; background: ${this.state.showQuantity ? '#6f42c1' : 'transparent'}; color: ${this.state.showQuantity ? 'white' : '#333'}; font-weight: ${this.state.showQuantity ? 'bold' : 'normal'};">🪙 Quantidade</button>`;
+      html += '<div class="farm-toggle-group">';
+      html += `<button onclick="UI_FarmCalculator.state.showQuantity = false; UI_FarmCalculator.render();" class="farm-toggle-btn ${!this.state.showQuantity ? 'active-purple' : ''}">💰 Valor</button>`;
+      html += `<button onclick="UI_FarmCalculator.state.showQuantity = true; UI_FarmCalculator.render();" class="farm-toggle-btn ${this.state.showQuantity ? 'active-purple' : ''}">🪙 Quantidade</button>`;
       html += '</div>';
       
       html += '</div>';
@@ -941,11 +928,10 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
       this.state.results.forEach((r, idx) => {
         const withdrawableCryptos = this.state.results.filter(coin => !coin.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(coin.coin));
         const isTopCrypto = !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin) && withdrawableCryptos.indexOf(r) === 0;
-        const rowClass = isTopCrypto ? ' style="background: #fff3cd;"' : '';
         const isNonWithdrawable = this.CONFIG.NON_WITHDRAWABLE.includes(r.coin);
         
-        html += `<tr${rowClass}>`;
-        html += `<td><strong>${r.coin}</strong> <span style="background: ${r.isGameCoin ? '#e3f2fd' : '#f3e5f5'}; color: ${r.isGameCoin ? '#007bff' : '#6f42c1'}; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">${r.isGameCoin ? 'Game' : 'Crypto'}</span>${isTopCrypto ? ' <span style="background: #fff3cd; color: #ff9800; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🏆 TOP</span>' : ''}${isNonWithdrawable ? ' <span style="background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px;">🚫 Não sacável</span>' : ''}</td>`;
+        html += `<tr${isTopCrypto ? ' class="farm-row-highlight"' : ''}>`;
+        html += `<td><strong>${r.coin}</strong> <span class="${r.isGameCoin ? 'farm-badge-game' : 'farm-badge-crypto'}">${r.isGameCoin ? 'Game' : 'Crypto'}</span>${isTopCrypto ? ' <span class="farm-badge-top">🏆 TOP</span>' : ''}${isNonWithdrawable ? ' <span class="farm-badge-no-withdraw">🚫 Não sacável</span>' : ''}</td>`;
         html += `<td style="text-align: right; font-size: 13px;">${r.contribution}%</td>`;
         html += `<td style="text-align: right;">${this.formatValue(r.block, r.blockQty, !r.isGameCoin, r.coin, 'block')}</td>`;
         html += `<td style="text-align: right;">${this.formatValue(r.daily, r.dailyQty, !r.isGameCoin, r.coin, 'daily')}</td>`;
@@ -961,8 +947,8 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
 
     // Histórico
     if (this.state.history.length > 0) {
-      html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">';
-      html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">';
+      html += '<div class="farm-history-section">';
+      html += '<div class="farm-history-header">';
       html += `<h3 style="margin: 0;">📜 Histórico de ${this.state.currentUsername || 'Usuário'} (${this.state.history.length})</h3>`;
       html += '<div>';
       html += `<button onclick="UI_FarmCalculator.state.showHistory = !UI_FarmCalculator.state.showHistory; UI_FarmCalculator.render();" style="padding: 6px 12px; font-size: 12px; margin-right: 8px;">${this.state.showHistory ? '▲ Ocultar' : '▼ Mostrar'}</button>`;
@@ -971,14 +957,11 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
       html += '</div>';
       
       if (this.state.showHistory) {
-        html += '<div style="max-height: 400px; overflow-y: auto;">';
+        html += '<div class="farm-history-scroll">';
         this.state.history.forEach((entry, idx) => {
-          html += '<div style="background: #fff; padding: 12px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd; position: relative;">';
-          
-          // Botão de delete no canto superior direito
-          html += `<button onclick="UI_FarmCalculator.deleteHistoryEntry(${idx})" style="position: absolute; top: 8px; right: 8px; background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">🗑️</button>`;
-          
-          html += '<div style="display: flex; justify-content: space-between; align-items: center; padding-right: 40px;">';
+          html += '<div class="farm-history-item">';
+          html += `<button onclick="UI_FarmCalculator.deleteHistoryEntry(${idx})" class="farm-history-delete">🗑️</button>`;
+          html += '<div class="farm-history-content">';
           html += '<div>';
           html += `<span style="font-weight: 600;">${this.formatDate(entry.timestamp)}</span>`;
           html += `<span style="color: #999; font-size: 12px; margin-left: 8px;">(${this.getTimeAgo(entry.timestamp)})</span>`;
@@ -997,7 +980,7 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
 
     container.innerHTML = html;
 
-    // Adicionar event listeners para os inputs
+    // Event listeners
     const powerInput = document.getElementById('farmMiningPower');
     const networkInput = document.getElementById('farmNetworkData');
     
@@ -1013,11 +996,10 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
       });
     }
 
-    // Renderizar gráfico se necessário
     setTimeout(() => this.renderChart(), 100);
   },
 
-   // Mostrar na interface - CARREGAR HISTÓRICO DO USUÁRIO
+  // Mostrar na interface
   mostrar(userData) {
     const container = document.getElementById('farmcalculator');
     if (!container) return;
@@ -1025,7 +1007,6 @@ Object.entries(this.state.prices).forEach(([coin, price]) => {
     const stateUser = State.getUserData();
     const user = stateUser || userData;
     
-    // Carregar histórico do usuário específico
     const username = user?.name;
     this.loadFromStorage(username);
     

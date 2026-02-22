@@ -1,4 +1,4 @@
-// js/ui/inventario.js - VERSÃO BASEADA NO CÓDIGO ANTIGO + SIMULAÇÃO
+// js/ui/inventario.js - VERSÃO CSS CLEANUP
 
 const UI_Inventario = {
   currentSort: { column: 'impacto', direction: 'desc' },
@@ -17,7 +17,7 @@ const UI_Inventario = {
     div.innerHTML = `
       <h2>Inventário</h2>
       
-      <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50;">
+      <div class="inv-box-green">
         <h4>💡 Como Usar</h4>
         <p>1. Vá em <a href="https://rollercoin.com/storage/inventory/miners" target="_blank">Storage > Miners no RollerCoin 🔗</a></p>
         <p>2. Clique "Load more" até carregar tudo</p>
@@ -25,7 +25,7 @@ const UI_Inventario = {
         <p>4. Cole abaixo e clique em Analisar</p>
       </div>
 
-      <textarea id="inventarioText" rows="8" placeholder="Cole aqui..." style="width: 100%; padding: 10px; margin: 15px 0;"></textarea>
+      <textarea id="inventarioText" rows="8" placeholder="Cole aqui..."></textarea>
       <button onclick="UI_Inventario.analisar()">🔍 Analisar Inventário</button>
       <button onclick="UI_Inventario.debugParsing()" style="background: #6c757d;">🐛 Debug Parsing</button>
       
@@ -280,19 +280,13 @@ const UI_Inventario = {
     this.renderResultado();
   },
   
-  // ========== FUNÇÕES AUXILIARES PARA IDENTIFICAÇÃO ÚNICA ==========
-  
   getMinerUniqueId: function(miner) {
-    // Cria ID único: nome|power|level
     return miner.name + '|' + miner.power.toFixed(2) + '|' + miner.level;
   },
   
   findMinerByUniqueId: function(uniqueId) {
-    // Encontra índice da miner no cache original (não ordenado)
     return this.minersCached.findIndex(m => this.getMinerUniqueId(m) === uniqueId);
   },
-  
-  // ========== SIMULAÇÃO ==========
   
   toggleRemoverMiner: function(minerIndex) {
     const idx = this.simulationState.removedMiners.findIndex(m => m.minerIndex === minerIndex);
@@ -303,7 +297,6 @@ const UI_Inventario = {
     } else {
       const userData = State.getUserData();
       
-      // Verificação de segurança
       if (!userData || !userData.roomData || !userData.roomData.miners) {
         Utils.mostrarNotificacao('❌ Erro: Dados do usuário não disponíveis!', 'error');
         return;
@@ -353,11 +346,11 @@ const UI_Inventario = {
     }
     
     const modalHTML = `
-      <div id="quantidadeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+      <div id="quantidadeModal" class="inv-modal-overlay">
+        <div class="inv-modal-content">
           <h3 style="margin: 0 0 20px 0;">📦 Quantas unidades adicionar?</h3>
           
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+          <div class="inv-modal-info">
             <h4 style="margin: 0 0 10px 0;">${miner.name} (${miner.level})</h4>
             <p style="margin: 5px 0; font-size: 13px;"><strong>Disponível:</strong> ${miner.quantity} unidades</p>
             <p style="margin: 5px 0; font-size: 13px;"><strong>Células:</strong> ${miner.cells}</p>
@@ -366,7 +359,7 @@ const UI_Inventario = {
             <p style="margin: 5px 0; font-size: 13px;"><strong>Vendível:</strong> ${miner.canBeSold ? '✅ Sim' : '❌ Não'}</p>
           </div>
           
-          <div style="background: #fff3e0; padding: 10px; border-radius: 5px; margin-bottom: 20px; font-size: 12px; border-left: 4px solid #FF9800;">
+          <div class="inv-modal-warning">
             <strong>⚠️ Importante:</strong><br>
             • <strong>1ª unidade:</strong> ${miner.jaPossui ? '❌ Sem bônus (você já possui)' : '✅ Com bônus de coleção'}<br>
             • <strong>2ª+ unidades:</strong> ❌ Sem bônus de coleção (duplicatas)
@@ -378,11 +371,11 @@ const UI_Inventario = {
                    style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #007bff; border-radius: 5px;">
           </div>
           
-          <div id="previewImpacto" style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #4CAF50;">
+          <div id="previewImpacto" class="inv-modal-preview">
             <div id="impactoCalculado"></div>
           </div>
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="inv-modal-buttons">
             <button onclick="UI_Inventario.fecharModal()" style="padding: 12px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">❌ Cancelar</button>
             <button onclick="UI_Inventario.confirmarAdicao(${inventoryIndex})" style="padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">✅ Adicionar</button>
           </div>
@@ -418,7 +411,6 @@ const UI_Inventario = {
   calcularImpactoMultiplo: function(miner, quantidade) {
     const userData = State.getUserData();
     
-    // Verificação de segurança
     if (!userData || !userData.roomData || !userData.roomData.miners || !userData.powerData) {
       const cells = miner.cells || 2;
       return {
@@ -445,14 +437,6 @@ const UI_Inventario = {
     const cells = miner.cells || 2;
     const celulasTotal = quantidade * cells;
     
-    // Debug
-    console.log('🔍 calcularImpactoMultiplo:', {
-      miner: miner.name,
-      cells: cells,
-      quantidade: quantidade,
-      celulasTotal: celulasTotal
-    });
-    
     return {
       impactoTotal,
       impactoPrimeira,
@@ -478,11 +462,11 @@ const UI_Inventario = {
   
   mostrarModalAdicionarMiner: function() {
     const modalHTML = `
-      <div id="adicionarMinerModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+      <div id="adicionarMinerModal" class="inv-modal-overlay">
+        <div class="inv-modal-content">
           <h3 style="margin: 0 0 20px 0;">➕ Adicionar Miner Manual</h3>
           
-          <div style="background: #e3f2fd; padding: 12px; border-radius: 5px; margin-bottom: 20px; font-size: 12px; border-left: 4px solid #2196F3;">
+          <div class="inv-modal-info" style="background: #e3f2fd; border-left-color: #2196F3;">
             <strong>ℹ️ Use para simular:</strong><br>
             • Miners que você ainda não possui<br>
             • Testar impacto antes de comprar<br>
@@ -543,7 +527,7 @@ const UI_Inventario = {
             </div>
           </div>
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="inv-modal-buttons">
             <button onclick="UI_Inventario.fecharModal()" style="padding: 12px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">❌ Cancelar</button>
             <button onclick="UI_Inventario.confirmarAdicionarMinerManual()" style="padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">✅ Adicionar</button>
           </div>
@@ -568,7 +552,7 @@ const UI_Inventario = {
       return;
     }
     
-    const power = powerValue * unit; // Converter para Gh/s
+    const power = powerValue * unit;
     
     const userData = State.getUserData();
     if (!userData) {
@@ -576,7 +560,6 @@ const UI_Inventario = {
       return;
     }
     
-    // Verificar se já possui
     const nomeInventario = nome.toLowerCase().trim();
     const minersComMesmoNome = userData.roomData.miners.filter(mi => 
       mi.name.toLowerCase().trim() === nomeInventario
@@ -604,7 +587,6 @@ const UI_Inventario = {
       }
     }
     
-    // Calcular impacto
     const baseAtual = userData.roomData.miners.reduce((s, m) => s + m.power, 0);
     const bonusPercentualAtual = userData.powerData.bonus_percent / 10000;
     
@@ -613,7 +595,6 @@ const UI_Inventario = {
     const ganhoBonusDeColecao = jaPossui ? 0 : (baseAtual * (bonus / 100));
     const impactoUmaUnidade = ganhoBase + ganhoBonusQueReceberá + ganhoBonusDeColecao;
     
-    // Criar objeto da miner
     const novaMiner = {
       name: nome,
       cells: cells,
@@ -625,12 +606,11 @@ const UI_Inventario = {
       jaPossui: jaPossui,
       minerInstalada: minerInstalada,
       tipoMatch: tipoMatch,
-      canBeSold: false, // Miners manuais marcadas como não vendíveis por padrão
-      isManual: true // Flag para identificar miners manuais
+      canBeSold: false,
+      isManual: true
     };
     
-    // Adicionar ao cache
-    this.minersCached.unshift(novaMiner); // Adiciona no início da lista
+    this.minersCached.unshift(novaMiner);
     
     this.fecharModal();
     this.renderResultado();
@@ -650,10 +630,7 @@ const UI_Inventario = {
       return;
     }
     
-    // Remover miners manuais do cache
     this.minersCached = this.minersCached.filter(m => !m.isManual);
-    
-    // Também remover da simulação se estiverem lá
     this.simulationState.addedMiners = this.simulationState.addedMiners.filter(m => !m.isManual);
     this.simulationState.active = this.simulationState.removedMiners.length > 0 || this.simulationState.addedMiners.length > 0;
     
@@ -667,7 +644,6 @@ const UI_Inventario = {
     
     const userData = State.getUserData();
     
-    // Verificação de segurança
     if (!userData || !userData.roomData || !userData.roomData.miners || !userData.powerData || !userData.roomData.racks) {
       Utils.mostrarNotificacao('❌ Erro: Dados do usuário não disponíveis!', 'error');
       return;
@@ -704,13 +680,11 @@ const UI_Inventario = {
     Utils.mostrarNotificacao('🔄 Simulação limpa!', 'info');
   },
   
-  // Alias para compatibilidade
   resetarSimulacao: function() {
     this.limparSimulacao();
   },
   
   calcularPowerSimulado: function(userData) {
-    // Verificação de segurança
     if (!userData || !userData.roomData || !userData.roomData.miners || !userData.powerData || !userData.roomData.racks) {
       return {
         poderAtual: 0,
@@ -729,12 +703,10 @@ const UI_Inventario = {
     
     const celulasOcupadas = userData.roomData.miners.reduce((s, m) => s + (m.width || 2), 0);
     
-    // Calcular capacidade total de forma segura
     let capacidadeTotal = 0;
     if (userData.roomData.room_levels && Array.isArray(userData.roomData.room_levels)) {
       capacidadeTotal = userData.roomData.room_levels.reduce((s, r) => s + (r === 3 ? 60 : r === 2 ? 36 : 18), 0);
     } else if (userData.roomData.racks && Array.isArray(userData.roomData.racks)) {
-      // Alternativa: calcular pelos racks
       capacidadeTotal = userData.roomData.racks.reduce((sum, r) => {
         return sum + (r.rack_info ? r.rack_info.width * r.rack_info.height : 0);
       }, 0);
@@ -779,7 +751,6 @@ const UI_Inventario = {
     const div = document.getElementById('resultadoInventario');
     const userData = State.getUserData();
     
-    // Salvar posição do scroll antes de renderizar
     let scrollPosInstalled = 0;
     let scrollPosInventory = 0;
     
@@ -793,7 +764,6 @@ const UI_Inventario = {
       scrollPosInventory = inventoryContainer.scrollTop;
     }
     
-    // Verificação de segurança
     if (!userData || !userData.roomData || !userData.roomData.miners || !userData.powerData || !userData.roomData.racks) {
       div.innerHTML = '<p class="error">❌ Dados do usuário incompletos. Recarregue a página e analise seu perfil novamente.</p>';
       return;
@@ -813,7 +783,7 @@ const UI_Inventario = {
       miners = miners.filter(m => m.canBeSold === true);
     }
     
-    // ORDENAR
+    // ORDENAR INVENTÁRIO
     miners.sort((a, b) => {
       let valA, valB;
       
@@ -871,6 +841,7 @@ const UI_Inventario = {
       }
     });
     
+    // ORDENAR INSTALADAS
     minersFracas.sort((a, b) => {
       let valA, valB;
       
@@ -928,44 +899,44 @@ const UI_Inventario = {
     html += '<p style="font-size: 12px; color: #666; margin: 0 0 15px 0;">Miners agrupadas por tipo | Mostrando: ' + miners.length + ' miners</p>';
     
     // INSTRUÇÕES
-    html += '<div style="margin: 15px 0; padding: 12px; background: #fff3e0; border-radius: 5px; border-left: 4px solid #FF9800;">';
+    html += '<div class="inv-box-yellow">';
     html += '<strong>🔄 Como usar:</strong> ';
     html += 'Clique nos botões ❌/✅ nas tabelas. Para miners com quantidade > 1, escolha quantas adicionar. ';
     html += 'Use a simulação para ver o impacto antes de fazer mudanças reais no inventário.';
     html += '</div>';
     
     // FILTROS
-    html += '<div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">';
-    html += '<strong>🔍 Filtros:</strong> ';
-    html += '<button onclick="UI_Inventario.filtrar(\'all\')" style="margin: 0 5px; padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; ' + (this.currentFilter === 'all' ? 'background: #007bff; color: white;' : 'background: white; color: #333;') + '">Todas</button>';
-    html += '<button onclick="UI_Inventario.filtrar(\'nao_possui\')" style="margin: 0 5px; padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; ' + (this.currentFilter === 'nao_possui' ? 'background: #28a745; color: white;' : 'background: white; color: #333;') + '">🆕 Não Possuo</button>';
-    html += '<button onclick="UI_Inventario.filtrar(\'possui_outra\')" style="margin: 0 5px; padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; ' + (this.currentFilter === 'possui_outra' ? 'background: #ff9800; color: white;' : 'background: white; color: #333;') + '">⚠️ Tier Diferente</button>';
-    html += '<button onclick="UI_Inventario.filtrar(\'possui_exata\')" style="margin: 0 5px; padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; ' + (this.currentFilter === 'possui_exata' ? 'background: #6c757d; color: white;' : 'background: white; color: #333;') + '">✔️ Já Possuo</button>';
-    html += '<button onclick="UI_Inventario.filtrar(\'vendiveis\')" style="margin: 0 5px; padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; cursor: pointer; ' + (this.currentFilter === 'vendiveis' ? 'background: #ffc107; color: black;' : 'background: white; color: #333;') + '">💰 Vendíveis</button>';
-    html += '<span style="margin-left: 15px;">|</span> ';
-    html += '<button onclick="UI_Inventario.mostrarModalAdicionarMiner()" style="margin: 0 5px; padding: 8px 15px; border: 1px solid #28a745; background: #28a745; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">➕ Adicionar Miner Manual</button>';
+    html += '<div class="filter-container">';
+    html += '<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">';
+    html += '<strong>🔍 Filtros:</strong>';
+    html += `<button onclick="UI_Inventario.filtrar('all')" class="filter-btn ${this.currentFilter === 'all' ? 'active-all' : ''}">Todas</button>`;
+    html += `<button onclick="UI_Inventario.filtrar('nao_possui')" class="filter-btn ${this.currentFilter === 'nao_possui' ? 'active-new' : ''}">🆕 Não Possuo</button>`;
+    html += `<button onclick="UI_Inventario.filtrar('possui_outra')" class="filter-btn ${this.currentFilter === 'possui_outra' ? 'active-warning' : ''}">⚠️ Tier Diferente</button>`;
+    html += `<button onclick="UI_Inventario.filtrar('possui_exata')" class="filter-btn ${this.currentFilter === 'possui_exata' ? 'active-success' : ''}">✔️ Já Possuo</button>`;
+    html += `<button onclick="UI_Inventario.filtrar('vendiveis')" class="filter-btn ${this.currentFilter === 'vendiveis' ? 'active-sell' : ''}">💰 Vendíveis</button>`;
+    html += '<span style="color: var(--border-color); margin: 0 10px;">|</span>';
+    html += '<button onclick="UI_Inventario.mostrarModalAdicionarMiner()" class="filter-btn" style="background: #28a745; color: white; border-color: #28a745; font-weight: bold;">➕ Adicionar Miner Manual</button>';
     
     const minersManualCount = this.minersCached.filter(m => m.isManual).length;
     if (minersManualCount > 0) {
-      html += '<button onclick="UI_Inventario.limparManuais()" style="margin: 0 5px; padding: 8px 15px; border: 1px solid #dc3545; background: #dc3545; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">🗑️ Limpar Manuais (' + minersManualCount + ')</button>';
+      html += '<button onclick="UI_Inventario.limparManuais()" style="padding: 8px 15px; border: none; background: #dc3545; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">🗑️ Limpar Manuais (' + minersManualCount + ')</button>';
     }
     
+    html += '</div>';
     html += '</div>';
     
     const celulasOcupadas = userData.roomData.miners.reduce((s, m) => s + (m.width || 2), 0);
     
-    // Calcular capacidade total de forma segura
     let capacidadeTotal = 0;
     if (userData.roomData.room_levels && Array.isArray(userData.roomData.room_levels)) {
       capacidadeTotal = userData.roomData.room_levels.reduce((s, r) => s + (r === 3 ? 60 : r === 2 ? 36 : 18), 0);
     } else if (userData.roomData.racks && Array.isArray(userData.roomData.racks)) {
-      // Alternativa: calcular pelos racks
       capacidadeTotal = userData.roomData.racks.reduce((sum, r) => {
         return sum + (r.rack_info ? r.rack_info.width * r.rack_info.height : 0);
       }, 0);
     } else {
       console.warn('⚠️ Não foi possível calcular capacidade total!');
-      capacidadeTotal = celulasOcupadas; // Assume que está usando exatamente o que tem
+      capacidadeTotal = celulasOcupadas;
     }
     
     let espacoLivre = capacidadeTotal - celulasOcupadas;
@@ -977,43 +948,43 @@ const UI_Inventario = {
       espacoLivre = simResult.espacoLivre;
       salaCheia = espacoLivre <= 0;
       
-      html += '<div style="background: #fff3e0; border-left: 4px solid #FF9800; padding: 20px; margin: 20px 0; border-radius: 5px;">';
+      html += '<div class="simulation-panel">';
       html += '<h4 style="margin: 0 0 15px 0;">🔄 SIMULAÇÃO ATIVA</h4>';
       
-      html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">';
-      html += '<div style="background: white; padding: 15px; border-radius: 5px;">';
+      html += '<div class="simulation-grid">';
+      html += '<div class="simulation-stat">';
       html += '<p style="margin: 0; font-size: 12px; color: #666;">Power Atual</p>';
       html += '<p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold;">' + Utils.formatPower(simResult.poderAtual * 1e9) + '</p>';
       html += '</div>';
       
-      html += '<div style="background: white; padding: 15px; border-radius: 5px;">';
+      html += '<div class="simulation-stat">';
       html += '<p style="margin: 0; font-size: 12px; color: #666;">Power Simulado</p>';
       html += '<p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: ' + (simResult.diferencaPower >= 0 ? '#28a745' : '#dc3545') + ';">' + Utils.formatPower(simResult.novoPoderTotal * 1e9) + '</p>';
       html += '</div>';
       html += '</div>';
       
       const corDiferenca = simResult.diferencaPower >= 0 ? '#28a745' : '#dc3545';
-      html += '<div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">';
+      html += '<div class="simulation-stat">';
       html += '<p style="margin: 0 0 5px 0; font-weight: bold;">Mudança no Power:</p>';
       html += '<p style="margin: 0; font-size: 18px; color: ' + corDiferenca + ';">' + 
               (simResult.diferencaPower >= 0 ? '▲ +' : '▼ ') + Utils.formatPower(Math.abs(simResult.diferencaPower) * 1e9) + 
               ' (' + (simResult.diferencaPower >= 0 ? '+' : '') + simResult.percentualMudanca.toFixed(2) + '%)</p>';
       html += '</div>';
       
-      html += '<div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">';
+      html += '<div class="simulation-stat">';
       html += '<p style="margin: 0 0 5px 0; font-weight: bold;">Espaço:</p>';
       html += '<p style="margin: 0;">' + simResult.celulasOcupadas + ' / ' + simResult.capacidadeTotal + ' células' + 
               (simResult.espacoLivre < 0 ? ' <span style="color: #dc3545; font-weight: bold;">(FALTA ESPAÇO: ' + Math.abs(simResult.espacoLivre) + ' células)</span>' : ' (' + simResult.espacoLivre + ' livres)') + '</p>';
       html += '</div>';
       
       if (this.simulationState.removedMiners.length > 0) {
-        html += '<div style="background: #ffebee; padding: 10px; border-radius: 5px; margin-bottom: 10px;">';
+        html += '<div class="inv-box-red">';
         html += '<p style="margin: 0; font-size: 13px;"><strong>🗑️ Miners Removidas:</strong> ' + this.simulationState.removedMiners.length + '</p>';
         html += '</div>';
       }
       
       if (this.simulationState.addedMiners.length > 0) {
-        html += '<div style="background: #e8f5e8; padding: 10px; border-radius: 5px; margin-bottom: 10px;">';
+        html += '<div class="inv-box-green">';
         html += '<p style="margin: 0; font-size: 13px;"><strong>➕ Miners Adicionadas:</strong> ' + this.simulationState.addedMiners.length + '</p>';
         html += '</div>';
       }
@@ -1023,137 +994,135 @@ const UI_Inventario = {
     }
     
     if (salaCheia) {
-      html += '<div style="background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin: 15px 0;">';
+      html += '<div class="inv-box-red">';
       html += '<h4 style="margin: 0;">⚠️ Sala Cheia! (' + capacidadeTotal + ' células)</h4>';
       html += '<p style="margin: 5px 0 0 0; font-size: 13px;">Use a simulação para testar trocas</p>';
       html += '</div>';
     } else {
-      html += '<div style="background: #e8f5e8; border-left: 4px solid #4CAF50; padding: 15px; margin: 15px 0;">';
+      html += '<div class="inv-box-green">';
       html += '<h4 style="margin: 0;">✅ Você tem ' + espacoLivre + ' células livres!</h4>';
       html += '</div>';
     }
     
-    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">';
+    html += '<div class="tables-grid">';
     
-    // COLUNA 1: MINERS INSTALADAS
-    html += '<div>';
-    if (minersFracas && minersFracas.length > 0) {
-      html += '<div style="background: #fff3e0; border-left: 4px solid #FF9800; padding: 15px; margin-bottom: 15px;">';
-      html += '<h4 style="margin: 0 0 10px 0;">🔍 Suas ' + minersFracas.length + ' Miners Instaladas</h4>';
-      html += '</div>';
-      
-      html += '<div id="installedMinersScroll" style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px;">';
-      html += '<table style="font-size: 10px; width: 100%;"><tr>';
-      html += '<th>Pos</th>';
-      html += '<th onclick="UI_Inventario.ordenarInstaladas(\'nome\')" style="cursor: pointer;">Nome ' + (this.instaladaSort.column === 'nome' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-      html += '<th onclick="UI_Inventario.ordenarInstaladas(\'level\')" style="cursor: pointer;">Lvl ' + (this.instaladaSort.column === 'level' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-      html += '<th>Local</th>';
-      html += '<th onclick="UI_Inventario.ordenarInstaladas(\'cells\')" style="cursor: pointer;">Cél ' + (this.instaladaSort.column === 'cells' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-      html += '<th onclick="UI_Inventario.ordenarInstaladas(\'power\')" style="cursor: pointer;">Power ' + (this.instaladaSort.column === 'power' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-      html += '<th onclick="UI_Inventario.ordenarInstaladas(\'bonus\')" style="cursor: pointer;">Bônus ' + (this.instaladaSort.column === 'bonus' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-      html += '<th onclick="UI_Inventario.ordenarInstaladas(\'impacto\')" style="cursor: pointer;">Imp. ' + (this.instaladaSort.column === 'impacto' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-      html += '<th>Vende</th>';
-      html += '<th style="width: 60px;">Ação</th>';
-      html += '</tr>';
-      
-      // Criar mapa de racks com numeração por posição física dentro de cada sala
-      const racksPorSala = {};
-      userData.roomData.racks.forEach((rack) => {
-        const sala = (rack.placement?.room_level || 0) + 1;
-        if (!racksPorSala[sala]) {
-          racksPorSala[sala] = [];
-        }
-        racksPorSala[sala].push({
-          id: rack._id,
-          x: rack.placement?.x || 0,
-          y: rack.placement?.y || 0
-        });
-      });
-      
-      // Ordenar racks dentro de cada sala por posição (y primeiro, depois x)
-      Object.keys(racksPorSala).forEach(sala => {
-        racksPorSala[sala].sort((a, b) => {
-          if (a.y !== b.y) return a.y - b.y;
-          return a.x - b.x;
-        });
-      });
-      
-      // Criar mapa final com numeração correta
-      const rackMap = {};
-      Object.keys(racksPorSala).forEach(sala => {
-        racksPorSala[sala].forEach((rack, index) => {
-          rackMap[rack.id] = {
-            sala: parseInt(sala),
-            rack: index + 1
-          };
-        });
-      });
-      
-      for (let i = 0; i < minersFracas.length; i++) {
-        const m = minersFracas[i];
-        const cor = i < 10 ? 'low-impact' : (i < 30 ? 'medium-impact' : 'high-impact');
-        const isRemoved = this.simulationState.removedMiners.some(rm => rm.minerIndex === m.minerIndex);
-        const trStyle = isRemoved ? 'opacity: 0.5; text-decoration: line-through;' : '';
-        
-        html += '<tr class="' + cor + '" style="' + trStyle + '">';
-        html += '<td>#' + (i + 1);
-        if (isRemoved) html += ' <span style="background: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">🔴</span>';
-        html += '</td>';
-        html += '<td><strong>' + m.name + '</strong></td>';
-        html += '<td>' + m.level + '</td>';
-        
-        // Localização (S4 rack 5)
-        const rackInfo = rackMap[m.rackId] || { sala: '?', rack: '?' };
-        html += '<td style="font-size: 9px; color: #666;">S' + rackInfo.sala + ' rack ' + rackInfo.rack + '</td>';
-        
-        html += '<td>' + (m.width || 2) + '</td>';
-        html += '<td>' + Utils.formatPower(m.basePower * 1e9) + '</td>';
-        html += '<td><strong>' + (m.minerBonusPercent * 100).toFixed(2) + '%</strong></td>';
-        html += '<td>' + Utils.formatPower(m.impact * 1e9) + '</td>';
-        
-        // Buscar canBeSold no APIData
-        let canBeSold = undefined;
-        if (typeof APIData !== 'undefined' && APIData.miners) {
-          const catalogData = APIData.findByNameAndPower(m.name, m.basePower);
-          if (catalogData) {
-            canBeSold = catalogData.canBeSold;
-          }
-        }
-        const vendeText = canBeSold === true ? '✅' : (canBeSold === false ? '❌' : '❓');
-        html += '<td>' + vendeText + '</td>';
-        
-        html += '<td style="text-align: center;">';
-        html += '<button onclick="UI_Inventario.toggleRemoverMiner(' + m.minerIndex + ')" style="padding: 5px 10px; background: ' + (isRemoved ? '#6c757d' : '#dc3545') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
-        html += isRemoved ? '🔄' : '❌';
-        html += '</button>';
-        html += '</td>';
-        html += '</tr>';
-      }
-      
-      html += '</table></div>';
+// COLUNA 1: MINERS INSTALADAS
+html += '<div>'; // ← ADICIONAR ESTA LINHA
+
+if (minersFracas && minersFracas.length > 0) {
+  html += '<div class="inv-box-orange">';
+  html += '<h4>🔍 Suas ' + minersFracas.length + ' Miners Instaladas</h4>';
+  html += '</div>';
+  
+  html += '<div id="installedMinersScroll" class="table-scroll">';
+  html += '<table><tr>';
+  html += '<th>Pos</th>';
+  html += '<th onclick="UI_Inventario.ordenarInstaladas(\'nome\')" style="cursor: pointer;">Nome ' + (this.instaladaSort.column === 'nome' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+  html += '<th onclick="UI_Inventario.ordenarInstaladas(\'level\')" style="cursor: pointer;">Lvl ' + (this.instaladaSort.column === 'level' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+  html += '<th>Local</th>';
+  html += '<th onclick="UI_Inventario.ordenarInstaladas(\'cells\')" style="cursor: pointer;">Cél ' + (this.instaladaSort.column === 'cells' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+  html += '<th onclick="UI_Inventario.ordenarInstaladas(\'power\')" style="cursor: pointer;">Power ' + (this.instaladaSort.column === 'power' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+  html += '<th onclick="UI_Inventario.ordenarInstaladas(\'bonus\')" style="cursor: pointer;">Bônus ' + (this.instaladaSort.column === 'bonus' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+  html += '<th onclick="UI_Inventario.ordenarInstaladas(\'impacto\')" style="cursor: pointer;">Imp. ' + (this.instaladaSort.column === 'impacto' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+  html += '<th>Vende</th>';
+  html += '<th style="width: 60px;">Ação</th>';
+  html += '</tr>';
+  
+  // Criar mapa de racks
+  const racksPorSala = {};
+  userData.roomData.racks.forEach((rack) => {
+    const sala = (rack.placement?.room_level || 0) + 1;
+    if (!racksPorSala[sala]) {
+      racksPorSala[sala] = [];
     }
-    html += '</div>';
+    racksPorSala[sala].push({
+      id: rack._id,
+      x: rack.placement?.x || 0,
+      y: rack.placement?.y || 0
+    });
+  });
+  
+  Object.keys(racksPorSala).forEach(sala => {
+    racksPorSala[sala].sort((a, b) => {
+      if (a.y !== b.y) return a.y - b.y;
+      return a.x - b.x;
+    });
+  });
+  
+  const rackMap = {};
+  Object.keys(racksPorSala).forEach(sala => {
+    racksPorSala[sala].forEach((rack, index) => {
+      rackMap[rack.id] = {
+        sala: parseInt(sala),
+        rack: index + 1
+      };
+    });
+  });
+  
+  for (let i = 0; i < minersFracas.length; i++) {
+    const m = minersFracas[i];
+    const cor = i < 10 ? 'low-impact' : (i < 30 ? 'medium-impact' : 'high-impact');
+    const isRemoved = this.simulationState.removedMiners.some(rm => rm.minerIndex === m.minerIndex);
+    const trStyle = isRemoved ? 'opacity: 0.5; text-decoration: line-through;' : '';
     
-    // COLUNA 2: INVENTÁRIO (COM BONUS E VENDÍVEL)
-    html += '<div>';
-    html += '<div style="background: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 15px;">';
-    html += '<h4 style="margin: 0 0 10px 0;">📋 Seu Inventário</h4>';
-    html += '</div>';
+    html += '<tr class="' + cor + '" style="' + trStyle + '">';
+    html += '<td>#' + (i + 1);
+    if (isRemoved) html += ' <span style="background: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">🔴</span>';
+    html += '</td>';
+    html += '<td><strong>' + m.name + '</strong></td>';
+    html += '<td>' + m.level + '</td>';
     
-    html += '<div id="inventoryMinersScroll" style="max-height: 600px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px;">';
-    html += '<table style="font-size: 10px; width: 100%;"><tr>';
-    html += '<th>#</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'nome\')" style="cursor: pointer;">Nome ' + (this.currentSort.column === 'nome' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'level\')" style="cursor: pointer;">Lvl ' + (this.currentSort.column === 'level' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'quantity\')" style="cursor: pointer;">Qty ' + (this.currentSort.column === 'quantity' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'cells\')" style="cursor: pointer;">Cél ' + (this.currentSort.column === 'cells' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'power\')" style="cursor: pointer;">Power ' + (this.currentSort.column === 'power' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'bonus\')" style="cursor: pointer;">Bônus ' + (this.currentSort.column === 'bonus' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'impacto\')" style="cursor: pointer;">Ganho ' + (this.currentSort.column === 'impacto' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th onclick="UI_Inventario.ordenar(\'status\')" style="cursor: pointer;">Status ' + (this.currentSort.column === 'status' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-    html += '<th>Vende</th>';
-    html += '<th style="width: 60px;">Ação</th>';
+    const rackInfo = rackMap[m.rackId] || { sala: '?', rack: '?' };
+    html += '<td style="font-size: 9px; color: #666;">S' + rackInfo.sala + ' rack ' + rackInfo.rack + '</td>';
+    
+    html += '<td>' + (m.width || 2) + '</td>';
+    html += '<td>' + Utils.formatPower(m.basePower * 1e9) + '</td>';
+    html += '<td><strong>' + (m.minerBonusPercent * 100).toFixed(2) + '%</strong></td>';
+    html += '<td>' + Utils.formatPower(m.impact * 1e9) + '</td>';
+    
+    let canBeSold = undefined;
+    if (typeof APIData !== 'undefined' && APIData.miners) {
+      const catalogData = APIData.findByNameAndPower(m.name, m.basePower);
+      if (catalogData) {
+        canBeSold = catalogData.canBeSold;
+      }
+    }
+    const vendeText = canBeSold === true ? '✅' : (canBeSold === false ? '❌' : '❓');
+    html += '<td>' + vendeText + '</td>';
+    
+    html += '<td style="text-align: center;">';
+    html += '<button onclick="UI_Inventario.toggleRemoverMiner(' + m.minerIndex + ')" style="padding: 5px 10px; background: ' + (isRemoved ? '#6c757d' : '#dc3545') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
+    html += isRemoved ? '🔄' : '❌';
+    html += '</button>';
+    html += '</td>';
     html += '</tr>';
+  }
+  
+  html += '</table></div>';
+}
+
+html += '</div>'; // ← ADICIONAR ESTA LINHA
+    
+// COLUNA 2: INVENTÁRIO
+html += '<div>';
+html += '<div class="inv-box-blue">';
+html += '<h4>📋 Seu Inventário</h4>';
+html += '</div>';
+
+html += '<div id="inventoryMinersScroll" class="table-scroll">';
+html += '<table><tr>';
+html += '<th>#</th>';
+html += '<th onclick="UI_Inventario.ordenar(\'nome\')" style="cursor: pointer;">Nome ' + (this.currentSort.column === 'nome' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+html += '<th onclick="UI_Inventario.ordenar(\'level\')" style="cursor: pointer;">Lvl ' + (this.currentSort.column === 'level' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+html += '<th onclick="UI_Inventario.ordenar(\'quantity\')" style="cursor: pointer;">Qty ' + (this.currentSort.column === 'quantity' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+html += '<th onclick="UI_Inventario.ordenar(\'cells\')" style="cursor: pointer;">Cél ' + (this.currentSort.column === 'cells' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+html += '<th onclick="UI_Inventario.ordenar(\'power\')" style="cursor: pointer;">Power ' + (this.currentSort.column === 'power' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+html += '<th onclick="UI_Inventario.ordenar(\'bonus\')" style="cursor: pointer;">Bônus ' + (this.currentSort.column === 'bonus' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+html += '<th onclick="UI_Inventario.ordenar(\'impacto\')" style="cursor: pointer;">Ganho ' + (this.currentSort.column === 'impacto' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+html += '<th onclick="UI_Inventario.ordenar(\'status\')" style="cursor: pointer;">Status ' + (this.currentSort.column === 'status' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+html += '<th>Vende</th>';
+html += '<th style="width: 60px;">Ação</th>';
+html += '</tr>';
     
     for (let i = 0; i < miners.length; i++) {
       const m = miners[i];
@@ -1202,7 +1171,6 @@ const UI_Inventario = {
       html += '<td>' + vendeText + '</td>';
       html += '<td style="text-align: center;">';
       
-      // Usar data-attribute para evitar problemas com caracteres especiais
       const uniqueId = this.getMinerUniqueId(m);
       const btnId = 'btn-inv-' + i;
       html += '<button id="' + btnId + '" data-minerid="' + uniqueId + '" style="padding: 5px 10px; background: ' + (isAdded ? '#6c757d' : '#28a745') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
@@ -1218,7 +1186,7 @@ const UI_Inventario = {
     
     div.innerHTML = html;
     
-    // Adicionar event listeners para botões do inventário (usar data-attribute)
+    // Event listeners
     const inventoryButtons = div.querySelectorAll('button[data-minerid]');
     inventoryButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1227,7 +1195,7 @@ const UI_Inventario = {
       });
     });
     
-    // Restaurar posição do scroll
+    // Restaurar scroll
     setTimeout(() => {
       const installedContainer = document.getElementById('installedMinersScroll');
       const inventoryContainer = document.getElementById('inventoryMinersScroll');
@@ -1268,4 +1236,4 @@ const UI_Inventario = {
 };
 
 window.UI_Inventario = UI_Inventario;
-console.log('✅ UI_Inventario v11.1 FINAL (Corrigido: Apóstrofos em nomes) loaded');
+console.log('✅ UI_Inventario v11.2 - CSS Cleanup loaded');

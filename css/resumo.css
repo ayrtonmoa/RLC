@@ -1,0 +1,93 @@
+/* ========== Resumo & Perfil ========== */
+.profile-section {
+  margin-bottom: 20px;
+}
+
+.league-image {
+  margin-top: 10px;
+  height: 60px;
+}
+
+.power-value-main {
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.power-value-official {
+  color: #007bff;
+}
+
+.power-value-small {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  display: block;
+  margin-top: 5px;
+}
+
+.power-diff {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.power-diff.good { color: #28a745; }
+.power-diff.warning { color: #ff9800; }
+
+.info-box {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  margin-top: 20px;
+  padding: 15px;
+}
+
+body.dark-mode .info-box {
+  background: #3a3a2a;
+  border-left-color: #ffc107;
+}
+
+.info-box p {
+  font-size: 13px;
+  margin: 5px 0;
+}
+
+.info-box ul {
+  font-size: 12px;
+  margin: 5px 0;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+/* Responsivo: 2 colunas em tablets, 1 em mobile */
+@media (max-width: 900px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-item {
+  background: var(--bg-primary);
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 4px solid var(--accent);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}

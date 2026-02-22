@@ -14,9 +14,9 @@ const UI_MergeCalculator = {
     div.innerHTML = `
       <h2>🔧 Merge Calculator</h2>
       
-      <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50; margin-bottom: 20px;">
+      <div class="info-box-green">
         <h4>💡 Como Usar</h4>
-        <p style="font-size: 13px; line-height: 1.6;">
+        <p>
           Calcule quanto custa fazer merges das suas peças! Pode calcular <strong>1, 2 ou 3 peças ao mesmo tempo</strong>.<br>
           ✅ Deixe em branco as que não quer calcular<br>
           💰 Sistema mostra custo individual + total
@@ -25,91 +25,91 @@ const UI_MergeCalculator = {
 
       <!-- SEÇÃO 1: CALCULADORA NORMAL -->
       <h3>📈 Calculadora Normal (O que consigo fazer?)</h3>
-      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800; margin-bottom: 20px;">
+      <div class="info-box-orange">
         <h4>💡 Sugestão do SilverGuns</h4>
-        <p style="font-size: 13px;">Você tem peças e quer saber <strong>até onde consegue chegar</strong>? Digite quantas peças você tem e veja!</p>
+        <p>Você tem peças e quer saber <strong>até onde consegue chegar</strong>? Digite quantas peças você tem e veja!</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;">
+      <div class="merge-grid-2">
         <div class="summary-item">
           <h4>📥 Suas Peças</h4>
           
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+          <div class="merge-grid-3">
             <!-- Fan -->
             <div>
-              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🌀 Fan</strong></label>
-              <select id="fanStartTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+              <label class="part-label">🌀 Fan</label>
+              <select id="fanStartTier" class="part-select">
                 <option value="">-- Nenhum --</option>
                 <option value="common">⚪ Common</option>
                 <option value="uncommon">🟢 Uncommon</option>
                 <option value="rare">🔵 Rare</option>
                 <option value="epic">🟣 Epic</option>
               </select>
-              <input type="number" id="fanQuantity" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+              <input type="number" id="fanQuantity" placeholder="Quantidade" min="0" class="part-input">
             </div>
 
             <!-- Wire -->
             <div>
-              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🔌 Wire</strong></label>
-              <select id="wireStartTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+              <label class="part-label">🔌 Wire</label>
+              <select id="wireStartTier" class="part-select">
                 <option value="">-- Nenhum --</option>
                 <option value="common">⚪ Common</option>
                 <option value="uncommon">🟢 Uncommon</option>
                 <option value="rare">🔵 Rare</option>
                 <option value="epic">🟣 Epic</option>
               </select>
-              <input type="number" id="wireQuantity" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+              <input type="number" id="wireQuantity" placeholder="Quantidade" min="0" class="part-input">
             </div>
 
             <!-- Hashboard -->
             <div>
-              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>💾 Hashboard</strong></label>
-              <select id="hashStartTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+              <label class="part-label">💾 Hashboard</label>
+              <select id="hashStartTier" class="part-select">
                 <option value="">-- Nenhum --</option>
                 <option value="common">⚪ Common</option>
                 <option value="uncommon">🟢 Uncommon</option>
                 <option value="rare">🔵 Rare</option>
                 <option value="epic">🟣 Epic</option>
               </select>
-              <input type="number" id="hashQuantity" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+              <input type="number" id="hashQuantity" placeholder="Quantidade" min="0" class="part-input">
             </div>
           </div>
 
-          <button onclick="UI_MergeCalculator.calcular()" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold;">
+          <button onclick="UI_MergeCalculator.calcular()" class="btn-calc-normal">
             🎯 Calcular Merges
           </button>
         </div>
 
         <div class="summary-item">
           <h4>📊 Taxas de Merge Oficiais</h4>
-          <table style="width: 100%; font-size: 12px;">
-            <tr style="background: #f8f9fa;">
-              <th style="padding: 8px;">Merge</th>
-              <th style="padding: 8px;">Precisa</th>
-              <th style="padding: 8px;">Taxa</th>
+          <table class="merge-rates-table">
+            <tr>
+              <th>Merge</th>
+              <th>Precisa</th>
+              <th>Taxa</th>
             </tr>
             <tr>
-              <td style="padding: 8px;">⚪ → 🟢</td>
-              <td style="padding: 8px;"><strong>50</strong> Common</td>
-              <td style="padding: 8px;">0.005 RLT</td>
-            </tr>
-            <tr style="background: #f8f9fa;">
-              <td style="padding: 8px;">🟢 → 🔵</td>
-              <td style="padding: 8px;"><strong>20</strong> Uncommon</td>
-              <td style="padding: 8px;">0.105 RLT</td>
+              <td>⚪ → 🟢</td>
+              <td><strong>50</strong> Common</td>
+              <td>0.005 RLT</td>
             </tr>
             <tr>
-              <td style="padding: 8px;">🔵 → 🟣</td>
-              <td style="padding: 8px;"><strong>10</strong> Rare</td>
-              <td style="padding: 8px;">1.1025 RLT</td>
+              <td>🟢 → 🔵</td>
+              <td><strong>20</strong> Uncommon</td>
+              <td>0.105 RLT</td>
             </tr>
-            <tr style="background: #f8f9fa;">
-              <td style="padding: 8px;">🟣 → 🟡</td>
-              <td style="padding: 8px;"><strong>5</strong> Epic</td>
-              <td style="padding: 8px;">5.7881 RLT</td>
+            <tr>
+              <td>🔵 → 🟣</td>
+              <td><strong>10</strong> Rare</td>
+              <td>1.1025 RLT</td>
+            </tr>
+            <tr>
+              <td>🟣 → 🟡</td>
+              <td><strong>5</strong> Epic</td>
+              <td>5.7881 RLT</td>
             </tr>
           </table>
-          <p style="font-size: 11px; color: #666; margin-top: 10px;">
+          <p class="rates-note">
             ℹ️ Taxas são iguais para Fan, Wire e Hashboard
           </p>
         </div>
@@ -117,63 +117,63 @@ const UI_MergeCalculator = {
 
       <div id="resultadoMergeCalc"></div>
 
-      <hr style="margin: 40px 0; border: 0; border-top: 2px solid #ddd;">
+      <hr class="merge-separator">
 
       <!-- SEÇÃO 2: CALCULADORA REVERSA -->
       <h3>📉 Calculadora Reversa (O que preciso ter?)</h3>
-      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3; margin-bottom: 20px;">
+      <div class="info-box-blue">
         <h4>💡 Sugestão do XnegX</h4>
-        <p style="font-size: 13px;">Quer fazer um merge específico? Descubra <strong>quantas peças você precisa</strong> e o <strong>custo total</strong>!</p>
+        <p>Quer fazer um merge específico? Descubra <strong>quantas peças você precisa</strong> e o <strong>custo total</strong>!</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+      <div class="merge-grid-2">
         <div class="summary-item">
           <h4>🎯 Seu Objetivo</h4>
           
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+          <div class="merge-grid-3">
             <!-- Fan -->
             <div>
-              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🌀 Fan</strong></label>
-              <select id="fanTargetTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+              <label class="part-label">🌀 Fan</label>
+              <select id="fanTargetTier" class="part-select">
                 <option value="">-- Nenhum --</option>
                 <option value="uncommon">🟢 Uncommon</option>
                 <option value="rare">🔵 Rare</option>
                 <option value="epic">🟣 Epic</option>
                 <option value="legendary">🟡 Legendary</option>
               </select>
-              <input type="number" id="fanTargetQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+              <input type="number" id="fanTargetQty" placeholder="Quantidade" min="0" class="part-input">
             </div>
 
             <!-- Wire -->
             <div>
-              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🔌 Wire</strong></label>
-              <select id="wireTargetTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+              <label class="part-label">🔌 Wire</label>
+              <select id="wireTargetTier" class="part-select">
                 <option value="">-- Nenhum --</option>
                 <option value="uncommon">🟢 Uncommon</option>
                 <option value="rare">🔵 Rare</option>
                 <option value="epic">🟣 Epic</option>
                 <option value="legendary">🟡 Legendary</option>
               </select>
-              <input type="number" id="wireTargetQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+              <input type="number" id="wireTargetQty" placeholder="Quantidade" min="0" class="part-input">
             </div>
 
             <!-- Hashboard -->
             <div>
-              <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>💾 Hashboard</strong></label>
-              <select id="hashTargetTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+              <label class="part-label">💾 Hashboard</label>
+              <select id="hashTargetTier" class="part-select">
                 <option value="">-- Nenhum --</option>
                 <option value="uncommon">🟢 Uncommon</option>
                 <option value="rare">🔵 Rare</option>
                 <option value="epic">🟣 Epic</option>
                 <option value="legendary">🟡 Legendary</option>
               </select>
-              <input type="number" id="hashTargetQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+              <input type="number" id="hashTargetQty" placeholder="Quantidade" min="0" class="part-input">
             </div>
           </div>
 
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px;"><strong>Partir de qual tier?</strong></label>
-            <select id="reverseStartTier" style="width: 100%; padding: 10px;">
+          <div class="reverse-start-tier">
+            <label class="reverse-start-label">Partir de qual tier?</label>
+            <select id="reverseStartTier" class="reverse-start-select">
               <option value="common">⚪ Common</option>
               <option value="uncommon">🟢 Uncommon</option>
               <option value="rare">🔵 Rare</option>
@@ -181,23 +181,23 @@ const UI_MergeCalculator = {
             </select>
           </div>
 
-          <button onclick="UI_MergeCalculator.calcularReverso()" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold; background: #2196F3;">
+          <button onclick="UI_MergeCalculator.calcularReverso()" class="btn-calc-reverse">
             🔍 Calcular Requisitos
           </button>
         </div>
 
-        <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800;">
+        <div class="info-box-orange merge-example-box">
           <h4>📋 Exemplo de Uso</h4>
-          <p style="font-size: 13px; line-height: 1.8;">
+          <p>
             <strong>Objetivo:</strong><br>
             • 2x Legendary Fan<br>
             • 1x Epic Wire<br>
             • 3x Rare Hashboard
           </p>
-          <p style="font-size: 13px; margin-top: 10px;">
+          <p>
             <strong>Sistema mostra:</strong>
           </p>
-          <ul style="font-size: 12px; margin: 10px 0; line-height: 1.8;">
+          <ul>
             <li>Quantas peças de cada precisa</li>
             <li>Custo individual de cada merge</li>
             <li>💰 Custo total em RLT</li>
@@ -244,7 +244,7 @@ const UI_MergeCalculator = {
     // Validação
     if (selectedParts.length === 0) {
       resultDiv.innerHTML = `
-        <div class="summary-item" style="background: #ffebee; border-left: 4px solid #f44336;">
+        <div class="info-box-red">
           <h4>⚠️ Nenhuma Peça Selecionada</h4>
           <p>Por favor, selecione pelo menos uma peça, tier e quantidade!</p>
         </div>
@@ -325,52 +325,50 @@ const UI_MergeCalculator = {
     };
 
     let html = `
-      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3;">
+      <div class="info-box-blue">
         <h3>🎯 Resultado da Cadeia de Merges</h3>
     `;
 
     // Cada peça
     results.forEach(result => {
       html += `
-        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #4CAF50;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div class="merge-result-card">
+          <div class="merge-result-header">
             <div>
-              <h4 style="margin: 0;">${result.emoji} ${result.name}</h4>
-              <p style="font-size: 14px; margin: 5px 0;">
+              <h4 class="merge-result-title">${result.emoji} ${result.name}</h4>
+              <p class="merge-result-info">
                 <strong>Início:</strong> ${result.quantity} ${tierEmojis[result.startTier]} ${this.getTierName(result.startTier)}
               </p>
-              <p style="font-size: 14px; margin: 5px 0;">
+              <p class="merge-result-info">
                 <strong>Final:</strong> ${result.finalQty} ${tierEmojis[result.finalTier]} ${this.getTierName(result.finalTier)}
               </p>
             </div>
-            <div style="text-align: right;">
-              <span style="background: #FF9800; color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+            <div>
+              <span class="merge-cost-badge">
                 ${result.chainCost.toFixed(4)} RLT
               </span>
             </div>
           </div>
 
-          <details style="margin-top: 15px;">
-            <summary style="cursor: pointer; font-size: 13px; color: #666; padding: 5px;">
-              📋 Ver passos detalhados
-            </summary>
-            <div style="margin-top: 10px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-    `;
+          <details class="merge-details">
+            <summary>📋 Ver passos detalhados</summary>
+            <div class="merge-steps-container">
+      `;
 
       result.chain.forEach((step, index) => {
         html += `
-          <div style="padding: 10px 0; ${index < result.chain.length - 1 ? 'border-bottom: 1px dashed #ddd;' : ''}">
-            <div style="display: grid; grid-template-columns: 2fr 1fr 2fr; gap: 10px; align-items: center; margin-bottom: 5px;">
+          <div class="merge-step">
+            <div class="merge-step-grid">
               <div>
                 <strong>${tierEmojis[step.from]} ${step.inputQty} ${this.getTierName(step.from)}</strong>
-                ${step.leftover > 0 ? `<br><small style="color: #999;">Sobra: ${step.leftover}</small>` : ''}
+                ${step.leftover > 0 ? `<br><small class="merge-leftover">Sobra: ${step.leftover}</small>` : ''}
               </div>
-              <div style="text-align: center; color: #2196F3; font-size: 18px;">→</div>
+              <div class="merge-step-arrow">→</div>
               <div>
                 <strong>${tierEmojis[step.to]} ${step.outputQty} ${this.getTierName(step.to)}</strong>
               </div>
             </div>
-            <div style="font-size: 12px; color: #666; display: flex; justify-content: space-between;">
+            <div class="merge-step-meta">
               <span>📦 ${step.needed} por merge</span>
               <span>🔢 ${step.outputQty} merges</span>
               <span>💰 ${step.totalCost.toFixed(4)} RLT</span>
@@ -387,18 +385,18 @@ const UI_MergeCalculator = {
     });
 
     html += `
-        <div style="background: #4CAF50; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px;">
-          <h3 style="margin: 0 0 10px 0;">💰 CUSTO TOTAL</h3>
-          <p style="font-size: 36px; font-weight: bold; margin: 10px 0;">${totalCost.toFixed(4)} RLT</p>
-          <p style="font-size: 14px; margin: 5px 0; opacity: 0.9;">
+        <div class="merge-total-box">
+          <h3>💰 CUSTO TOTAL</h3>
+          <p class="merge-total-value">${totalCost.toFixed(4)} RLT</p>
+          <p class="merge-total-subtitle">
             Para fazer ${results.length} ${results.length === 1 ? 'peça' : 'peças'}
           </p>
         </div>
       </div>
 
-      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800; margin-top: 20px;">
+      <div class="info-box-orange">
         <h4>💡 Dica do SilverGuns</h4>
-        <p style="font-size: 13px; line-height: 1.6;">
+        <p>
           ✅ <strong>Merge sempre compensa!</strong> Fazer merge de peças comuns é muito mais barato que comprar direto no marketplace.<br>
           📊 Você tem <strong>controle total</strong> dos gastos: pode fazer 20, 30 ou 50 peças verdes e usar as comuns para outros merges.<br>
           💰 Quanto mais alta a qualidade da peça, <strong>mais cara</strong> ela é, mas o merge no inventário <strong>sempre compensa mais</strong>!
@@ -447,7 +445,7 @@ const UI_MergeCalculator = {
     // Validação
     if (selectedParts.length === 0) {
       resultDiv.innerHTML = `
-        <div class="summary-item" style="background: #ffebee; border-left: 4px solid #f44336;">
+        <div class="info-box-red">
           <h4>⚠️ Nenhuma Peça Selecionada</h4>
           <p>Por favor, selecione pelo menos uma peça, tier e quantidade!</p>
         </div>
@@ -528,53 +526,51 @@ const UI_MergeCalculator = {
     };
 
     let html = `
-      <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50;">
+      <div class="info-box-green">
         <h3>🎯 Requisitos para Seu Objetivo</h3>
     `;
 
     // Cada peça
     results.forEach(result => {
       html += `
-        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #2196F3;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div class="reverse-result-card">
+          <div class="merge-result-header">
             <div>
-              <h4 style="margin: 0;">${result.emoji} ${result.quantity}x ${tierEmojis[result.targetTier]} ${this.getTierName(result.targetTier)} ${result.name}</h4>
+              <h4 class="merge-result-title">${result.emoji} ${result.quantity}x ${tierEmojis[result.targetTier]} ${this.getTierName(result.targetTier)} ${result.name}</h4>
             </div>
-            <div style="text-align: right;">
-              <span style="background: #FF9800; color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">
+            <div>
+              <span class="merge-cost-badge">
                 ${result.route.totalCost.toFixed(4)} RLT
               </span>
             </div>
           </div>
 
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-            <p style="margin: 0; font-size: 16px;">
+          <div class="reverse-requirement-box">
+            <p class="reverse-requirement-text">
               <strong>📦 Você precisa de:</strong> 
-              <span style="color: #2196F3; font-weight: bold; font-size: 18px;">
+              <span class="reverse-requirement-value">
                 ${result.route.startQuantity} ${tierEmojis[startTier]} ${this.getTierName(startTier)} ${result.name}
               </span>
             </p>
           </div>
 
-          <details style="margin-top: 15px;">
-            <summary style="cursor: pointer; font-size: 13px; color: #666; padding: 5px;">
-              📋 Ver passos detalhados
-            </summary>
-            <div style="margin-top: 10px; padding: 15px; background: #f8f9fa; border-radius: 5px; font-size: 13px;">
-    `;
+          <details class="merge-details">
+            <summary>📋 Ver passos detalhados</summary>
+            <div class="merge-steps-container">
+      `;
 
       result.route.steps.forEach((step, index) => {
         html += `
-          <div style="padding: 8px 0; ${index < result.route.steps.length - 1 ? 'border-bottom: 1px dashed #ddd;' : ''}">
-            <div style="display: flex; align-items: center;">
-              <div style="flex: 1;">
+          <div class="reverse-step">
+            <div class="reverse-step-flex">
+              <div class="reverse-step-from">
                 ${tierEmojis[step.from]} ${step.neededQty} ${this.getTierName(step.from)}
               </div>
-              <div style="padding: 0 15px; color: #2196F3; font-size: 18px;">→</div>
-              <div style="flex: 1;">
+              <div class="reverse-step-arrow">→</div>
+              <div class="reverse-step-to">
                 ${tierEmojis[step.to]} ${step.outputQty} ${this.getTierName(step.to)}
               </div>
-              <div style="text-align: right; color: #666; font-size: 12px;">
+              <div class="reverse-step-cost">
                 ${step.cost.toFixed(4)} RLT
               </div>
             </div>
@@ -590,18 +586,18 @@ const UI_MergeCalculator = {
     });
 
     html += `
-        <div style="background: #2196F3; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px;">
-          <h3 style="margin: 0 0 10px 0;">💰 CUSTO TOTAL</h3>
-          <p style="font-size: 36px; font-weight: bold; margin: 10px 0;">${totalCost.toFixed(4)} RLT</p>
-          <p style="font-size: 14px; margin: 5px 0; opacity: 0.9;">
+        <div class="merge-total-box merge-total-box-reverse">
+          <h3>💰 CUSTO TOTAL</h3>
+          <p class="merge-total-value">${totalCost.toFixed(4)} RLT</p>
+          <p class="merge-total-subtitle">
             Para fazer ${results.length} ${results.length === 1 ? 'peça' : 'peças'} partindo de ${tierEmojis[startTier]} ${this.getTierName(startTier)}
           </p>
         </div>
       </div>
 
-      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3; margin-top: 20px;">
+      <div class="info-box-blue">
         <h4>💡 Dica do XnegX</h4>
-        <p style="font-size: 13px; line-height: 1.6;">
+        <p>
           🎯 Use a <strong>calculadora reversa</strong> para planejar seus merges com antecedência!<br>
           📊 Compare as <strong>diferentes rotas</strong> e escolha a que você tem mais peças.<br>
           💰 Sempre considere o <strong>custo vs disponibilidade</strong> das suas peças!

@@ -1,0 +1,119 @@
+/* ========== Buy Analyzer ========== */
+.analyzer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.btn-analyze {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-analyze:hover {
+  background: var(--accent-hover);
+}
+
+.miner-title {
+  margin: 10px 0;
+  font-size: 22px;
+}
+
+body.dark-mode .miner-title {
+  color: #4a9eff;
+}
+
+.value-positive {
+  color: #4CAF50;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.value-positive-bold {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+body.dark-mode .value-positive,
+body.dark-mode .value-positive-bold {
+  color: #5fff5f;
+}
+
+.recommendation-box {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--bg-primary);
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+}
+
+.rec-excellent { color: #28a745; font-weight: bold; }
+.rec-good { color: #ff9800; font-weight: bold; }
+.rec-ok { color: #ff9800; }
+.rec-bad { color: #dc3545; font-weight: bold; }
+
+body.dark-mode .rec-excellent { color: #5fff5f; }
+body.dark-mode .rec-good { color: #ffc857; }
+body.dark-mode .rec-ok { color: #ffc857; }
+body.dark-mode .rec-bad { color: #ff6b6b; }
+
+.hidden {
+  display: none;
+}
+
+.analysis-price {
+  border-left: 4px solid #2196F3;
+}
+
+.analysis-no-price {
+  border-left: 4px solid #9C27B0;
+}
+
+@media (max-width: 900px) {
+  .analyzer-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -26,98 +26,98 @@ const UI_MergeVsMarket = {
     div.innerHTML = `
       <h2>💰 Merge vs Market</h2>
       
-      <div class="summary-item" style="background: #e8f5e8; border-left: 4px solid #4CAF50; margin-bottom: 20px;">
+      <div class="info-box-green">
         <h4>💡 Sugestão do BBJ</h4>
-        <p style="font-size: 13px; line-height: 1.6;">
+        <p>
           Compare 3 opções e descubra qual é <strong>mais barata</strong>:<br>
           <strong>1)</strong> Fazer merge (só taxas) - se você já tem peças<br>
           <strong>2)</strong> Comprar peças menores + fazer merge<br>
           <strong>3)</strong> Comprar pronto no marketplace
         </p>
-        <p style="font-size: 12px; color: #666; margin-top: 10px;">
-          💡 <em>"Seria bom implementar um local pra gente colocar o valor que eu comprei no mercado junto com o valor do merge"</em> - BBJ
+        <p class="price-update-timestamp">
+          💡 <em>"Seria bom implementar um local pra gente colocar o valor que eu comprou no mercado junto com o valor do merge"</em> - BBJ
         </p>
       </div>
 
       <!-- SEÇÃO: ATUALIZAR PREÇOS -->
-      <div class="summary-item" style="background: #fff3cd; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+      <div class="market-update-section">
         <h4>🔄 Atualizar Preços do Marketplace</h4>
-        <p style="font-size: 13px;">Cole o conteúdo da página do marketplace para atualizar os preços automaticamente!</p>
-        <p style="font-size: 12px; color: #666; margin: 5px 0;">
+        <p>Cole o conteúdo da página do marketplace para atualizar os preços automaticamente!</p>
+        <p class="price-update-timestamp">
           ✅ Funciona tanto no <strong>Desktop</strong> quanto no <strong>Mobile</strong>!
         </p>
-        <ol style="font-size: 12px; line-height: 1.8; margin: 10px 0;">
-          <li>Vá em <a href="https://rollercoin.com/marketplace/buy" target="_blank" style="font-weight: bold;">Marketplace > Buy > Parts</a></li>
+        <ol class="market-update-list">
+          <li>Vá em <a href="https://rollercoin.com/marketplace/buy" target="_blank"><strong>Marketplace > Buy > Parts</strong></a></li>
           <li>⚠️ <strong>IMPORTANTE:</strong> Altere de <strong>12 para 24 resultados por página</strong></li>
           <li>Marque <strong>apenas "Parts"</strong> (desmarque Miners, Racks, etc)</li>
           <li>Pressione <kbd>Ctrl+A</kbd> e <kbd>Ctrl+C</kbd> (ou pressione e segure na tela no mobile)</li>
           <li>Cole abaixo e clique em "Atualizar Preços"</li>
         </ol>
         
-        <div style="margin-top: 15px;">
-          <textarea id="marketText" rows="4" placeholder="Cole aqui o conteúdo da página do marketplace..." style="width: 100%; padding: 10px; font-size: 12px; font-family: monospace;"></textarea>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-            <button onclick="UI_MergeVsMarket.atualizarPrecos()" style="padding: 12px; background: #ffc107; color: #000; font-weight: bold;">
+        <div>
+          <textarea id="marketText" rows="4" placeholder="Cole aqui o conteúdo da página do marketplace..." class="market-textarea"></textarea>
+          <div class="market-buttons-grid">
+            <button onclick="UI_MergeVsMarket.atualizarPrecos()" class="btn-update-prices">
               🔄 Atualizar Preços
             </button>
-            <button onclick="UI_MergeVsMarket.mostrarPrecosAtuais()" style="padding: 12px; background: #6c757d; color: white;">
+            <button onclick="UI_MergeVsMarket.mostrarPrecosAtuais()" class="btn-show-prices">
               👁️ Ver Preços Atuais
             </button>
           </div>
         </div>
         
-        <div id="precosAtualizados" style="margin-top: 15px;"></div>
+        <div id="precosAtualizados"></div>
       </div>
 
-      <hr style="margin: 40px 0; border: 0; border-top: 2px solid #ddd;">
+      <hr class="merge-separator">
 
       <!-- SEÇÃO: COMPARADOR -->
       <h3>💰 Compare Opções</h3>
       <div class="summary-item">
         <h4>🎯 Suas Metas</h4>
         
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+        <div class="comparator-grid">
           <!-- Fan -->
           <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🌀 Fan</strong></label>
-            <select id="fanTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+            <label class="part-label">🌀 Fan</label>
+            <select id="fanTier" class="part-select">
               <option value="">-- Nenhum --</option>
               <option value="uncommon">🟢 Uncommon</option>
               <option value="rare">🔵 Rare</option>
               <option value="epic">🟣 Epic</option>
               <option value="legendary">🟡 Legendary</option>
             </select>
-            <input type="number" id="fanQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            <input type="number" id="fanQty" placeholder="Quantidade" min="0" class="part-input">
           </div>
 
           <!-- Wire -->
           <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>🔌 Wire</strong></label>
-            <select id="wireTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+            <label class="part-label">🔌 Wire</label>
+            <select id="wireTier" class="part-select">
               <option value="">-- Nenhum --</option>
               <option value="uncommon">🟢 Uncommon</option>
               <option value="rare">🔵 Rare</option>
               <option value="epic">🟣 Epic</option>
               <option value="legendary">🟡 Legendary</option>
             </select>
-            <input type="number" id="wireQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            <input type="number" id="wireQty" placeholder="Quantidade" min="0" class="part-input">
           </div>
 
           <!-- Hashboard -->
           <div>
-            <label style="display: block; margin-bottom: 5px; font-size: 13px;"><strong>💾 Hashboard</strong></label>
-            <select id="hashTier" style="width: 100%; padding: 8px; margin-bottom: 5px;">
+            <label class="part-label">💾 Hashboard</label>
+            <select id="hashTier" class="part-select">
               <option value="">-- Nenhum --</option>
               <option value="uncommon">🟢 Uncommon</option>
               <option value="rare">🔵 Rare</option>
               <option value="epic">🟣 Epic</option>
               <option value="legendary">🟡 Legendary</option>
             </select>
-            <input type="number" id="hashQty" placeholder="Quantidade" min="0" style="width: 100%; padding: 8px;">
+            <input type="number" id="hashQty" placeholder="Quantidade" min="0" class="part-input">
           </div>
         </div>
 
-        <button onclick="UI_MergeVsMarket.comparar()" style="width: 100%; padding: 15px; font-size: 16px; font-weight: bold; background: #FF9800; color: white;">
+        <button onclick="UI_MergeVsMarket.comparar()" class="btn-compare">
           💰 Comparar Opções
         </button>
       </div>
@@ -133,8 +133,8 @@ const UI_MergeVsMarket = {
     
     if (!text) {
       resultDiv.innerHTML = `
-        <div style="background: #ffebee; padding: 10px; border-radius: 5px; border-left: 4px solid #f44336;">
-          <p style="margin: 0; font-size: 13px;">⚠️ Cole o texto da página primeiro!</p>
+        <div class="price-update-error">
+          <p style="margin: 0;">⚠️ Cole o texto da página primeiro!</p>
         </div>
       `;
       return;
@@ -151,12 +151,12 @@ const UI_MergeVsMarket = {
       localStorage.setItem('rollercoin_prices_update', new Date().toISOString());
       
       resultDiv.innerHTML = `
-        <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; border-left: 4px solid #4CAF50;">
+        <div class="price-update-success">
           <h4 style="margin: 0 0 10px 0;">✅ Preços Atualizados com Sucesso!</h4>
-          <p style="margin: 0; font-size: 12px; color: #666;">
+          <p class="price-update-timestamp">
             Última atualização: ${new Date().toLocaleString('pt-BR')}
           </p>
-          <button onclick="UI_MergeVsMarket.mostrarPrecosAtuais()" style="margin-top: 10px; padding: 8px 15px; font-size: 12px;">
+          <button onclick="UI_MergeVsMarket.mostrarPrecosAtuais()" class="btn-show-prices" style="margin-top: 10px; padding: 8px 15px; font-size: 12px;">
             👁️ Ver Preços Atualizados
           </button>
         </div>
@@ -166,9 +166,9 @@ const UI_MergeVsMarket = {
       
     } catch (error) {
       resultDiv.innerHTML = `
-        <div style="background: #ffebee; padding: 10px; border-radius: 5px; border-left: 4px solid #f44336;">
-          <p style="margin: 0; font-size: 13px;">❌ Erro ao processar: ${error.message}</p>
-          <p style="margin: 5px 0 0 0; font-size: 11px; color: #666;">
+        <div class="price-update-error">
+          <p style="margin: 0;">❌ Erro ao processar: ${error.message}</p>
+          <p style="margin: 5px 0 0 0; font-size: 11px;">
             Verifique se:<br>
             • Copiou da página correta (Marketplace > Buy > Parts)<br>
             • Alterou para 24 resultados por página<br>
@@ -295,18 +295,18 @@ const UI_MergeVsMarket = {
     };
     
     let html = `
-      <div style="background: white; padding: 15px; border-radius: 5px; border: 1px solid #ddd;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-          <h4 style="margin: 0;">💰 Preços Atuais</h4>
-          <span style="font-size: 11px; color: #666;">${updateText}</span>
+      <div class="prices-table-container">
+        <div class="prices-table-header">
+          <h4>💰 Preços Atuais</h4>
+          <span class="price-update-timestamp">${updateText}</span>
         </div>
-        <table style="width: 100%; font-size: 12px;">
-          <thead style="background: #f8f9fa;">
+        <table class="prices-table">
+          <thead>
             <tr>
-              <th style="padding: 8px; text-align: left;">Tier</th>
-              <th style="padding: 8px;">🌀 Fan</th>
-              <th style="padding: 8px;">🔌 Wire</th>
-              <th style="padding: 8px;">💾 Hashboard</th>
+              <th>Tier</th>
+              <th>🌀 Fan</th>
+              <th>🔌 Wire</th>
+              <th>💾 Hashboard</th>
             </tr>
           </thead>
           <tbody>
@@ -314,11 +314,11 @@ const UI_MergeVsMarket = {
     
     ['common', 'uncommon', 'rare', 'epic', 'legendary'].forEach(tier => {
       html += `
-        <tr style="border-bottom: 1px solid #eee;">
-          <td style="padding: 8px;"><strong>${tierEmojis[tier]} ${this.getTierName(tier)}</strong></td>
-          <td style="padding: 8px; text-align: center;">${this.marketPrices[tier].fan.toFixed(4)} RLT</td>
-          <td style="padding: 8px; text-align: center;">${this.marketPrices[tier].wire.toFixed(4)} RLT</td>
-          <td style="padding: 8px; text-align: center;">${this.marketPrices[tier].hashboard.toFixed(4)} RLT</td>
+        <tr>
+          <td><strong>${tierEmojis[tier]} ${this.getTierName(tier)}</strong></td>
+          <td>${this.marketPrices[tier].fan.toFixed(4)} RLT</td>
+          <td>${this.marketPrices[tier].wire.toFixed(4)} RLT</td>
+          <td>${this.marketPrices[tier].hashboard.toFixed(4)} RLT</td>
         </tr>
       `;
     });
@@ -363,7 +363,7 @@ const UI_MergeVsMarket = {
 
     if (selectedParts.length === 0) {
       resultDiv.innerHTML = `
-        <div class="summary-item" style="background: #ffebee; border-left: 4px solid #f44336; margin-top: 20px;">
+        <div class="info-box-red">
           <h4>⚠️ Nenhuma Peça Selecionada</h4>
           <p>Selecione pelo menos uma peça!</p>
         </div>
@@ -431,7 +431,7 @@ const UI_MergeVsMarket = {
     const tierEmojis = { common: '⚪', uncommon: '🟢', rare: '🔵', epic: '🟣', legendary: '🟡' };
 
     let html = `
-      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3; margin-top: 30px;">
+      <div class="info-box-blue" style="margin-top: 30px;">
         <h3>📊 Resultado da Comparação</h3>
     `;
 
@@ -442,34 +442,34 @@ const UI_MergeVsMarket = {
       const savingsPercent = (savingsVs3 / result.option3Cost * 100);
       
       html += `
-        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #4CAF50;">
-          <h4 style="margin: 0 0 15px 0;">
+        <div class="comparison-part-card">
+          <h4 class="comparison-part-title">
             ${result.emoji} ${result.qty}x ${tierEmojis[result.tier]} ${this.getTierName(result.tier)} ${result.name}
           </h4>
           ${option2BetterThan3 ? `
-            <div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 3px solid #FF9800; margin-bottom: 15px; font-size: 12px;">
-              <strong style="color: #e65100;">🔥 Comprar Common + Merge é ${savingsPercent.toFixed(1)}% mais barato que comprar pronto!</strong>
-              <span style="color: #666;"> (Economia: ${savingsVs3.toFixed(4)} RLT)</span>
+            <div class="savings-highlight">
+              <strong>🔥 Comprar Common + Merge é ${savingsPercent.toFixed(1)}% mais barato que comprar pronto!</strong>
+              <span>(Economia: ${savingsVs3.toFixed(4)} RLT)</span>
             </div>
           ` : ''}
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-            <div style="background: ${result.option1Cost === bestLocal ? '#e8f5e8' : '#f8f9fa'}; padding: 15px; border-radius: 5px; border: 2px solid ${result.option1Cost === bestLocal ? '#4CAF50' : '#ddd'};">
-              <div style="font-size: 12px; color: #666; margin-bottom: 5px;">${result.option1Cost === bestLocal ? '⭐ ' : ''}Opção 1</div>
-              <div style="font-size: 11px; margin-bottom: 10px;">Merge (só taxas)</div>
-              <div style="font-size: 18px; font-weight: bold; color: ${result.option1Cost === bestLocal ? '#4CAF50' : '#333'};">${result.option1Cost.toFixed(4)} RLT</div>
-              <div style="font-size: 10px; color: #999; margin-top: 5px;">Você já tem peças</div>
+          <div class="options-grid">
+            <div class="option-card ${result.option1Cost === bestLocal ? 'best' : ''}">
+              <div class="option-label">${result.option1Cost === bestLocal ? '⭐ ' : ''}Opção 1</div>
+              <div class="option-description">Merge (só taxas)</div>
+              <div class="option-cost">${result.option1Cost.toFixed(4)} RLT</div>
+              <div class="option-meta">Você já tem peças</div>
             </div>
-            <div style="background: ${result.option2Cost === bestLocal ? '#e8f5e8' : '#f8f9fa'}; padding: 15px; border-radius: 5px; border: 2px solid ${result.option2Cost === bestLocal ? '#4CAF50' : '#ddd'};">
-              <div style="font-size: 12px; color: #666; margin-bottom: 5px;">${result.option2Cost === bestLocal ? '⭐ ' : ''}Opção 2</div>
-              <div style="font-size: 11px; margin-bottom: 10px;">Comprar Common + Merge</div>
-              <div style="font-size: 18px; font-weight: bold; color: ${result.option2Cost === bestLocal ? '#4CAF50' : '#333'};">${result.option2Cost.toFixed(4)} RLT</div>
-              <div style="font-size: 10px; color: #999; margin-top: 5px;">${result.commonNeeded} Common</div>
+            <div class="option-card ${result.option2Cost === bestLocal ? 'best' : ''}">
+              <div class="option-label">${result.option2Cost === bestLocal ? '⭐ ' : ''}Opção 2</div>
+              <div class="option-description">Comprar Common + Merge</div>
+              <div class="option-cost">${result.option2Cost.toFixed(4)} RLT</div>
+              <div class="option-meta">${result.commonNeeded} Common</div>
             </div>
-            <div style="background: ${result.option3Cost === bestLocal ? '#e8f5e8' : '#f8f9fa'}; padding: 15px; border-radius: 5px; border: 2px solid ${result.option3Cost === bestLocal ? '#4CAF50' : '#ddd'};">
-              <div style="font-size: 12px; color: #666; margin-bottom: 5px;">${result.option3Cost === bestLocal ? '⭐ ' : ''}Opção 3</div>
-              <div style="font-size: 11px; margin-bottom: 10px;">Comprar Pronto</div>
-              <div style="font-size: 18px; font-weight: bold; color: ${result.option3Cost === bestLocal ? '#4CAF50' : '#333'};">${result.option3Cost.toFixed(4)} RLT</div>
-              <div style="font-size: 10px; color: #999; margin-top: 5px;">Direto no market</div>
+            <div class="option-card ${result.option3Cost === bestLocal ? 'best' : ''}">
+              <div class="option-label">${result.option3Cost === bestLocal ? '⭐ ' : ''}Opção 3</div>
+              <div class="option-description">Comprar Pronto</div>
+              <div class="option-cost">${result.option3Cost.toFixed(4)} RLT</div>
+              <div class="option-meta">Direto no market</div>
             </div>
           </div>
         </div>
@@ -480,32 +480,32 @@ const UI_MergeVsMarket = {
     const savingsPercent = (savings / totals.totalOption3) * 100;
 
     html += `
-        <div style="background: #4CAF50; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px;">
-          <h3 style="margin: 0 0 10px 0;">🎉 Melhor Opção: Opção ${totals.bestOption.id}</h3>
-          <p style="font-size: 36px; font-weight: bold; margin: 10px 0;">${totals.bestOption.cost.toFixed(4)} RLT</p>
-          <p style="font-size: 16px; margin: 10px 0;">💰 Economia: ${savings.toFixed(4)} RLT (${savingsPercent.toFixed(1)}%)</p>
+        <div class="best-option-box">
+          <h3>🎉 Melhor Opção: Opção ${totals.bestOption.id}</h3>
+          <p class="best-option-value">${totals.bestOption.cost.toFixed(4)} RLT</p>
+          <p class="best-option-savings">💰 Economia: ${savings.toFixed(4)} RLT (${savingsPercent.toFixed(1)}%)</p>
         </div>
       </div>
 
-      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3; margin-top: 20px;">
+      <div class="info-box-blue">
         <h4>💡 Dica do BBJ</h4>
-        <p style="font-size: 13px; line-height: 1.6;">
+        <p class="insight-box">
           ✅ <strong>Compare sempre!</strong> O merge quase sempre sai mais barato que comprar pronto.<br>
           💰 Se você comprar peças Common e fizer merge, economiza MUITO mais que comprar direto.<br>
           📊 Use esta ferramenta antes de gastar seus RLT no marketplace!
         </p>
       </div>
 
-      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800; margin-top: 20px;">
+      <div class="info-box-orange">
         <h4>🔥 Insight Importante</h4>
-        <p style="font-size: 13px; line-height: 1.6;">
+        <p class="insight-box">
           <strong>Mesmo se você NÃO tem as peças:</strong><br>
           📈 <strong>Comprar Common + Merge</strong> é quase sempre mais barato que <strong>Comprar Pronto</strong>!<br>
           <br>
           💰 Na maioria dos casos, você economiza entre <strong>5% a 15%</strong> comprando Common e fazendo merge.<br>
           🎯 <strong>Conclusão:</strong> Sempre vale a pena fazer merge, mesmo comprando as peças!<br>
           <br>
-          <em style="font-size: 12px; color: #666;">💡 Use o comparador acima para ver a economia exata com os preços atuais do mercado!</em>
+          <em>💡 Use o comparador acima para ver a economia exata com os preços atuais do mercado!</em>
         </p>
       </div>
     `;

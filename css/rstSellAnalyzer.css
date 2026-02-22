@@ -1,0 +1,446 @@
+/* ========== RST Sell Analyzer ========== */
+
+/* Force text color in dark mode */
+body.dark-mode #rstsellanalyzer * {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode #rstsellanalyzer button {
+  color: white !important;
+}
+
+/* Info Boxes */
+.rst-box-red {
+  background: #ffebee;
+  border-left: 4px solid #dc3545;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .rst-box-red {
+  background: #3a2a2a;
+}
+
+.rst-box-purple {
+  background: #f3e5f5;
+  border-left: 4px solid #9C27B0;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .rst-box-purple {
+  background: #3a2a3a;
+}
+
+.rst-box-orange {
+  background: #fff3e0;
+  border-left: 4px solid #FF9800;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .rst-box-orange {
+  background: #3a3a2a;
+}
+
+.rst-box-green {
+  background: #e8f5e8;
+  border-left: 4px solid #4CAF50;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .rst-box-green {
+  background: #2a3a2a;
+}
+
+.rst-box-yellow {
+  background: #fff9e6;
+  border-left: 4px solid #FFC107;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .rst-box-yellow {
+  background: #3a3a2a;
+}
+
+.rst-box-blue {
+  background: #e3f2fd;
+  border-left: 4px solid #2196F3;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .rst-box-blue {
+  background: #2a2a3a;
+}
+
+/* Text utilities */
+.text-13 {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* White Box */
+.white-box {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+body.dark-mode .white-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* List 13 */
+.list-13 {
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 5px 0;
+}
+
+/* Table overflow */
+.table-overflow {
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+/* Analysis Table */
+.analysis-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+body.dark-mode .analysis-table {
+  background: var(--bg-secondary);
+}
+
+.analysis-table th,
+.analysis-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+body.dark-mode .analysis-table th,
+body.dark-mode .analysis-table td {
+  border-color: var(--border-color);
+}
+
+.analysis-table thead tr {
+  background: #f8f9fa;
+}
+
+body.dark-mode .analysis-table thead tr {
+  background: #2d2d2d;
+}
+
+.th-left {
+  text-align: left;
+}
+
+.th-center {
+  text-align: center;
+}
+
+.td-bold {
+  font-weight: bold;
+}
+
+/* Table row colors */
+.row-blue {
+  background: #e3f2fd;
+}
+
+body.dark-mode .row-blue {
+  background: #2a2a3a;
+}
+
+.row-orange {
+  background: #fff3e0;
+}
+
+body.dark-mode .row-orange {
+  background: #3a3a2a;
+}
+
+.row-gray {
+  background: #f8f9fa;
+}
+
+body.dark-mode .row-gray {
+  background: #2d2d2d;
+}
+
+/* RST Calculator Section */
+.rst-calculator-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.rst-input-group {
+  margin-bottom: 15px;
+}
+
+.rst-input-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.rst-input-hint {
+  color: #666;
+  font-size: 12px;
+}
+
+body.dark-mode .rst-input-hint {
+  color: var(--text-secondary);
+}
+
+/* RST Results */
+.rst-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.rst-result-box {
+  text-align: center;
+}
+
+.rst-result-title {
+  margin: 0 0 10px 0;
+}
+
+.rst-result-value {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.rst-result-desc {
+  font-size: 13px;
+  color: #666;
+}
+
+body.dark-mode .rst-result-desc {
+  color: var(--text-secondary);
+}
+
+.rst-result-leftover {
+  font-size: 11px;
+  color: #999;
+  margin-top: 5px;
+}
+
+/* Part Results */
+.rst-parts-box {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+body.dark-mode .rst-parts-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.rst-parts-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rst-parts-total {
+  font-size: 32px;
+  font-weight: bold;
+  color: #4CAF50;
+  margin: 0;
+}
+
+/* Value Cards */
+.rst-value-card {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 10px 0;
+  border-left: 4px solid #4CAF50;
+}
+
+body.dark-mode .rst-value-card {
+  background: var(--bg-secondary);
+  border-left-color: #4CAF50;
+}
+
+.rst-value-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  font-size: 13px;
+}
+
+.rst-value-label {
+  color: #666;
+}
+
+body.dark-mode .rst-value-label {
+  color: var(--text-secondary);
+}
+
+.rst-value-negative {
+  color: #dc3545;
+}
+
+.rst-value-positive {
+  color: #4CAF50;
+}
+
+/* Summary Box */
+.rst-summary-box {
+  background: #4CAF50;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.rst-summary-title {
+  margin: 0 0 10px 0;
+}
+
+.rst-summary-subtitle {
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+.rst-summary-value {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.rst-summary-desc {
+  font-size: 13px;
+  margin: 5px 0;
+  opacity: 0.9;
+}
+
+/* Part Type Buttons */
+.rst-part-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.rst-part-btn {
+  padding: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.rst-part-btn.fan {
+  background: #2196F3;
+}
+
+.rst-part-btn.wire {
+  background: #FF9800;
+}
+
+.rst-part-btn.hashboard {
+  background: #9C27B0;
+}
+
+.rst-part-hint {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+body.dark-mode .rst-part-hint {
+  color: var(--text-secondary);
+}
+
+/* Cell backgrounds in table */
+.cell-green {
+  background: #e8f5e8;
+}
+
+body.dark-mode .cell-green {
+  background: #2a3a2a;
+}
+
+.cell-red {
+  background: #ffebee;
+}
+
+body.dark-mode .cell-red {
+  background: #3a2a2a;
+}
+
+/* Input overrides for dark mode */
+body.dark-mode #rstsellanalyzer input[type="number"] {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Inline style overrides */
+body.dark-mode #rstsellanalyzer [style*="background: white"],
+body.dark-mode #rstsellanalyzer [style*="background:white"] {
+  background: var(--bg-secondary) !important;
+}
+
+body.dark-mode #rstsellanalyzer [style*="color: #666"],
+body.dark-mode #rstsellanalyzer [style*="color:#666"] {
+  color: var(--text-secondary) !important;
+}
+
+body.dark-mode #rstsellanalyzer [style*="color: #999"],
+body.dark-mode #rstsellanalyzer [style*="color:#999"] {
+  color: var(--text-secondary) !important;
+}
+
+/* Value colors should stay the same in dark mode */
+body.dark-mode #rstsellanalyzer [style*="color: #4CAF50"],
+body.dark-mode #rstsellanalyzer [style*="color:#4CAF50"] {
+  color: #4CAF50 !important;
+}
+
+body.dark-mode #rstsellanalyzer [style*="color: #dc3545"],
+body.dark-mode #rstsellanalyzer [style*="color:#dc3545"] {
+  color: #ff6b6b !important;
+}
+
+body.dark-mode #rstsellanalyzer [style*="color: #FF9800"],
+body.dark-mode #rstsellanalyzer [style*="color:#FF9800"] {
+  color: #FF9800 !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .rst-calculator-grid,
+  .rst-result-grid,
+  .rst-value-grid,
+  .rst-part-grid {
+    grid-template-columns: 1fr;
+  }
+}

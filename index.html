@@ -2,10 +2,20 @@
 <html lang="pt-BR">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RollerCoin Analyzer Pro</title>
-  <link rel="stylesheet" href="css/styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RollerCoin Analyzer Pro</title>
+
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/index.css">
+<link rel="stylesheet" href="css/resumo.css">
+<link rel="stylesheet" href="css/buyAnalyzer.css">
+<link rel="stylesheet" href="css/farmCalculator.css">
+<link rel="stylesheet" href="css/mergeCalculator.css">
+<link rel="stylesheet" href="css/mergeVsMarket.css">
+<link rel="stylesheet" href="css/rstSellAnalyzer.css">
+<link rel="stylesheet" href="css/inventario.css">
+<link rel="stylesheet" href="css/racks.css">
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-YY4HR4G1LV"></script>
@@ -19,17 +29,22 @@
 
 <body>
   <div class="container">
-    <h1>RollerCoin Analyzer Pro</h1>
-
-    <div class="card">
-      <label for="username">Username:</label>
-      <input type="text" id="username" placeholder="Digite seu username" value="">
-      <button id="analisarBtn">Analisar</button>
-      <div id="status" class="status">Digite um username e clique em Analisar</div>
-      <div id="progress" class="progress" style="display:none;">
-        <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
-      </div>
+    <div class="header-bar">
+      <h1>RollerCoin Analyzer Pro</h1>       <button id="darkModeToggle" class="dark-toggle">🌙</button>
     </div>
+
+<div class="card">
+  <label for="username">Username:</label>
+  <div class="card-input-group">
+    <input type="text" id="username" placeholder="Digite seu username" value="">
+    <button id="analisarBtn">🔍 Analisar</button>
+  </div>
+  <div id="status" class="status">Digite um username e clique em Analisar</div>
+  
+  <div id="progress" class="progress">
+    <div id="progress-bar" class="progress-bar"></div>
+  </div>
+</div>
 
     <div class="tabs">
       <div class="tab active" data-tab="guia">Como Utilizar</div>
@@ -173,6 +188,36 @@
 
       console.log('✅ Sistema inicializado com sucesso!');
     });
+    // Dark Mode Toggle
+const darkModeToggle = document.getElementById('darkModeToggle');
+const body = document.body;
+
+// Carregar preferência salva
+const darkMode = localStorage.getItem('darkMode');
+if (darkMode === 'enabled') {
+  body.classList.add('dark-mode');
+  darkModeToggle.textContent = '☀️';
+}
+
+darkModeToggle.addEventListener('click', () => {
+  body.classList.toggle('dark-mode');
+  
+  if (body.classList.contains('dark-mode')) {
+    darkModeToggle.textContent = '☀️';
+    localStorage.setItem('darkMode', 'enabled');
+  } else {
+    darkModeToggle.textContent = '🌙';
+    localStorage.setItem('darkMode', 'disabled');
+  }
+});
+Utils.showProgress = function() {
+  document.getElementById('progress').style.display = 'block';
+};
+
+Utils.hideProgress = function() {
+  document.getElementById('progress').style.display = 'none';
+};
+
   </script>
 </body>
 

@@ -1,0 +1,353 @@
+/* ========== Merge Calculator Styles ========== */
+
+/* Grids */
+.merge-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.merge-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* Section Separator */
+.merge-separator {
+  margin: 40px 0;
+  border: 0;
+  border-top: 2px solid var(--border-color);
+}
+
+/* Part Input Groups */
+.part-input-group {
+  display: block;
+}
+
+.part-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.part-select,
+.part-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.part-select {
+  margin-bottom: 5px;
+}
+
+/* Buttons */
+.btn-calc-normal {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-calc-normal:hover {
+  background: var(--accent-hover);
+}
+
+.btn-calc-reverse {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-calc-reverse:hover {
+  background: #1976d2;
+}
+
+/* Taxas Table */
+.merge-rates-table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.merge-rates-table th {
+  padding: 8px;
+  background: var(--bg-primary);
+  font-weight: bold;
+}
+
+.merge-rates-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.merge-rates-table tr:nth-child(even) td {
+  background: var(--bg-primary);
+}
+
+.rates-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
+
+/* Result Cards */
+.merge-result-card {
+  background: white;
+  padding: 20px;
+  margin: 15px 0;
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+}
+
+body.dark-mode .merge-result-card {
+  background: var(--bg-secondary);
+}
+
+.merge-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.merge-result-title {
+  margin: 0;
+}
+
+.merge-result-info {
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.merge-cost-badge {
+  background: #FF9800;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Details/Summary */
+.merge-details {
+  margin-top: 15px;
+}
+
+.merge-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 5px;
+}
+
+.merge-steps-container {
+  margin-top: 10px;
+  padding: 15px;
+  background: var(--bg-primary);
+  border-radius: 5px;
+}
+
+.merge-step {
+  padding: 10px 0;
+}
+
+.merge-step:not(:last-child) {
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.merge-step-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.merge-step-arrow {
+  text-align: center;
+  color: #2196F3;
+  font-size: 18px;
+}
+
+.merge-step-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+}
+
+.merge-leftover {
+  color: #999;
+  font-size: 11px;
+}
+
+/* Total Box */
+.merge-total-box {
+  background: #4CAF50;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.merge-total-box h3 {
+  margin: 0 0 10px 0;
+}
+
+.merge-total-value {
+  font-size: 36px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.merge-total-subtitle {
+  font-size: 14px;
+  margin: 5px 0;
+  opacity: 0.9;
+}
+
+.merge-total-box-reverse {
+  background: #2196F3;
+}
+
+/* Reverse Calculator Specific */
+.reverse-start-tier {
+  margin-bottom: 20px;
+}
+
+.reverse-start-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.reverse-start-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.reverse-result-card {
+  background: white;
+  padding: 20px;
+  margin: 15px 0;
+  border-radius: 8px;
+  border-left: 4px solid #2196F3;
+}
+
+body.dark-mode .reverse-result-card {
+  background: var(--bg-secondary);
+}
+
+.reverse-requirement-box {
+  background: var(--bg-primary);
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.reverse-requirement-text {
+  margin: 0;
+  font-size: 16px;
+}
+
+.reverse-requirement-value {
+  color: #2196F3;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+body.dark-mode .reverse-requirement-value {
+  color: #4a9eff;
+}
+
+.reverse-step {
+  padding: 8px 0;
+}
+
+.reverse-step:not(:last-child) {
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.reverse-step-flex {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+}
+
+.reverse-step-from {
+  flex: 1;
+}
+
+.reverse-step-arrow {
+  padding: 0 15px;
+  color: #2196F3;
+  font-size: 18px;
+}
+
+.reverse-step-to {
+  flex: 1;
+}
+
+.reverse-step-cost {
+  text-align: right;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Example Box */
+.merge-example-box {
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.merge-example-box ul {
+  font-size: 12px;
+  margin: 10px 0;
+  line-height: 1.8;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .merge-grid-2,
+  .merge-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .merge-step-grid {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .merge-step-arrow {
+    transform: rotate(90deg);
+  }
+
+  .merge-total-value {
+    font-size: 28px;
+  }
+}

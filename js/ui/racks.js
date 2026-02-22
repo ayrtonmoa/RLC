@@ -1,4 +1,4 @@
-// js/ui/racks.js - Impact Rack Analyzer (POSIÇÕES ATUALIZADAS)
+// js/ui/racks.js - Impact Rack Analyzer (CSS Cleanup)
 
 const UI_Racks = {
   currentFilter: 'all',
@@ -15,8 +15,8 @@ const UI_Racks = {
     let html = `
       <h2>Impact Rack Analyzer</h2>
       
-      <div style="background-color: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-        <p style="font-weight: bold; margin-bottom: 10px; text-align: center;">Estatísticas Gerais</p>
+      <div class="racks-stats-box">
+        <p class="racks-stats-title">Estatísticas Gerais</p>
         <div class="summary-grid">
           <div><strong>Total de Racks:</strong> ${impactosRacks.length}</div>
           <div><strong>Racks Ocupados:</strong> ${impactosRacks.filter(r => r.numMiners > 0).length}</div>
@@ -25,13 +25,13 @@ const UI_Racks = {
         </div>
       </div>
       
-      <div style="margin-bottom: 15px;">
-        <button onclick="UI_Racks.exportarCSV()">📊 Exportar CSV</button>
-        <button onclick="UI_Racks.filtrar('high')" style="${this.currentFilter === 'high' ? 'background: #dc3545; color: white;' : ''}">🔴 Alto Impacto</button>
-        <button onclick="UI_Racks.filtrar('medium')" style="${this.currentFilter === 'medium' ? 'background: #ff9800; color: white;' : ''}">🟡 Médio Impacto</button>
-        <button onclick="UI_Racks.filtrar('low')" style="${this.currentFilter === 'low' ? 'background: #28a745; color: white;' : ''}">🟢 Baixo Impacto</button>
-        <button onclick="UI_Racks.filtrar('empty')" style="${this.currentFilter === 'empty' ? 'background: #6c757d; color: white;' : ''}">⚪ Vazios</button>
-        <button onclick="UI_Racks.filtrar('all')" style="${this.currentFilter === 'all' ? 'background: #007bff; color: white;' : ''}">Todos</button>
+      <div class="racks-filters">
+        <button onclick="UI_Racks.exportarCSV()" class="racks-filter-btn">📊 Exportar CSV</button>
+        <button onclick="UI_Racks.filtrar('high')" class="racks-filter-btn ${this.currentFilter === 'high' ? 'active-high' : ''}">🔴 Alto Impacto</button>
+        <button onclick="UI_Racks.filtrar('medium')" class="racks-filter-btn ${this.currentFilter === 'medium' ? 'active-medium' : ''}">🟡 Médio Impacto</button>
+        <button onclick="UI_Racks.filtrar('low')" class="racks-filter-btn ${this.currentFilter === 'low' ? 'active-low' : ''}">🟢 Baixo Impacto</button>
+        <button onclick="UI_Racks.filtrar('empty')" class="racks-filter-btn ${this.currentFilter === 'empty' ? 'active-empty' : ''}">⚪ Vazios</button>
+        <button onclick="UI_Racks.filtrar('all')" class="racks-filter-btn ${this.currentFilter === 'all' ? 'active-all' : ''}">Todos</button>
       </div>
 
       <table id="racksTable">
@@ -67,7 +67,7 @@ const UI_Racks = {
       }
       
       html += `
-        <tr class="${impactClass}" data-type="${rack.numMiners === 0 ? 'empty' : percentualRelativo > 70 ? 'high' : percentualRelativo > 30 ? 'medium' : 'low'}" onclick="UI_Racks.mostrarMinersDoRack('${rack.rackId}')" style="cursor: pointer;">
+        <tr class="${impactClass}" data-type="${rack.numMiners === 0 ? 'empty' : percentualRelativo > 70 ? 'high' : percentualRelativo > 30 ? 'medium' : 'low'}" onclick="UI_Racks.mostrarMinersDoRack('${rack.rackId}')">
           <td><strong>#${index + 1}</strong></td>
           <td><strong>Rack #${rack.ordem}</strong></td>
           <td><strong>${rack.nome}</strong></td>
@@ -87,9 +87,9 @@ const UI_Racks = {
     html += "</table>";
     
     html += `
-      <div style="background: #e8f5e8; padding: 15px; border-left: 4px solid #4CAF50; margin-top: 20px;">
+      <div class="racks-info-box">
         <h4>💡 Como Interpretar</h4>
-        <ul style="font-size: 13px; margin: 5px 0;">
+        <ul>
           <li><strong>Ordem:</strong> Posição visual do rack (1º da esquerda pra direita, cima pra baixo, começando pela Sala 1)</li>
           <li><strong>Impacto Real:</strong> Quanto poder você perderia removendo TODAS as miners desse rack</li>
           <li><strong>Contribuição Bônus:</strong> Diferença entre impacto real e poder base (mostra efeito dos bônus)</li>
@@ -97,7 +97,7 @@ const UI_Racks = {
           <li><strong>Eficiência:</strong> Percentual de ocupação do rack (células usadas / capacidade total)</li>
           <li><strong>👆 Clique em qualquer rack</strong> para ver as miners instaladas nele!</li>
         </ul>
-        <p style="margin-top: 10px; font-size: 12px; color: #666;">
+        <p class="racks-info-tip">
           <strong>💡 Dica:</strong> Racks com alto ROI/Célula são mais eficientes. Considere mover miners fortes para estes racks!
         </p>
       </div>
@@ -114,11 +114,9 @@ const UI_Racks = {
     const racks = userData.roomData.racks || [];
     const impacts = Calculations.calcularImpactos(userData);
     
-    // Encontrar o rack
     const rack = racks.find(r => r._id === rackId);
     if (!rack) return;
     
-    // ORDENAR RACKS POR POSIÇÃO VISUAL para encontrar ordem correta
     const racksOrdenados = [...racks].sort((a, b) => {
       const salaA = a.placement?.room_level || 0;
       const salaB = b.placement?.room_level || 0;
@@ -131,11 +129,9 @@ const UI_Racks = {
       return (a.placement?.x || 0) - (b.placement?.x || 0);
     });
     
-    // Encontrar índice/ordem VISUAL do rack
     const rackIndex = racksOrdenados.findIndex(r => r._id === rackId);
     const rackOrdem = rackIndex >= 0 ? rackIndex + 1 : '?';
     
-    // Encontrar miners neste rack
     const minersNoRack = allMiners.filter(m => m.placement?.user_rack_id === rackId);
     
     if (minersNoRack.length === 0) {
@@ -143,7 +139,6 @@ const UI_Racks = {
       return;
     }
     
-    // Pegar impactos dessas miners e ordenar
     const minersComImpacto = minersNoRack.map(miner => {
       const minerIndex = allMiners.indexOf(miner);
       const impact = impacts.find(i => i.minerIndex === minerIndex);
@@ -153,17 +148,16 @@ const UI_Racks = {
       };
     }).sort((a, b) => b.impact - a.impact);
     
-    // Criar modal
     let modalHTML = `
-      <div id="rackModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center;" onclick="UI_Racks.fecharModal(event)">
-        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;" onclick="event.stopPropagation();">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">🏠 Rack #${rackOrdem}: ${rack.name}</h3>
-            <button onclick="UI_Racks.fecharModal()" style="background: #dc3545; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 18px;">✕</button>
+      <div id="rackModal" class="racks-modal-overlay" onclick="UI_Racks.fecharModal(event)">
+        <div class="racks-modal-content" onclick="event.stopPropagation();">
+          <div class="racks-modal-header">
+            <h3>🏠 Rack #${rackOrdem}: ${rack.name}</h3>
+            <button onclick="UI_Racks.fecharModal()" class="racks-modal-close">✕</button>
           </div>
           
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 14px;">
+          <div class="racks-modal-info">
+            <div class="racks-modal-grid">
               <div><strong>Sala:</strong> ${(rack.placement?.room_level || 0) + 1}</div>
               <div><strong>Bônus:</strong> ${(rack.bonus / 100).toFixed(2)}%</div>
               <div><strong>Miners:</strong> ${minersNoRack.length}</div>
@@ -172,16 +166,16 @@ const UI_Racks = {
           
           <h4 style="margin: 20px 0 10px 0;">📋 Miners neste Rack (ordenadas por impacto)</h4>
           
-          <table style="width: 100%; font-size: 12px;">
-            <tr style="background: #eee;">
-              <th style="padding: 8px;">#</th>
-              <th style="padding: 8px;">Nome</th>
-              <th style="padding: 8px;">Level</th>
-              <th style="padding: 8px;">Status</th>
-              <th style="padding: 8px;">Cél</th>
-              <th style="padding: 8px;">Bônus</th>
-              <th style="padding: 8px;">Power Base</th>
-              <th style="padding: 8px;">Impacto</th>
+          <table>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>Level</th>
+              <th>Status</th>
+              <th>Cél</th>
+              <th>Bônus</th>
+              <th>Power Base</th>
+              <th>Impacto</th>
             </tr>
     `;
     
@@ -195,15 +189,15 @@ const UI_Racks = {
       const statusIcon = m.isFirstOfType ? '🔷' : (m.isDuplicate ? '🔄' : '⚪');
       
       modalHTML += `
-        <tr class="${impactClass}" style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 8px;"><strong>#${index + 1}</strong></td>
-          <td style="padding: 8px;"><strong>${m.name}</strong></td>
-          <td style="padding: 8px;">${m.level}</td>
-          <td style="padding: 8px; text-align: center; font-size: 16px;">${statusIcon}</td>
-          <td style="padding: 8px; text-align: center;"><strong>${m.width || 2}</strong></td>
-          <td style="padding: 8px;">${(m.minerBonusPercent * 100).toFixed(2)}%</td>
-          <td style="padding: 8px;">${Utils.formatPower(m.basePower * 1e9)}</td>
-          <td style="padding: 8px;"><strong>${Utils.formatPower(m.impact * 1e9)}</strong></td>
+        <tr class="${impactClass}">
+          <td><strong>#${index + 1}</strong></td>
+          <td><strong>${m.name}</strong></td>
+          <td>${m.level}</td>
+          <td style="text-align: center; font-size: 16px;">${statusIcon}</td>
+          <td style="text-align: center;"><strong>${m.width || 2}</strong></td>
+          <td>${(m.minerBonusPercent * 100).toFixed(2)}%</td>
+          <td>${Utils.formatPower(m.basePower * 1e9)}</td>
+          <td><strong>${Utils.formatPower(m.impact * 1e9)}</strong></td>
         </tr>
       `;
     });
@@ -211,14 +205,14 @@ const UI_Racks = {
     modalHTML += `
           </table>
           
-          <div style="background: #e8f5e8; padding: 10px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #4CAF50;">
+          <div class="racks-modal-legend">
             <p style="font-size: 12px; margin: 5px 0;"><strong>Legenda:</strong></p>
-            <p style="font-size: 11px; margin: 3px 0;">🔷 = Primeira do tipo (alto impacto com perda de bônus)</p>
-            <p style="font-size: 11px; margin: 3px 0;">🔄 = Duplicata (impacto menor, sem perda de bônus)</p>
-            <p style="font-size: 11px; margin: 3px 0;">⚪ = Única (impacto com perda de bônus)</p>
+            <p>🔷 = Primeira do tipo (alto impacto com perda de bônus)</p>
+            <p>🔄 = Duplicata (impacto menor, sem perda de bônus)</p>
+            <p>⚪ = Única (impacto com perda de bônus)</p>
           </div>
           
-          <div style="margin-top: 20px; text-align: center;">
+          <div class="racks-modal-actions">
             <button onclick="UI_Racks.fecharModal()" style="padding: 10px 30px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">Fechar</button>
           </div>
         </div>
@@ -229,7 +223,6 @@ const UI_Racks = {
   },
   
   fecharModal(event) {
-    // Se event existe e não é o background, não fecha
     if (event && event.target.id !== 'rackModal') return;
     
     const modal = document.getElementById('rackModal');
@@ -243,7 +236,6 @@ const UI_Racks = {
     const allMiners = user.roomData.miners || [];
     const impacts = Calculations.calcularImpactos(user);
     
-    // ORDENAR RACKS POR POSIÇÃO VISUAL (sala -> linha -> coluna)
     const racksOrdenados = [...racks].sort((a, b) => {
       const salaA = a.placement?.room_level || 0;
       const salaB = b.placement?.room_level || 0;
@@ -260,7 +252,6 @@ const UI_Racks = {
       const rackId = rack._id;
       const minersNoRack = allMiners.filter(m => m.placement?.user_rack_id === rackId);
       
-      // Somar impactos das miners neste rack
       let impactoTotal = 0;
       let poderBaseTotal = 0;
       let celulasOcupadas = 0;
@@ -281,7 +272,7 @@ const UI_Racks = {
       
       return {
         nome: rack.name || 'N/A',
-        ordem: rackIndex + 1, // Ordem VISUAL (1º visualmente, 2º visualmente, etc)
+        ordem: rackIndex + 1,
         sala: (rack.placement?.room_level || 0) + 1,
         bonusRack: (rack.bonus || 0) / 100,
         numMiners: minersNoRack.length,
@@ -296,7 +287,6 @@ const UI_Racks = {
       };
     });
     
-    // Ordenar por impacto real (maior primeiro)
     return impactosRacks.sort((a, b) => b.impactoReal - a.impactoReal);
   },
   

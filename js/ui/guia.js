@@ -6,7 +6,7 @@ const UI_Guia = {
     div.innerHTML = `
       <h2>Guia de Uso - RollerCoin Analyzer Pro</h2>
       
-      <div class="summary-item" style="margin-bottom: 20px; background: #e8f5e8; border-left: 4px solid #4CAF50;">
+      <div class="info-box-green">
         <h4>💡 O que é o RollerCoin Analyzer Pro?</h4>
         <p>Uma ferramenta completa que analisa o <strong>impacto real</strong> de cada miner, calcula <strong>rentabilidade de farming</strong>, simula <strong>merges</strong> e compara com o <strong>mercado</strong>. Tome decisões estratégicas baseadas em dados precisos.</p>
       </div>
@@ -112,7 +112,7 @@ const UI_Guia = {
 
       <h3>Farm Calculator - Como Usar (NOVO!)</h3>
 
-      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3;">
+      <div class="info-box-blue">
         <h4>⚡ Passo a Passo</h4>
         <ol>
           <li><strong>Analise seu perfil primeiro</strong> (para detectar sua liga)</li>
@@ -154,7 +154,7 @@ const UI_Guia = {
 
       <h3>Interpretando os Resultados</h3>
 
-      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800;">
+      <div class="info-box-orange">
         <h4>❓ O que significa "Impacto Real"?</h4>
         <p>O <strong>Impacto Real</strong> responde: "Se eu remover APENAS esta miner, quanto poder eu perderia?"</p>
         
@@ -200,7 +200,7 @@ const UI_Guia = {
 
       <h3>Buy Analyzer - Como Usar</h3>
 
-      <div class="summary-item" style="background: #e3f2fd; border-left: 4px solid #2196F3;">
+      <div class="info-box-blue">
         <h4>🛒 Passo a Passo</h4>
         <ol>
           <li>Abra qualquer miner no marketplace do RollerCoin</li>
@@ -218,7 +218,7 @@ const UI_Guia = {
 
       <h3>Merge Analyzer - Como Usar</h3>
 
-      <div class="summary-item" style="background: #f3e5f5; border-left: 4px solid #9C27B0;">
+      <div class="info-box-purple">
         <h4>🔀 Simulação de Merge</h4>
         <ol>
           <li>Vá no <strong>Storage</strong> do RollerCoin</li>
@@ -239,7 +239,7 @@ const UI_Guia = {
 
       <h3>Merge vs Market - Como Usar (NOVO!)</h3>
 
-      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800;">
+      <div class="info-box-orange">
         <h4>⚖️ Decidir: Merge, Vender ou Comprar?</h4>
         <ol>
           <li>Cole as miners que planeja fazer merge</li>
@@ -268,7 +268,7 @@ const UI_Guia = {
 
       <h3>Inventário - Como Usar</h3>
 
-      <div class="summary-item" style="background: #f3e5f5; border-left: 4px solid #9C27B0;">
+      <div class="info-box-purple">
         <h4>📦 Análise de Inventário</h4>
         <ol>
           <li>Vá em Storage no RollerCoin</li>
@@ -325,12 +325,12 @@ const UI_Guia = {
 
       <h3>Limitações e Notas Importantes</h3>
 
-      <div class="summary-item" style="background: #ffebee; border-left: 4px solid #f44336;">
+      <div class="info-box-red">
         <h4>⚠️ Impactos Não São Aditivos</h4>
         <p>Os valores de impacto <strong>não podem ser somados</strong>. Cada valor mostra o impacto de remover apenas aquela miner específica, mas os bônus se afetam mutuamente.</p>
       </div>
 
-      <div class="summary-item" style="background: #fff3e0; border-left: 4px solid #FF9800;">
+      <div class="info-box-orange">
         <h4>⚠️ Farm Calculator - Notas Importantes</h4>
         <ul>
           <li><strong>Sistema de Ligas:</strong> Cada liga tem block rewards diferentes</li>
@@ -391,13 +391,13 @@ const UI_Guia = {
         </div>
       </div>
 
-      <hr style="margin: 30px 0;">
+      <hr class="separator">
       
-      <p style="text-align: center; font-size: 14px; color: #666;">
+      <p class="text-center text-muted">
         <strong>Lembre-se:</strong> Use esta ferramenta como apoio às suas decisões, mas sempre considere também fatores como custo, disponibilidade no mercado e seus objetivos pessoais no jogo.
       </p>
       
-      <p style="text-align: center; font-size: 12px; color: #999;">
+      <p class="text-center text-small">
         <em>Ferramenta criada pela comunidade RollerCoin para análise completa de miners e farming. Não afiliada oficialmente ao RollerCoin.</em>
       </p>
     `;
@@ -405,3 +405,4 @@ const UI_Guia = {
 };
 
 window.UI_Guia = UI_Guia;
+console.log('✅ UI_Guia loaded');

@@ -1,0 +1,604 @@
+/* ========== INVENTÁRIO STYLES ========== */
+
+/* ===== Reset & Base ===== */
+#inventario {
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+body.dark-mode #inventario {
+  color: var(--text-primary);
+}
+
+body.dark-mode #inventario * {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode #inventario button {
+  color: white !important;
+}
+
+/* ===== Info Boxes ===== */
+.inv-box-green,
+.inv-box-orange,
+.inv-box-blue,
+.inv-box-red,
+.inv-box-yellow {
+  padding: 15px;
+  border-radius: 5px;
+  margin: 15px 0;
+  border-left: 4px solid;
+}
+
+.inv-box-green {
+  background: #e8f5e8;
+  border-left-color: #4CAF50;
+  margin-bottom: 15px;
+}
+
+.inv-box-orange {
+  background: #fff3e0;
+  border-left-color: #FF9800;
+  height: 65px;
+  display: flex;
+  align-items: center;
+}
+
+.inv-box-blue {
+  background: #e3f2fd;
+  border-left-color: #2196F3;
+  height: 65px;
+  display: flex;
+  align-items: center;
+}
+
+.inv-box-red {
+  background: #ffebee;
+  border-left-color: #f44336;
+}
+
+.inv-box-yellow {
+  background: #fff3cd;
+  border-left-color: #ffc107;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Dark mode boxes */
+body.dark-mode .inv-box-green { background: #2a3a2a; }
+body.dark-mode .inv-box-orange { background: #3a3a2a; }
+body.dark-mode .inv-box-blue { background: #2a2a3a; }
+body.dark-mode .inv-box-red { background: #3a2a2a; }
+body.dark-mode .inv-box-yellow { background: #3a3a2a; }
+
+/* Box headers */
+.inv-box-green h4 {
+  margin: 0 0 10px 0;
+}
+
+.inv-box-green p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.inv-box-orange h4,
+.inv-box-blue h4 {
+  margin: 0;
+  padding: 0;
+  line-height: 1.4;
+}
+
+.inv-box-red h4,
+.inv-box-red p {
+  margin: 0;
+}
+
+/* ===== Filter System ===== */
+.filter-container {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+body.dark-mode .filter-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.filter-container > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-container strong {
+  margin-right: 5px;
+  white-space: nowrap;
+}
+
+.filter-btn {
+  padding: 8px 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  background: white;
+  color: #333;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: normal;
+  flex-shrink: 0;
+  display: inline-block;
+  width: auto;
+}
+
+body.dark-mode .filter-btn {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Filter active states */
+.filter-btn.active-all {
+  background: #007bff;
+  border-color: #007bff;
+}
+
+.filter-btn.active-new {
+  background: #17a2b8;
+  border-color: #17a2b8;
+}
+
+.filter-btn.active-warning {
+  background: #ffc107;
+  border-color: #ffc107;
+  color: #333 !important;
+}
+
+.filter-btn.active-success {
+  background: #28a745;
+  border-color: #28a745;
+}
+
+.filter-btn.active-sell {
+  background: #ff9800;
+  border-color: #ff9800;
+}
+
+.filter-btn.active-all,
+.filter-btn.active-new,
+.filter-btn.active-success,
+.filter-btn.active-sell {
+  color: white !important;
+  font-weight: bold;
+}
+
+body.dark-mode .filter-btn.active-warning {
+  color: #000 !important;
+}
+
+/* ===== Simulation Panel ===== */
+.simulation-panel {
+  background: #fff3e0;
+  border-left: 4px solid #FF9800;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+body.dark-mode .simulation-panel {
+  background: #3a3a2a;
+}
+
+.simulation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.simulation-stat {
+  background: white;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+body.dark-mode .simulation-stat {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* ===== Tables Layout ===== */
+.tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+  width: 100%;
+  align-items: start;
+}
+
+.tables-grid > div {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.table-scroll {
+  height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: white;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.dark-mode .table-scroll {
+  border-color: var(--border-color);
+  background: var(--bg-secondary);
+}
+
+/* ===== Tables ===== */
+#inventario table {
+  font-size: 9px;
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  table-layout: fixed;
+}
+
+body.dark-mode #inventario table {
+  background: var(--bg-secondary);
+}
+
+#inventario table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Table headers */
+#inventario table th {
+  background: #f8f9fa;
+  color: #333 !important;
+  padding: 6px 3px;
+  text-align: center;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 9px;
+  vertical-align: middle;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+body.dark-mode #inventario table th {
+  background: #2d2d2d !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color);
+}
+
+#inventario table th:hover {
+  background: #e9ecef;
+}
+
+body.dark-mode #inventario table th:hover {
+  background: #3a3a3a !important;
+}
+
+/* Table cells */
+#inventario table td {
+  padding: 5px 3px;
+  border: 1px solid #eee;
+  color: #333;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 9px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+body.dark-mode #inventario table td {
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Column widths */
+#inventario table th:nth-child(1),
+#inventario table td:nth-child(1) { width: 6%; }
+
+#inventario table th:nth-child(2),
+#inventario table td:nth-child(2) { 
+  width: 18%;
+  text-align: left;
+  padding-left: 5px;
+}
+
+#inventario table th:nth-child(3),
+#inventario table td:nth-child(3) { width: 11%; }
+
+#inventario table th:nth-child(4),
+#inventario table td:nth-child(4) { width: 6%; }
+
+#inventario table th:nth-child(5),
+#inventario table td:nth-child(5) { width: 5%; }
+
+#inventario table th:nth-child(6),
+#inventario table td:nth-child(6) { width: 13%; }
+
+#inventario table th:nth-child(7),
+#inventario table td:nth-child(7) { width: 10%; }
+
+#inventario table th:nth-child(8),
+#inventario table td:nth-child(8) { width: 13%; }
+
+#inventario table th:nth-child(9),
+#inventario table td:nth-child(9) { width: 6%; }
+
+#inventario table th:nth-child(10),
+#inventario table td:nth-child(10) { width: 6%; }
+
+#inventario table th:nth-child(11),
+#inventario table td:nth-child(11) { width: 10%; }
+
+/* Table buttons */
+#inventario table button {
+  padding: 4px 6px;
+  font-size: 9px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+#inventario table td:nth-child(2) strong {
+  font-weight: 600;
+  font-size: 9px;
+  word-break: break-word;
+}
+
+/* ===== Row Colors ===== */
+.high-impact { background: #e8f5e8; }
+.medium-impact { background: #fff3e0; }
+.low-impact { background: #ffebee; }
+
+body.dark-mode .high-impact { background: #2a3a2a; }
+body.dark-mode .medium-impact { background: #3a3a2a; }
+body.dark-mode .low-impact { background: #3a2a2a; }
+
+/* ===== Modal ===== */
+.inv-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.inv-modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+body.dark-mode .inv-modal-content {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+/* Modal boxes */
+.inv-modal-info,
+.inv-modal-warning,
+.inv-modal-preview {
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-left: 4px solid;
+}
+
+.inv-modal-info {
+  background: #f8f9fa;
+  border-left-color: #2196F3;
+}
+
+.inv-modal-warning {
+  background: #fff3e0;
+  border-left-color: #FF9800;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.inv-modal-preview {
+  background: #e8f5e8;
+  border-left-color: #4CAF50;
+}
+
+body.dark-mode .inv-modal-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid #2196F3;
+}
+
+body.dark-mode .inv-modal-warning {
+  background: #3a3a2a;
+}
+
+body.dark-mode .inv-modal-preview {
+  background: #2a3a2a;
+}
+
+.inv-modal-info h4 {
+  margin: 0 0 10px 0;
+}
+
+.inv-modal-info p {
+  margin: 5px 0;
+}
+
+.inv-modal-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ===== Form Elements ===== */
+#inventario input[type="number"],
+#inventario input[type="text"],
+#inventario select,
+#inventario textarea {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+#inventario input:focus,
+#inventario select:focus,
+#inventario textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+#inventario textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 15px 0;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 150px;
+}
+
+/* ===== Buttons ===== */
+#inventario button {
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+#inventario button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+#inventario button:active {
+  transform: translateY(0);
+}
+
+/* ===== Dark Mode Inline Overrides ===== */
+body.dark-mode #inventario [style*="background: white"],
+body.dark-mode #inventario [style*="background:white"] {
+  background: var(--bg-secondary) !important;
+}
+
+body.dark-mode #inventario [style*="background: #f8f9fa"] {
+  background: #2d2d2d !important;
+}
+
+body.dark-mode #inventario [style*="background: #e8f5e8"] {
+  background: #2a3a2a !important;
+}
+
+body.dark-mode #inventario [style*="background: #fff3e0"] {
+  background: #3a3a2a !important;
+}
+
+body.dark-mode #inventario [style*="background: #e3f2fd"] {
+  background: #2a2a3a !important;
+}
+
+body.dark-mode #inventario [style*="background: #ffebee"] {
+  background: #3a2a2a !important;
+}
+
+body.dark-mode #inventario [style*="background: #fff3cd"] {
+  background: #3a3a2a !important;
+}
+
+body.dark-mode #inventario [style*="color: #666"] {
+  color: #aaa !important;
+}
+
+body.dark-mode #inventario [style*="color: #28a745"] {
+  color: #5fff5f !important;
+}
+
+body.dark-mode #inventario [style*="color: #dc3545"] {
+  color: #ff6b6b !important;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .tables-grid,
+  .simulation-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  #inventario table {
+    font-size: 6px;
+  }
+  
+  #inventario table th,
+  #inventario table td {
+    padding: 2px 1px;
+    font-size: 6px;
+  }
+  
+  #inventario table button {
+    padding: 2px 4px;
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 600px) {
+  .filter-btn {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+  
+  .inv-modal-content,
+  .simulation-panel {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .inv-modal-buttons {
+    grid-template-columns: 1fr;
+  }
+}

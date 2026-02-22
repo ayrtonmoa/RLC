@@ -1,0 +1,520 @@
+/* ========== Farm Calculator ========== */
+
+/* Force text color in dark mode */
+body.dark-mode #farmcalculator * {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode #farmcalculator button {
+  color: white !important;
+}
+
+/* Input Section */
+.farm-input-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .farm-input-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.farm-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 15px;
+  align-items: end;
+}
+
+.farm-input-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+  font-size: 14px;
+}
+
+/* Input fields - MELHORADO */
+#farmcalculator input[type="text"],
+#farmcalculator input[type="number"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+#farmcalculator textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-family: monospace;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 150px;
+}
+
+#farmcalculator button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.farm-blocks-info {
+  text-align: center;
+  margin-bottom: 15px;
+  padding: 12px;
+  background: #e3f2fd;
+  border-radius: 6px;
+}
+
+body.dark-mode .farm-blocks-info {
+  background: #2a2a3a;
+}
+
+/* League Section */
+.farm-league-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.farm-league-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.farm-league-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.farm-league-rewards {
+  background: rgba(255,255,255,0.15);
+  padding: 15px;
+  border-radius: 6px;
+  backdrop-filter: blur(10px);
+}
+
+.farm-rewards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.farm-reward-item {
+  background: rgba(255,255,255,0.2);
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+/* Comparison Box */
+.farm-comparison-box {
+  background: #e8f4f8;
+  border-left: 4px solid #007bff;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+body.dark-mode .farm-comparison-box {
+  background: #2a2a3a;
+}
+
+.farm-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.farm-comparison-value {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.farm-comparison-change {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Best Crypto Section */
+.farm-best-crypto {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+body.dark-mode .farm-best-crypto {
+  background: #3a3a2a;
+}
+
+.farm-best-card {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 2px solid #ffc107;
+}
+
+body.dark-mode .farm-best-card {
+  background: var(--bg-secondary);
+  border-color: #ffc107;
+}
+
+.farm-best-name {
+  font-size: 24px;
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.farm-stats-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.farm-stat-box {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+body.dark-mode .farm-stat-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.farm-stat-value {
+  font-size: 20px;
+  color: #ff9800;
+  font-weight: bold;
+}
+
+/* Top 3 Cryptos */
+.farm-top3-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .farm-top3-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.farm-top3-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.farm-top3-card {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+body.dark-mode .farm-top3-card {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.farm-top3-card.gold {
+  border: 2px solid #ffc107;
+}
+
+/* Prices Panel */
+.farm-prices-panel {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .farm-prices-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.farm-prices-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.farm-prices-info {
+  background: #e3f2fd;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: #666;
+}
+
+body.dark-mode .farm-prices-info {
+  background: #2a2a3a;
+  color: var(--text-secondary);
+}
+
+.farm-prices-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.farm-price-item {
+  background: white;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+body.dark-mode .farm-price-item {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.farm-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Chart Container */
+.farm-chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  height: 400px;
+}
+
+body.dark-mode .farm-chart-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* Results Table */
+.farm-results-section {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .farm-results-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.farm-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.farm-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.farm-toggle-group {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid #ddd;
+}
+
+body.dark-mode .farm-toggle-group {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.farm-toggle-btn {
+  padding: 8px 16px;
+  background: transparent;
+  color: #333;
+  font-weight: normal;
+  border: none;
+  cursor: pointer;
+}
+
+body.dark-mode .farm-toggle-btn {
+  color: var(--text-primary);
+}
+
+.farm-toggle-btn.active {
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+.farm-toggle-btn.active-purple {
+  background: #6f42c1;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+/* Table rows */
+.farm-row-highlight {
+  background: #fff3cd;
+}
+
+body.dark-mode .farm-row-highlight {
+  background: #3a3a2a;
+}
+
+/* Badge styles */
+.farm-badge-game {
+  background: #e3f2fd;
+  color: #007bff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+body.dark-mode .farm-badge-game {
+  background: #2a2a3a;
+}
+
+.farm-badge-crypto {
+  background: #f3e5f5;
+  color: #6f42c1;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+body.dark-mode .farm-badge-crypto {
+  background: #3a2a3a;
+}
+
+.farm-badge-top {
+  background: #fff3cd;
+  color: #ff9800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+.farm-badge-no-withdraw {
+  background: #ffebee;
+  color: #c62828;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+body.dark-mode .farm-badge-no-withdraw {
+  background: #3a2a2a;
+  color: #ff6b6b;
+}
+
+/* History Section */
+.farm-history-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+body.dark-mode .farm-history-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.farm-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.farm-history-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.farm-history-item {
+  background: white;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  position: relative;
+}
+
+body.dark-mode .farm-history-item {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.farm-history-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.farm-history-delete:hover {
+  opacity: 1;
+}
+
+.farm-history-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 40px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .farm-input-grid,
+  .farm-comparison-grid,
+  .farm-stats-grid-3,
+  .farm-top3-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .farm-rewards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

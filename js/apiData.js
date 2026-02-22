@@ -91,7 +91,7 @@ const APIData = {
     });
     
     if (found) {
-      console.log(`✅ Match exato: ${name} (power: ${power} H/s) → Level ${found.level}`);
+      //console.log(`✅ Match exato: ${name} (power: ${power} H/s) → Level ${found.level}`);
     } else {
       console.log(`⚠️ Não encontrado: ${name} (power: ${power} H/s). Candidatos:`, 
         candidates.map(m => `Level ${m.level}: ${m.power} H/s`).join(', '));

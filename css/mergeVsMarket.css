@@ -1,0 +1,379 @@
+/* ========== Merge vs Market Styles ========== */
+
+/* Container principal */
+#mergevsmarket {
+  padding: 20px 0;
+}
+
+/* Espaçamento entre seções */
+#mergevsmarket > h2,
+#mergevsmarket > h3 {
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+/* Info boxes precisam herdar do styles.css */
+#mergevsmarket .info-box-green,
+#mergevsmarket .info-box-orange,
+#mergevsmarket .info-box-blue,
+#mergevsmarket .info-box-red {
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+/* Summary item dentro do merge */
+#mergevsmarket .summary-item {
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+#mergevsmarket .summary-item h4 {
+  margin-top: 0;
+}
+
+/* Update Section */
+.market-update-section {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  margin-bottom: 20px;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+body.dark-mode .market-update-section {
+  background: #3a3a2a;
+}
+
+.market-update-section h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.market-update-section p {
+  font-size: 13px;
+  margin: 5px 0;
+}
+
+.market-update-list {
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 10px 0;
+}
+
+.market-update-list kbd {
+  padding: 2px 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.market-textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 12px;
+  font-family: monospace;
+  border: 2px dashed var(--border-color);
+  border-radius: 5px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 100px;
+}
+
+.market-textarea:focus {
+  outline: none;
+  border-style: solid;
+  border-color: var(--accent);
+}
+
+.market-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-update-prices {
+  padding: 12px;
+  background: #ffc107;
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-update-prices:hover {
+  background: #ffb300;
+}
+
+.btn-show-prices {
+  padding: 12px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-show-prices:hover {
+  background: #5a6268;
+}
+
+/* Price Update Messages */
+.price-update-success {
+  background: #e8f5e8;
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 4px solid #4CAF50;
+  margin-top: 15px;
+}
+
+body.dark-mode .price-update-success {
+  background: #2a3a2a;
+}
+
+.price-update-error {
+  background: #ffebee;
+  padding: 10px;
+  border-radius: 5px;
+  border-left: 4px solid #f44336;
+  margin-top: 15px;
+}
+
+body.dark-mode .price-update-error {
+  background: #3a2a2a;
+}
+
+.price-update-timestamp {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Current Prices Table */
+.prices-table-container {
+  background: var(--bg-secondary);
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  margin-top: 15px;
+}
+
+.prices-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.prices-table-header h4 {
+  margin: 0;
+}
+
+.prices-table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.prices-table thead {
+  background: var(--bg-primary);
+}
+
+.prices-table th {
+  padding: 8px;
+  font-weight: bold;
+  border: 1px solid var(--border-color);
+}
+
+.prices-table th:first-child {
+  text-align: left;
+}
+
+.prices-table td {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.prices-table td:first-child {
+  text-align: left;
+}
+
+/* Comparator Section */
+.comparator-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.btn-compare {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-compare:hover {
+  background: #f57c00;
+}
+
+/* Comparison Results */
+.comparison-part-card {
+  background: var(--bg-secondary);
+  padding: 20px;
+  margin: 15px 0;
+  border-radius: 8px;
+  border-left: 4px solid #4CAF50;
+}
+
+.comparison-part-title {
+  margin: 0 0 15px 0;
+}
+
+.savings-highlight {
+  background: #fff3e0;
+  padding: 10px;
+  border-radius: 5px;
+  border-left: 3px solid #FF9800;
+  margin-bottom: 15px;
+  font-size: 12px;
+}
+
+body.dark-mode .savings-highlight {
+  background: #3a3a2a;
+}
+
+.savings-highlight strong {
+  color: #e65100;
+}
+
+body.dark-mode .savings-highlight strong {
+  color: #ff9800;
+}
+
+.savings-highlight span {
+  color: var(--text-secondary);
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.option-card {
+  background: var(--bg-primary);
+  padding: 15px;
+  border-radius: 5px;
+  border: 2px solid var(--border-color);
+}
+
+.option-card.best {
+  background: #e8f5e8;
+  border-color: #4CAF50;
+}
+
+body.dark-mode .option-card.best {
+  background: #2a3a2a;
+  border-color: #4CAF50;
+}
+
+.option-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+.option-description {
+  font-size: 11px;
+  margin-bottom: 10px;
+  min-height: 30px;
+}
+
+.option-cost {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.option-card.best .option-cost {
+  color: #4CAF50;
+}
+
+body.dark-mode .option-card.best .option-cost {
+  color: #5fff5f;
+}
+
+.option-meta {
+  font-size: 10px;
+  color: #999;
+  margin-top: 5px;
+}
+
+/* Total/Best Option Box */
+.best-option-box {
+  background: #4CAF50;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.best-option-box h3 {
+  margin: 0 0 10px 0;
+}
+
+.best-option-value {
+  font-size: 36px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.best-option-savings {
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+/* Insight Boxes */
+.insight-box {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.insight-box em {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .comparator-grid,
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .market-buttons-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .best-option-value {
+    font-size: 28px;
+  }
+
+  .option-description {
+    min-height: auto;
+  }
+}

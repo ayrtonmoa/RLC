@@ -97,78 +97,67 @@ const UI_Miners = {
     let html = `
       <h2>Impact Analyzer - Detalhado</h2>
       
-      <div style="background-color: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-        <p style="font-weight: bold; margin-bottom: 10px; text-align: center;">Estatísticas Gerais</p>
+      <div class="stats-box">
+        <p class="stats-title">Estatísticas Gerais</p>
         <div class="summary-grid">
           <div><strong>Total de Miners:</strong> ${this.tableData.length}</div>
           <div><strong>Miners Únicas:</strong> ${Calculations.calcularMinersUnicas(impacts)}</div>
           <div><strong>Poder Total Atual:</strong> ${Utils.formatPower(poderTotalAtual * 1e9)}</div>
           <div><strong>Maior Impacto Individual:</strong> ${Utils.formatPower(impacts[0].impact * 1e9)}</div>
         </div>
-        <p style="font-size: 12px; color: #666; margin-top: 10px;">
+        <p class="stats-note">
           <strong>⚠️ Importante:</strong> Os impactos individuais não podem ser somados porque os bônus de miners se afetam mutuamente.
         </p>
       </div>
       
-      <div style="background: #fff3e0; padding: 15px; border-left: 4px solid #FF9800; margin: 15px 0;">
+      <div class="info-box-orange">
         <h4>📋 Sobre Duplicatas (Mesmo Tipo de Miner)</h4>
-        <p style="font-size: 13px;">Miners <strong>duplicatas</strong> são aquelas que você tem mais de uma unidade <strong>idêntica</strong> (mesmo modelo, não apenas mesmo nome).</p>
-        <ul style="font-size: 13px; margin: 10px 0;">
-          <li><strong style="color: #666;">⚪ Única:</strong> Apenas 1 desta miner. Remover causa perda de bônus.</li>
-          <li><strong style="color: #2196F3;">🔷 Primeira:</strong> Primeira de várias iguais. Remover causa perda de bônus.</li>
-          <li><strong style="color: #FF9800;">🔄 Duplicata:</strong> 2ª, 3ª... da mesma miner. Remover NÃO perde bônus.</li>
+        <p>Miners <strong>duplicatas</strong> são aquelas que você tem mais de uma unidade <strong>idêntica</strong> (mesmo modelo, não apenas mesmo nome).</p>
+        <ul>
+          <li><strong class="status-unique">⚪ Única:</strong> Apenas 1 desta miner. Remover causa perda de bônus.</li>
+          <li><strong class="status-first">🔷 Primeira:</strong> Primeira de várias iguais. Remover causa perda de bônus.</li>
+          <li><strong class="status-duplicate">🔄 Duplicata:</strong> 2ª, 3ª... da mesma miner. Remover NÃO perde bônus.</li>
         </ul>
       </div>
       
-      <div style="margin-bottom: 15px;">
-        <button onclick="UI_Miners.exportarCSV()">📊 Exportar CSV</button>
-        <button onclick="UI_Miners.restaurarTodas()" style="background: #28a745;">🔄 Restaurar Todas</button>
-        <button onclick="UI_Miners.limparFiltros()" style="background: #6c757d;">🔍 Limpar Filtros</button>
-        <button onclick="UI_Miners.filtrarRapido('high')">🔴 Alto Impacto</button>
-        <button onclick="UI_Miners.filtrarRapido('medium')">🟡 Médio Impacto</button>
-        <button onclick="UI_Miners.filtrarRapido('low')">🟢 Baixo Impacto</button>
-        <button onclick="UI_Miners.filtrarRapido('duplicates')">🔍 Duplicadas</button>
-      </div>
+<div class="action-buttons">
+  <button onclick="UI_Miners.exportarCSV()" class="btn-export">📊 Exportar CSV</button>
+  <button onclick="UI_Miners.restaurarTodas()" class="btn-restore">🔄 Restaurar Todas</button>
+  <button onclick="UI_Miners.limparFiltros()" class="btn-clear">🔍 Limpar Filtros</button>
+  <button onclick="UI_Miners.filtrarRapido('duplicates')" class="btn-filter-dup">🔍 Duplicadas</button>
+</div>
       
-      <div id="filtrosAtivos" style="margin-bottom: 10px; min-height: 20px;"></div>
+      <div id="filtrosAtivos"></div>
 
-      <table id="minersTable" style="position: relative;">
+      <table id="minersTable" class="miners-table">
         <thead>
           <tr>
-            <th onclick="UI_Miners.ordenar('ranking')" style="cursor: pointer;">
+            <th onclick="UI_Miners.ordenar('ranking')">
               Ranking ${this.getSortIcon('ranking')}
             </th>
-            <th style="position: relative;">
-              Nome ${this.getFilterIcon('name')}
-            </th>
-            <th style="position: relative;">
-              Level ${this.getFilterIcon('level')}
-            </th>
-            <th style="position: relative;">
-              Status ${this.getFilterIcon('statusText')}
-            </th>
-            <th style="position: relative;">
-              Sala ${this.getFilterIcon('sala')}
-            </th>
-            <th onclick="UI_Miners.ordenar('basePower')" style="cursor: pointer;">
+            <th>Nome ${this.getFilterIcon('name')}</th>
+            <th>Level ${this.getFilterIcon('level')}</th>
+            <th>Status ${this.getFilterIcon('statusText')}</th>
+            <th>Sala ${this.getFilterIcon('sala')}</th>
+            <th onclick="UI_Miners.ordenar('basePower')">
               Poder Base ${this.getSortIcon('basePower')}
             </th>
-            <th onclick="UI_Miners.ordenar('minerBonusPercent')" style="cursor: pointer;">
+            <th onclick="UI_Miners.ordenar('minerBonusPercent')">
               Bônus % ${this.getSortIcon('minerBonusPercent')}
             </th>
-            <th onclick="UI_Miners.ordenar('rackBonus')" style="cursor: pointer;">
+            <th onclick="UI_Miners.ordenar('rackBonus')">
               Rack % ${this.getSortIcon('rackBonus')}
             </th>
-            <th onclick="UI_Miners.ordenar('impact')" style="cursor: pointer;">
+            <th onclick="UI_Miners.ordenar('impact')">
               Impacto Real ${this.getSortIcon('impact')}
             </th>
-            <th onclick="UI_Miners.ordenar('perdaBase')" style="cursor: pointer;">
+            <th onclick="UI_Miners.ordenar('perdaBase')">
               Perda Base ${this.getSortIcon('perdaBase')}
             </th>
-            <th onclick="UI_Miners.ordenar('perdaBonusTotal')" style="cursor: pointer;">
+            <th onclick="UI_Miners.ordenar('perdaBonusTotal')">
               Perda Bônus ${this.getSortIcon('perdaBonusTotal')}
             </th>
-            <th onclick="UI_Miners.ordenar('percentualRelativo')" style="cursor: pointer;">
+            <th onclick="UI_Miners.ordenar('percentualRelativo')">
               % Relativo ${this.getSortIcon('percentualRelativo')}
             </th>
             <th>Ação</th>
@@ -222,18 +211,18 @@ const UI_Miners = {
       html += `
         <tr class="${row.impactClass}" data-type="${row.impactType}" data-duplicate="${row.isDuplicate}">
           <td><strong>#${row.ranking}</strong></td>
-          <td><strong>${row.name}</strong>${row.minerCount > 1 ? ` <span style="color: orange;">🔢${row.minerCount}</span>` : ''}</td>
+          <td><strong>${row.name}</strong>${row.minerCount > 1 ? ` <span class="miner-count-badge">🔢${row.minerCount}</span>` : ''}</td>
           <td>${row.level}</td>
-          <td style="font-size: 20px;">${row.statusIcon}</td>
+          <td class="status-icon">${row.statusIcon}</td>
           <td><strong>Sala ${row.sala}</strong><br><small>${row.rackName}</small></td>
           <td>${Utils.formatPower(row.basePower * 1e9)}<br><small>${row.basePower.toFixed(3)} GH/s</small></td>
-          <td>${(row.minerBonusPercent * 100).toFixed(2)}%${row.isDuplicate ? '<br><small style="color: #999;">(não aplicado)</small>' : ''}</td>
+          <td>${(row.minerBonusPercent * 100).toFixed(2)}%${row.isDuplicate ? '<br><small class="bonus-not-applied">(não aplicado)</small>' : ''}</td>
           <td>${(row.rackBonus * 100).toFixed(2)}%</td>
           <td><strong>${Utils.formatPower(row.impact * 1e9)}</strong><br><small>${row.impact.toFixed(3)} GH/s</small></td>
           <td>${Utils.formatPower(row.perdaBase * 1e9)}<br><small>Base perdida</small></td>
           <td>${Utils.formatPower(row.perdaBonusTotal * 1e9)}<br><small>Bônus perdido</small></td>
           <td><strong>${row.percentualRelativo.toFixed(1)}%</strong><br><small>vs maior</small></td>
-          <td><button onclick="UI_Miners.simularRemocao(${row.minerIndex})" style="padding: 5px 10px; font-size: 12px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">🗑️ Simular</button></td>
+          <td><button onclick="UI_Miners.simularRemocao(${row.minerIndex})" class="btn-simulate">🗑️ Simular</button></td>
         </tr>
       `;
     });
@@ -243,17 +232,17 @@ const UI_Miners = {
   
   getSortIcon(column) {
     if (this.currentSort.column !== column) {
-      return '<span style="color: #ccc; font-size: 10px;">▲▼</span>';
+      return '<span class="sort-icon">▲▼</span>';
     }
     return this.currentSort.direction === 'asc' ? 
-      '<span style="color: #007bff; font-size: 12px;">▲</span>' : 
-      '<span style="color: #007bff; font-size: 12px;">▼</span>';
+      '<span class="sort-icon-active">▲</span>' : 
+      '<span class="sort-icon-active">▼</span>';
   },
   
   getFilterIcon(column) {
     const hasFilter = this.activeFilters[column] && this.activeFilters[column].length > 0;
-    const color = hasFilter ? '#007bff' : '#999';
-    return `<span onclick="UI_Miners.mostrarFiltro('${column}', event)" style="cursor: pointer; color: ${color}; margin-left: 5px; font-size: 14px;" title="Filtrar">🔽</span>`;
+    const iconClass = hasFilter ? 'filter-icon-active' : 'filter-icon-inactive';
+    return `<span onclick="UI_Miners.mostrarFiltro('${column}', event)" class="filter-icon ${iconClass}" title="Filtrar">🔽</span>`;
   },
   
   ordenar(column) {
@@ -277,18 +266,7 @@ const UI_Miners = {
     
     const dropdown = document.createElement('div');
     dropdown.id = 'filterDropdown';
-    dropdown.style.cssText = `
-      position: fixed;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 10000;
-      max-height: 400px;
-      overflow-y: auto;
-      min-width: 250px;
-    `;
+    dropdown.className = 'filter-dropdown';
     
     const rect = event.target.getBoundingClientRect();
     dropdown.style.left = rect.left + 'px';
@@ -296,34 +274,31 @@ const UI_Miners = {
     
     const filtrosAtivos = this.activeFilters[column] || [];
     
-    let html = '<div style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">';
-    html += '<button onclick="UI_Miners.selecionarTodosFiltro(\'' + column + '\')" style="font-size: 11px; padding: 3px 8px; margin-right: 5px;">✓ Todos</button>';
-    html += '<button onclick="UI_Miners.limparFiltroColuna(\'' + column + '\')" style="font-size: 11px; padding: 3px 8px;">✗ Limpar</button>';
+    let html = '<div class="filter-header">';
+    html += '<button onclick="UI_Miners.selecionarTodosFiltro(\'' + column + '\')" class="filter-btn-all">✓ Todos</button>';
+    html += '<button onclick="UI_Miners.limparFiltroColuna(\'' + column + '\')" class="filter-btn-clear-col">✗ Limpar</button>';
     html += '</div>';
     
-    html += `
-      <div style="margin-bottom: 10px;">
-        <input type="text" 
-               id="filterSearch" 
-               placeholder="🔍 Buscar..." 
-               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 13px;"
-               oninput="UI_Miners.filtrarOpcoes('${column}')">
-      </div>
-    `;
+    html += `<div class="filter-search-box">
+      <input type="text" 
+             id="filterSearch" 
+             placeholder="🔍 Buscar..." 
+             class="filter-search-input"
+             oninput="UI_Miners.filtrarOpcoes('${column}')">
+    </div>`;
     
-    html += '<div id="filterOptions" style="max-height: 250px; overflow-y: auto;">';
+    html += '<div id="filterOptions" class="filter-options">';
     
     valoresUnicos.forEach(valor => {
       const checked = filtrosAtivos.includes(String(valor));
       
       html += `
-        <div class="filter-option" data-value="${valor.toLowerCase()}" style="margin: 5px 0;">
-          <label style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
+        <div class="filter-option" data-value="${valor.toLowerCase()}">
+          <label>
             <input type="checkbox" 
                    value="${valor}" 
                    ${checked ? 'checked' : ''}
-                   onchange="UI_Miners.toggleFiltroValor('${column}', '${valor}')"
-                   style="margin-right: 8px;">
+                   onchange="UI_Miners.toggleFiltroValor('${column}', '${valor}')">
             <span>${valor}</span>
           </label>
         </div>
@@ -437,13 +412,13 @@ const UI_Miners = {
       return;
     }
     
-    let html = '<div style="background: #e3f2fd; padding: 10px; border-radius: 5px; font-size: 12px;"><strong>Filtros ativos:</strong> ';
+    let html = '<div class="filters-active"><strong>Filtros ativos:</strong> ';
     
     filtros.forEach(column => {
       const valores = this.activeFilters[column];
-      html += `<span style="background: white; padding: 3px 8px; margin: 2px; border-radius: 3px; display: inline-block;">`;
+      html += `<span class="filter-tag">`;
       html += `<strong>${column}:</strong> ${valores.length} selecionado(s) `;
-      html += `<span onclick="UI_Miners.limparFiltroColuna('${column}')" style="cursor: pointer; color: red; font-weight: bold;">✗</span>`;
+      html += `<span onclick="UI_Miners.limparFiltroColuna('${column}')" class="filter-remove">✗</span>`;
       html += `</span> `;
     });
     
@@ -451,84 +426,83 @@ const UI_Miners = {
     div.innerHTML = html;
   },
   
-simularRemocao(minerIndex) {
-  const userData = State.getUserData();
-  if (!userData) return;
-  
-  const allMiners = userData.roomData.miners;
-  const minerParaRemover = allMiners[minerIndex];
-  
-  if (!minerParaRemover) return;
-  
-  const impacts = Calculations.calcularImpactos(userData);
-  const impactData = impacts.find(i => i.minerIndex === minerIndex);
-  
-// ✅ CORRETO (dá 24.703 - valor oficial!)
-const poderAtual = userData.powerData.current_power;
-const novoPoderTotal = poderAtual - impactData.impact;
-  const percentualPerda = (impactData.impact / poderAtual) * 100;
-  
-  const minerCount = impacts.filter(other => other.minerId === impactData.minerId).length;
-  const isUnique = minerCount === 1;
-  const primeiraIndex = impacts.findIndex(m => m.minerId === impactData.minerId);
-  const isFirst = primeiraIndex === impacts.indexOf(impactData);
-  const isDuplicate = !isFirst && minerCount > 1;
-  
-  let statusText = '';
-  let bonusInfo = '';
-  
-  if (isUnique) {
-    statusText = '<span style="color: #666; font-weight: bold;">⚪ Única</span>';
-    bonusInfo = '<div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;"><p style="color: #e65100; font-size: 13px; margin: 0;">⚠️ Esta é a <strong>única</strong> miner deste tipo. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
-  } else if (isFirst) {
-    statusText = '<span style="color: #2196F3; font-weight: bold;">🔷 Primeira do tipo</span>';
-    bonusInfo = '<div style="background: #fff3e0; padding: 10px; border-radius: 5px; border-left: 4px solid #FF9800;"><p style="color: #e65100; font-size: 13px; margin: 0;">⚠️ Esta é a <strong>primeira de ' + minerCount + '</strong> miners iguais. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
-  } else {
-    statusText = '<span style="color: #FF9800; font-weight: bold;">🔄 Duplicata</span>';
-    bonusInfo = '<div style="background: #e8f5e8; padding: 10px; border-radius: 5px; border-left: 4px solid #4CAF50;"><p style="color: #2e7d32; font-size: 13px; margin: 0;">✅ Esta é uma duplicata (' + minerCount + ' unidades total). Removê-la <strong>NÃO causará</strong> perda de bônus de coleção porque você tem outras miners iguais!</p></div>';
-  }
-  
-  const modalHTML = `
-    <div id="simulationModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-      <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
-        <h3 style="margin-top: 0; color: #dc3545;">🗑️ Simulação de Remoção</h3>
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-          <h4>${minerParaRemover.name} (${minerParaRemover.level_label})</h4>
-          <p><strong>Status:</strong> ${statusText}</p>
-          <p><strong>Poder Base:</strong> ${Utils.formatPower(minerParaRemover.power * 1e9)}</p>
-          <p><strong>Bônus Total:</strong> ${((minerParaRemover.bonus_percent/10000) * 100).toFixed(2)}%</p>
-          ${isDuplicate ? 
-            '<p><strong>Bônus Aplicado:</strong> <span style="color: #999;">0% (duplicata não perde)</span></p>' :
-            '<p><strong>Bônus Aplicado:</strong> <span style="color: #dc3545;">' + ((minerParaRemover.bonus_percent/10000) * 100).toFixed(2) + '% (será perdido!)</span></p>'
-          }
-        </div>
-        ${bonusInfo}
-        <hr>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
-          <div style="text-align: center;">
-            <h4 style="color: #007bff;">Poder Atual</h4>
-            <p style="font-size: 1.2em; font-weight: bold;">${Utils.formatPower(poderAtual * 1e9)}</p>
+  simularRemocao(minerIndex) {
+    const userData = State.getUserData();
+    if (!userData) return;
+    
+    const allMiners = userData.roomData.miners;
+    const minerParaRemover = allMiners[minerIndex];
+    
+    if (!minerParaRemover) return;
+    
+    const impacts = Calculations.calcularImpactos(userData);
+    const impactData = impacts.find(i => i.minerIndex === minerIndex);
+    
+    const poderAtual = userData.powerData.current_power;
+    const novoPoderTotal = poderAtual - impactData.impact;
+    const percentualPerda = (impactData.impact / poderAtual) * 100;
+    
+    const minerCount = impacts.filter(other => other.minerId === impactData.minerId).length;
+    const isUnique = minerCount === 1;
+    const primeiraIndex = impacts.findIndex(m => m.minerId === impactData.minerId);
+    const isFirst = primeiraIndex === impacts.indexOf(impactData);
+    const isDuplicate = !isFirst && minerCount > 1;
+    
+    let statusText = '';
+    let bonusInfo = '';
+    
+    if (isUnique) {
+      statusText = '<span class="status-unique">⚪ Única</span>';
+      bonusInfo = '<div class="info-box-orange"><p class="value-danger">⚠️ Esta é a <strong>única</strong> miner deste tipo. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
+    } else if (isFirst) {
+      statusText = '<span class="status-first">🔷 Primeira do tipo</span>';
+      bonusInfo = '<div class="info-box-orange"><p class="value-danger">⚠️ Esta é a <strong>primeira de ' + minerCount + '</strong> miners iguais. Removê-la <strong>causará perda</strong> de bônus de coleção!</p></div>';
+    } else {
+      statusText = '<span class="status-duplicate">🔄 Duplicata</span>';
+      bonusInfo = '<div class="info-box-green"><p class="value-success">✅ Esta é uma duplicata (' + minerCount + ' unidades total). Removê-la <strong>NÃO causará</strong> perda de bônus de coleção porque você tem outras miners iguais!</p></div>';
+    }
+    
+    const modalHTML = `
+      <div id="simulationModal" class="modal-overlay">
+        <div class="modal-content">
+          <h3 class="modal-title">🗑️ Simulação de Remoção</h3>
+          <div class="modal-info-box">
+            <h4>${minerParaRemover.name} (${minerParaRemover.level_label})</h4>
+            <p><strong>Status:</strong> ${statusText}</p>
+            <p><strong>Poder Base:</strong> ${Utils.formatPower(minerParaRemover.power * 1e9)}</p>
+            <p><strong>Bônus Total:</strong> ${((minerParaRemover.bonus_percent/10000) * 100).toFixed(2)}%</p>
+            ${isDuplicate ? 
+              '<p><strong>Bônus Aplicado:</strong> <span class="value-muted">0% (duplicata não perde)</span></p>' :
+              '<p><strong>Bônus Aplicado:</strong> <span class="value-danger">' + ((minerParaRemover.bonus_percent/10000) * 100).toFixed(2) + '% (será perdido!)</span></p>'
+            }
           </div>
-          <div style="text-align: center;">
-            <h4 style="color: #dc3545;">Após Remoção</h4>
-            <p style="font-size: 1.2em; font-weight: bold;">${Utils.formatPower(novoPoderTotal * 1e9)}</p>
+          ${bonusInfo}
+          <hr>
+          <div class="modal-grid">
+            <div class="modal-grid-item">
+              <h4 class="modal-power-current">Poder Atual</h4>
+              <p class="modal-power-value">${Utils.formatPower(poderAtual * 1e9)}</p>
+            </div>
+            <div class="modal-grid-item">
+              <h4 class="modal-power-after">Após Remoção</h4>
+              <p class="modal-power-value">${Utils.formatPower(novoPoderTotal * 1e9)}</p>
+            </div>
           </div>
-        </div>
-        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
-          <h4 style="margin-top: 0;">📉 Impacto da Remoção</h4>
-          <p><strong>Perda Total:</strong> <span style="color: #dc3545; font-weight: bold;">${Utils.formatPower(impactData.impact * 1e9)}</span></p>
-          <p><strong>Percentual de Perda:</strong> <span style="color: #dc3545; font-weight: bold;">${percentualPerda.toFixed(2)}%</span></p>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="UI_Miners.fecharModal()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Fechar</button>
-          <button onclick="UI_Miners.confirmarRemocao(${minerIndex})" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">⚠️ Confirmar Remoção</button>
+          <div class="modal-impact-box">
+            <h4>📉 Impacto da Remoção</h4>
+            <p><strong>Perda Total:</strong> <span class="value-danger">${Utils.formatPower(impactData.impact * 1e9)}</span></p>
+            <p><strong>Percentual de Perda:</strong> <span class="value-danger">${percentualPerda.toFixed(2)}%</span></p>
+          </div>
+          <div class="modal-actions">
+            <button onclick="UI_Miners.fecharModal()" class="modal-btn-close">Fechar</button>
+            <button onclick="UI_Miners.confirmarRemocao(${minerIndex})" class="modal-btn-confirm">⚠️ Confirmar Remoção</button>
+          </div>
         </div>
       </div>
-    </div>
-  `;
-  
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-},
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+  },
   
   fecharModal() {
     const modal = document.getElementById('simulationModal');
@@ -623,3 +597,4 @@ const novoPoderTotal = poderAtual - impactData.impact;
 };
 
 window.UI_Miners = UI_Miners;
+console.log('✅ UI_Miners loaded');
