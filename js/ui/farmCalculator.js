@@ -29,12 +29,14 @@ const UI_FarmCalculator = {
   CONFIG: {
     BLOCKS_PER_DAY: 144.9664, // 09:56 segundos por bloco (padrão)
     BLOCKS_PER_DAY_LTC_TRX: 143.5215, // 10:02 segundos por bloco para LTC e TRX
+    BLOCKS_PER_DAY_USDT: 149.74, // 09:37 segundos por bloco para USDT ← ADICIONAR
     GAME_COINS: ['RLT', 'RST', 'HMT'],
-    NON_WITHDRAWABLE: ['ALGO'],
+    NON_WITHDRAWABLE: ['ALGO', 'USDT'],
     FIXED_PRICES: {
       RLT: 1.00,
       RST: 0.01,
-      HMT: 1.00
+      HMT: 1.00,
+      USDT: 1.00
     },
     
     // Fallback se a liga não for encontrada
@@ -70,7 +72,8 @@ const UI_FarmCalculator = {
       'TRX_SMALL': 1e10,
       'SOL_SMALL': 1e9,
       'ALGO_SMALL': 1e6,
-      'HMT': 1e6
+      'HMT': 1e6,
+      'USDT_SMALL': 1e6,
     };
 
     const nameMap = {
@@ -83,7 +86,9 @@ const UI_FarmCalculator = {
       'ETH_SMALL': 'ETH',
       'TRX_SMALL': 'TRX',
       'SOL_SMALL': 'SOL',
-      'ALGO_SMALL': 'ALGO'
+      'ALGO_SMALL': 'ALGO',
+      'USDT_SMALL': 'USDT'
+      
     };
 
     const rewards = {};
@@ -100,67 +105,67 @@ const UI_FarmCalculator = {
   async loadLeagueData() {
     // Fallback com dados das ligas
     const leaguesFallback = {
-      '68af01ce48490927df92d687': { 
-        name: 'Bronze I', 
-        rewards: { RLT: 0.73828, RST: 46, BTC: 0.00000179, LTC: 0.00119 } 
-      },
-      '68af01ce48490927df92d686': { 
-        name: 'Bronze II', 
-        rewards: { RLT: 1.33984, RST: 83, BTC: 0.00000389, LTC: 0.00253, BNB: 0.00067 } 
-      },
-      '68af01ce48490927df92d685': { 
-        name: 'Bronze III', 
-        rewards: { RLT: 1.9, RST: 117, BTC: 0.00000759, LTC: 0.0049, BNB: 0.00087, POL: 6.73 } 
-      },
-      '68af01ce48490927df92d684': { 
-        name: 'Silver I', 
-        rewards: { RLT: 1.12, RST: 69, BTC: 0.00000494, LTC: 0.003, BNB: 0.00051, POL: 3.76, XRP: 0.3 } 
-      },
-      '68af01ce48490927df92d683': { 
-        name: 'Silver II', 
-        rewards: { RLT: 1.32, RST: 81, BTC: 0.00000528, LTC: 0.0031, BNB: 0.00049, POL: 3.44, XRP: 0.26, DOGE: 6.39 } 
-      },
-      '68af01ce48490927df92d682': { 
-        name: 'Silver III', 
-        rewards: { RLT: 1.08, RST: 66, BTC: 0.00000471, LTC: 0.0026, BNB: 0.0004, POL: 2.63, XRP: 0.19, DOGE: 4.42, ETH: 0.00024 } 
-      },
-      '68af01ce48490927df92d681': { 
-        name: 'Gold I', 
-        rewards: { RLT: 0.81, RST: 50, BTC: 0.00000396, LTC: 0.0021, BNB: 0.0003, POL: 1.9, XRP: 0.13, DOGE: 2.87, ETH: 0.00015, TRX: 2.56 } 
-      },
-      '68af01ce48490927df92d680': { 
-        name: 'Gold II', 
-        rewards: { RLT: 1.3, RST: 80, BTC: 0.00000632, LTC: 0.0027, BNB: 0.0004, POL: 2.29, XRP: 0.15, DOGE: 3.39, ETH: 0.00017, TRX: 2.87, SOL: 0.0107, HMT: 625 } 
-      },
-      '68af01ce48490927df92d67f': { 
-        name: 'Gold III', 
-        rewards: { RLT: 3.33, RST: 204, BTC: 0.0000176, LTC: 0.0084, BNB: 0.00127, POL: 7.71, XRP: 0.52, DOGE: 12.03, ETH: 0.00061, TRX: 10.83, SOL: 0.028, HMT: 1528 } 
-      },
-      '68af01ce48490927df92d67e': { 
-        name: 'Platinum I', 
-        rewards: { RLT: 5.51, RST: 338, BTC: 0.00003546, LTC: 0.0175, BNB: 0.00273, POL: 17.15, XRP: 1.2, DOGE: 28.39, ETH: 0.00148, TRX: 27.05, SOL: 0.0362, ALGO: 30.9, HMT: 3125 } 
-      },
-      '68af01ce48490927df92d67d': { 
-        name: 'Platinum II', 
-        rewards: { RLT: 2.58, RST: 158, BTC: 0.00002172, LTC: 0.0107, BNB: 0.00174, POL: 11.11, XRP: 0.8, DOGE: 19.41, ETH: 0.00104, TRX: 19.35, SOL: 0.0398, ALGO: 12.9, HMT: 2430 } 
-      },
-      '68af01ce48490927df92d67c': { 
-        name: 'Platinum III', 
-        rewards: { RLT: 1.48, RST: 91, BTC: 0.00001466, LTC: 0.0073, BNB: 0.00125, POL: 8.22, XRP: 0.61, DOGE: 15.45, ETH: 0.00085, TRX: 16.42, SOL: 0.0423, ALGO: 8.3, HMT: 2084 } 
-      },
-      '68af01ce48490927df92d67b': { 
-        name: 'Diamond I', 
-        rewards: { RST: 81, BTC: 0.00001428, LTC: 0.0158, BNB: 0.00144, POL: 16.04, XRP: 1.02, DOGE: 16.33, ETH: 0.00079, TRX: 5.07, SOL: 0.0126, ALGO: 18.6 } 
-      },
-      '68af01ce48490927df92d67a': { 
-        name: 'Diamond II', 
-        rewards: { RST: 84, BTC: 0.00001746, LTC: 0.0192, BNB: 0.00201, POL: 19.5, XRP: 1.24, DOGE: 19.86, ETH: 0.00096, TRX: 6.17, SOL: 0.0153, ALGO: 22.6 } 
-      },
-      '68af01ce48490927df92d679': { 
-        name: 'Diamond III', 
-        rewards: { RST: 11, BTC: 0.00000198, LTC: 0.00199, BNB: 0.0003, POL: 1.32163, XRP: 0.11772, DOGE: 1.7745, ETH: 0.00009, TRX: 1.262, SOL: 0.00249, ALGO: 1.83942 } 
-      }
-    };
+  '68af01ce48490927df92d687': { 
+    name: 'Bronze I', 
+    rewards: { RLT: 0.76, RST: 48, BTC: 0.00000201, LTC: 0.0015 } 
+  },
+  '68af01ce48490927df92d686': { 
+    name: 'Bronze II', 
+    rewards: { RLT: 1.4, RST: 86, BTC: 0.00000411, LTC: 0.00269, BNB: 0.0007 } 
+  },
+  '68af01ce48490927df92d685': { 
+    name: 'Bronze III', 
+    rewards: { RLT: 1.55, RST: 117, BTC: 0.00000759, LTC: 0.0049, BNB: 0.00087, POL: 6.73 } 
+  },
+  '68af01ce48490927df92d684': { 
+    name: 'Silver I', 
+    rewards: { RLT: 0.91, RST: 69, BTC: 0.0000043, LTC: 0.0026, BNB: 0.00044, POL: 3.27, XRP: 0.26, USDT: 0.14287 } 
+  },
+  '68af01ce48490927df92d683': { 
+    name: 'Silver II', 
+    rewards: { RLT: 1.07, RST: 49.61213, BTC: 0.00000459, LTC: 0.0027, BNB: 0.00043, POL: 2.99, XRP: 0.22, DOGE: 5.56, USDT: 0.195529 } 
+  },
+  '68af01ce48490927df92d682': { 
+    name: 'Silver III', 
+    rewards: { RLT: 0.88, RST: 66, BTC: 0.0000041, LTC: 0.0023, BNB: 0.00035, POL: 2.29, XRP: 0.16, DOGE: 3.84, ETH: 0.00021, USDT: 0.274038 } 
+  },
+  '68af01ce48490927df92d681': { 
+    name: 'Gold I', 
+    rewards: { RLT: 0.66, RST: 50, BTC: 0.00000345, LTC: 0.0018, BNB: 0.00026, POL: 1.65, XRP: 0.11, DOGE: 2.5, ETH: 0.00013, TRX: 2.23, USDT: 0.151647 } 
+  },
+  '68af01ce48490927df92d680': { 
+    name: 'Gold II', 
+    rewards: { RLT: 1.06, RST: 80, BTC: 0.0000036, LTC: 0.0023, BNB: 0.00035, POL: 1.99, XRP: 0.13, DOGE: 2.95, ETH: 0.00014, TRX: 2.5, SOL: 0.0093, HMT: 625, USDT: 0.274038 } 
+  },
+  '68af01ce48490927df92d67f': { 
+    name: 'Gold III', 
+    rewards: { RLT: 2.72, RST: 204, BTC: 0.00001531, LTC: 0.0073, BNB: 0.00111, POL: 6.71, XRP: 0.46, DOGE: 10.47, ETH: 0.00053, TRX: 9.42, SOL: 0.0243, HMT: 1528, USDT: 1 } 
+  },
+  '68af01ce48490927df92d67e': { 
+    name: 'Platinum I', 
+    rewards: { RLT: 4.5, RST: 338, BTC: 0.00003085, LTC: 0.0152, BNB: 0.00238, POL: 14.92, XRP: 1.04, DOGE: 24.7, ETH: 0.00129, TRX: 23.53, SOL: 0.0315, ALGO: 26.9, HMT: 3125, USDT: 2.340383 } 
+  },
+  '68af01ce48490927df92d67d': { 
+    name: 'Platinum II', 
+    rewards: { RLT: 2.11, RST: 158, BTC: 0.0000189, LTC: 0.0093, BNB: 0.00151, POL: 9.67, XRP: 0.69, DOGE: 16.88, ETH: 0.0009, TRX: 16.84, SOL: 0.0346, ALGO: 11.2, HMT: 2430, USDT: 1.46274 } 
+  },
+  '68af01ce48490927df92d67c': { 
+    name: 'Platinum III', 
+    rewards: { RLT: 1.21, RST: 91, BTC: 0.00001275, LTC: 0.0064, BNB: 0.00109, POL: 7.16, XRP: 0.53, DOGE: 13.44, ETH: 0.00074, TRX: 14.28, SOL: 0.0368, ALGO: 7.2, HMT: 2084, USDT: 1.316466 } 
+  },
+  '68af01ce48490927df92d67b': { 
+    name: 'Diamond I', 
+    rewards: { RST: 81, BTC: 0.00001242, LTC: 0.0137, BNB: 0.00126, POL: 13.95, XRP: 0.89, DOGE: 14.21, ETH: 0.00068, TRX: 4.41, SOL: 0.0115, ALGO: 16.2, USDT: 1.170192 } 
+  },
+  '68af01ce48490927df92d67a': { 
+    name: 'Diamond II', 
+    rewards: { RST: 45.59218, BTC: 0.0000151, LTC: 0.0167, BNB: 0.00174, POL: 16.96, XRP: 1.08, DOGE: 17.28, ETH: 0.00083, TRX: 5.37, SOL: 0.0133, ALGO: 19.7, USDT: 1.609014 } 
+  },
+  '68af01ce48490927df92d679': { 
+    name: 'Diamond III', 
+    rewards: { RST: 88, BTC: 0.00000102, LTC: 0.00127, BNB: 0.00013, POL: 0.94354, XRP: 0.07015, DOGE: 1.1583, ETH: 0.00006, TRX: 0.43505, SOL: 0.00162, ALGO: 2.04621, USDT: 0.34722 } 
+  }
+};
     try {
       const res = await fetch('https://rollercoin.com/api/game/league-list');
       if (!res.ok) throw new Error('Erro ao carregar ligas');
@@ -392,7 +397,9 @@ const UI_FarmCalculator = {
       
       const blocksPerDay = (coin === 'LTC' || coin === 'TRX') 
         ? this.CONFIG.BLOCKS_PER_DAY_LTC_TRX 
-        : this.CONFIG.BLOCKS_PER_DAY;
+        : (coin === 'USDT')
+          ? this.CONFIG.BLOCKS_PER_DAY_USDT
+          : this.CONFIG.BLOCKS_PER_DAY;
       const blocksPerWeek = blocksPerDay * 7;
       const blocksPerMonth = blocksPerDay * 30;
       
