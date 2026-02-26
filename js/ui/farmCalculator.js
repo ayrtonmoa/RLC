@@ -704,7 +704,7 @@ const UI_FarmCalculator = {
     
     // Info de blocos
     html += '<div class="farm-blocks-info">';
-    html += `<span style="font-weight: 600; color: #007bff;">📊 Blocos/dia: ${this.CONFIG.BLOCKS_PER_DAY} (padrão) | LTC/TRX: ${this.CONFIG.BLOCKS_PER_DAY_LTC_TRX}</span>`;
+    html += `<span style="font-weight: 600; color: #007bff;">📊 Blocos/dia: ${this.CONFIG.BLOCKS_PER_DAY} (padrão) | LTC/TRX: ${this.CONFIG.BLOCKS_PER_DAY_LTC_TRX} | USDT: ${this.CONFIG.BLOCKS_PER_DAY_USDT}</span>`;
     html += '</div>';
     
     // Campo Network Data
