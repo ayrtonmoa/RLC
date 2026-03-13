@@ -15,21 +15,57 @@ const UI_Inventario = {
   mostrar: function(user) {
     const div = document.getElementById('inventario');
     div.innerHTML = `
-      <h2>Inventário</h2>
-      
-      <div class="inv-box-green">
-        <h4>💡 Como Usar</h4>
-        <p>1. Vá em <a href="https://rollercoin.com/storage/inventory/miners" target="_blank">Storage > Miners no RollerCoin 🔗</a></p>
-        <p>2. Clique "Load more" até carregar tudo</p>
-        <p>3. Ctrl+A, Ctrl+C para copiar</p>
-        <p>4. Cole abaixo e clique em Analisar</p>
+      <h2 style="margin-bottom: 30px; text-align: center; font-size: 28px;">📊 Análise de Inventário</h2>
+
+      <!-- Stepper com 5 passos -->
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 40px;">
+        <!-- Passo 1 -->
+        <div style="text-align: center;">
+          <div style="width: 50px; height: 50px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; font-weight: bold;">1</div>
+          <h4 style="margin: 0 0 8px 0; font-size: 14px;">Abrir Armazém</h4>
+          <p style="margin: 0; font-size: 12px; color: #666;">Vá em <a href="https://rollercoin.com/storage/inventory/miners" target="_blank" style="color: #667eea; text-decoration: none;">Storage > Miners 🔗</a></p>
+        </div>
+
+        <!-- Passo 2 -->
+        <div style="text-align: center;">
+          <div style="width: 50px; height: 50px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; font-weight: bold;">2</div>
+          <h4 style="margin: 0 0 8px 0; font-size: 14px;">Aumentar Resultados</h4>
+          <p style="margin: 0; font-size: 12px; color: #666;">Mude de 24 para 48 por página</p>
+        </div>
+
+        <!-- Passo 3 -->
+        <div style="text-align: center;">
+          <div style="width: 50px; height: 50px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; font-weight: bold;">3</div>
+          <h4 style="margin: 0 0 8px 0; font-size: 14px;">Carregar Tudo</h4>
+          <p style="margin: 0; font-size: 12px; color: #666;">Clique "Load more" até tudo aparecer</p>
+        </div>
+
+        <!-- Passo 4 -->
+        <div style="text-align: center;">
+          <div style="width: 50px; height: 50px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; font-weight: bold;">4</div>
+          <h4 style="margin: 0 0 8px 0; font-size: 14px;">Copiar</h4>
+          <p style="margin: 0; font-size: 12px; color: #666;">Ctrl+A, depois Ctrl+C</p>
+        </div>
+
+        <!-- Passo 5 -->
+        <div style="text-align: center;">
+          <div style="width: 50px; height: 50px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; font-weight: bold;">5</div>
+          <h4 style="margin: 0 0 8px 0; font-size: 14px;">Colar & Analisar</h4>
+          <p style="margin: 0; font-size: 12px; color: #666;">Cole no campo abaixo</p>
+        </div>
       </div>
 
-      <textarea id="inventarioText" rows="8" placeholder="Cole aqui..."></textarea>
-      <button onclick="UI_Inventario.analisar()">🔍 Analisar Inventário</button>
-      <button onclick="UI_Inventario.debugParsing()" style="background: #6c757d;">🐛 Debug Parsing</button>
-      
-      <div id="resultadoInventario" style="margin-top: 20px;"></div>
+      <!-- Textarea e Botões -->
+      <div style="background: var(--bg-secondary); border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+        <label style="display: block; margin-bottom: 10px; font-weight: 600; color: var(--text-primary);">Cole o texto copiado aqui:</label>
+        <textarea id="inventarioText" rows="8" placeholder="Ctrl+V para colar..." style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 6px; font-family: monospace; font-size: 12px; background: var(--bg-primary); color: var(--text-primary);"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button onclick="UI_Inventario.analisar()" style="padding: 14px 32px; font-size: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">🔍 Analisar Inventário</button>
+      </div>
+
+      <div id="resultadoInventario" style="margin-top: 30px;"></div>
     `;
   },
   
@@ -82,9 +118,7 @@ const UI_Inventario = {
   extrair: function(texto) {
     const miners = [];
     const linhas = texto.split('\n').map(l => l.trim()).filter(l => l);
-    
-    console.log('📋 Total de linhas:', linhas.length);
-    
+
     for (let i = 0; i < linhas.length; i++) {
       if (linhas[i + 1] !== 'Set') continue;
       
@@ -183,8 +217,7 @@ const UI_Inventario = {
         });
       }
     }
-    
-    console.log('\n📊 RESULTADO FINAL:', miners.length, 'miners extraídas');
+
     return miners;
   },
   
@@ -905,24 +938,33 @@ const UI_Inventario = {
     html += 'Use a simulação para ver o impacto antes de fazer mudanças reais no inventário.';
     html += '</div>';
     
-    // FILTROS
-    html += '<div class="filter-container">';
-    html += '<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">';
-    html += '<strong>🔍 Filtros:</strong>';
-    html += `<button onclick="UI_Inventario.filtrar('all')" class="filter-btn ${this.currentFilter === 'all' ? 'active-all' : ''}">Todas</button>`;
-    html += `<button onclick="UI_Inventario.filtrar('nao_possui')" class="filter-btn ${this.currentFilter === 'nao_possui' ? 'active-new' : ''}">🆕 Não Possuo</button>`;
-    html += `<button onclick="UI_Inventario.filtrar('possui_outra')" class="filter-btn ${this.currentFilter === 'possui_outra' ? 'active-warning' : ''}">⚠️ Tier Diferente</button>`;
-    html += `<button onclick="UI_Inventario.filtrar('possui_exata')" class="filter-btn ${this.currentFilter === 'possui_exata' ? 'active-success' : ''}">✔️ Já Possuo</button>`;
-    html += `<button onclick="UI_Inventario.filtrar('vendiveis')" class="filter-btn ${this.currentFilter === 'vendiveis' ? 'active-sell' : ''}">💰 Vendíveis</button>`;
-    html += '<span style="color: var(--border-color); margin: 0 10px;">|</span>';
-    html += '<button onclick="UI_Inventario.mostrarModalAdicionarMiner()" class="filter-btn" style="background: #28a745; color: white; border-color: #28a745; font-weight: bold;">➕ Adicionar Miner Manual</button>';
-    
+    // FILTROS - Layout melhorado
+    html += '<div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #FF9800;">';
+
+    // Cabeçalho com título
+    html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
+    html += '<strong style="font-size: 14px; color: #333;">🔍 Filtros de Análise:</strong>';
+    html += '</div>';
+
+    // Linha 1: Filtros principais
+    html += '<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px;">';
+    html += '<button onclick="UI_Inventario.filtrar(\'all\')" style="padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; ' + (this.currentFilter === 'all' ? 'background: #007bff; color: white; font-weight: bold;' : 'background: white; color: #333;') + '">Todas</button>';
+    html += '<button onclick="UI_Inventario.filtrar(\'nao_possui\')" style="padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; ' + (this.currentFilter === 'nao_possui' ? 'background: #28a745; color: white; font-weight: bold;' : 'background: white; color: #333;') + '">🆕 Não Possuo</button>';
+    html += '<button onclick="UI_Inventario.filtrar(\'possui_outra\')" style="padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; ' + (this.currentFilter === 'possui_outra' ? 'background: #ff9800; color: white; font-weight: bold;' : 'background: white; color: #333;') + '">⚠️ Diferente</button>';
+    html += '<button onclick="UI_Inventario.filtrar(\'possui_exata\')" style="padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; ' + (this.currentFilter === 'possui_exata' ? 'background: #6c757d; color: white; font-weight: bold;' : 'background: white; color: #333;') + '">✔️ Possuo</button>';
+    html += '<button onclick="UI_Inventario.filtrar(\'vendiveis\')" style="padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; ' + (this.currentFilter === 'vendiveis' ? 'background: #ffc107; color: black; font-weight: bold;' : 'background: white; color: #333;') + '">💰 Vendíveis</button>';
+    html += '</div>';
+
+    // Linha 2: Ações (com melhor espaçamento)
+    html += '<div style="display: flex; gap: 8px; align-items: center;">';
+    html += '<button onclick="UI_Inventario.mostrarModalAdicionarMiner()" style="padding: 10px 16px; border: none; background: #28a745; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; flex: 1; text-align: center;">➕ Adicionar Miner Manual</button>';
+
     const minersManualCount = this.minersCached.filter(m => m.isManual).length;
     if (minersManualCount > 0) {
-      html += '<button onclick="UI_Inventario.limparManuais()" style="padding: 8px 15px; border: none; background: #dc3545; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">🗑️ Limpar Manuais (' + minersManualCount + ')</button>';
+      html += '<button onclick="UI_Inventario.limparManuais()" style="padding: 10px 16px; border: none; background: #dc3545; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap;">🗑️ Limpar (' + minersManualCount + ')</button>';
     }
-    
     html += '</div>';
+
     html += '</div>';
     
     const celulasOcupadas = userData.roomData.miners.reduce((s, m) => s + (m.width || 2), 0);
@@ -948,48 +990,64 @@ const UI_Inventario = {
       espacoLivre = simResult.espacoLivre;
       salaCheia = espacoLivre <= 0;
       
-      html += '<div class="simulation-panel">';
-      html += '<h4 style="margin: 0 0 15px 0;">🔄 SIMULAÇÃO ATIVA</h4>';
-      
-      html += '<div class="simulation-grid">';
-      html += '<div class="simulation-stat">';
-      html += '<p style="margin: 0; font-size: 12px; color: #666;">Power Atual</p>';
-      html += '<p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold;">' + Utils.formatPower(simResult.poderAtual * 1e9) + '</p>';
-      html += '</div>';
-      
-      html += '<div class="simulation-stat">';
-      html += '<p style="margin: 0; font-size: 12px; color: #666;">Power Simulado</p>';
-      html += '<p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: ' + (simResult.diferencaPower >= 0 ? '#28a745' : '#dc3545') + ';">' + Utils.formatPower(simResult.novoPoderTotal * 1e9) + '</p>';
-      html += '</div>';
-      html += '</div>';
+      html += '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">';
+      html += '<div style="color: white; margin-bottom: 20px;"><h3 style="margin: 0; font-size: 20px;">🔄 Simulação Ativa</h3></div>';
       
       const corDiferenca = simResult.diferencaPower >= 0 ? '#28a745' : '#dc3545';
-      html += '<div class="simulation-stat">';
-      html += '<p style="margin: 0 0 5px 0; font-weight: bold;">Mudança no Power:</p>';
-      html += '<p style="margin: 0; font-size: 18px; color: ' + corDiferenca + ';">' + 
-              (simResult.diferencaPower >= 0 ? '▲ +' : '▼ ') + Utils.formatPower(Math.abs(simResult.diferencaPower) * 1e9) + 
-              ' (' + (simResult.diferencaPower >= 0 ? '+' : '') + simResult.percentualMudanca.toFixed(2) + '%)</p>';
+      const iconDiferenca = simResult.diferencaPower >= 0 ? '📈' : '📉';
+
+      html += '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">';
+
+      // Card 1: Power Atual
+      html += '<div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 15px; border: 1px solid rgba(255,255,255,0.2);">';
+      html += '<p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.8);">Power Atual</p>';
+      html += '<p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold; color: white;">' + Utils.formatPower(simResult.poderAtual * 1e9) + '</p>';
+      html += '</div>';
+
+      // Card 2: Power Simulado
+      html += '<div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 15px; border: 1px solid rgba(255,255,255,0.2);">';
+      html += '<p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.8);">Power Simulado</p>';
+      html += '<p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold; color: white;">' + Utils.formatPower(simResult.novoPoderTotal * 1e9) + '</p>';
+      html += '</div>';
+
+      // Card 3: Mudança
+      html += '<div style="background: ' + corDiferenca + '; border-radius: 6px; padding: 15px; color: white;">';
+      html += '<p style="margin: 0; font-size: 12px; opacity: 0.9;">Mudança</p>';
+      html += '<p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold;">' + iconDiferenca + ' ' +
+              (simResult.diferencaPower >= 0 ? '+' : '') + Utils.formatPower(simResult.diferencaPower * 1e9) + '</p>';
+      html += '<p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">(' + (simResult.diferencaPower >= 0 ? '+' : '') + simResult.percentualMudanca.toFixed(2) + '%)</p>';
+      html += '</div>';
+
+      // Card 4: Espaço
+      const corEspaco = simResult.espacoLivre < 0 ? '#dc3545' : '#28a745';
+      html += '<div style="background: ' + corEspaco + '; border-radius: 6px; padding: 15px; color: white;">';
+      html += '<p style="margin: 0; font-size: 12px; opacity: 0.9;">Espaço</p>';
+      html += '<p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold;">' + simResult.celulasOcupadas + ' / ' + simResult.capacidadeTotal + '</p>';
+      html += '<p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">' + (simResult.espacoLivre >= 0 ? '+' + simResult.espacoLivre + ' livres' : '⚠️ ' + Math.abs(simResult.espacoLivre) + ' faltando') + '</p>';
+      html += '</div>';
+
       html += '</div>';
       
-      html += '<div class="simulation-stat">';
-      html += '<p style="margin: 0 0 5px 0; font-weight: bold;">Espaço:</p>';
-      html += '<p style="margin: 0;">' + simResult.celulasOcupadas + ' / ' + simResult.capacidadeTotal + ' células' + 
-              (simResult.espacoLivre < 0 ? ' <span style="color: #dc3545; font-weight: bold;">(FALTA ESPAÇO: ' + Math.abs(simResult.espacoLivre) + ' células)</span>' : ' (' + simResult.espacoLivre + ' livres)') + '</p>';
-      html += '</div>';
-      
-      if (this.simulationState.removedMiners.length > 0) {
-        html += '<div class="inv-box-red">';
-        html += '<p style="margin: 0; font-size: 13px;"><strong>🗑️ Miners Removidas:</strong> ' + this.simulationState.removedMiners.length + '</p>';
+      // Sumário de mudanças (se houver)
+      if (this.simulationState.removedMiners.length > 0 || this.simulationState.addedMiners.length > 0) {
+        html += '<div style="margin-top: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">';
+
+        if (this.simulationState.removedMiners.length > 0) {
+          html += '<div style="background: rgba(220,53,69,0.1); border-left: 4px solid #dc3545; padding: 12px; border-radius: 4px;">';
+          html += '<p style="margin: 0; font-size: 12px; color: #dc3545;"><strong>🗑️ Removidas:</strong> ' + this.simulationState.removedMiners.length + '</p>';
+          html += '</div>';
+        }
+
+        if (this.simulationState.addedMiners.length > 0) {
+          html += '<div style="background: rgba(40,167,69,0.1); border-left: 4px solid #28a745; padding: 12px; border-radius: 4px;">';
+          html += '<p style="margin: 0; font-size: 12px; color: #28a745;"><strong>➕ Adicionadas:</strong> ' + this.simulationState.addedMiners.length + '</p>';
+          html += '</div>';
+        }
+
         html += '</div>';
       }
-      
-      if (this.simulationState.addedMiners.length > 0) {
-        html += '<div class="inv-box-green">';
-        html += '<p style="margin: 0; font-size: 13px;"><strong>➕ Miners Adicionadas:</strong> ' + this.simulationState.addedMiners.length + '</p>';
-        html += '</div>';
-      }
-      
-      html += '<button onclick="UI_Inventario.limparSimulacao()" style="width: 100%; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;">🔄 Limpar Simulação</button>';
+
+      html += '<button onclick="UI_Inventario.limparSimulacao()" style="width: 100%; margin-top: 20px; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;">🔄 Limpar Simulação</button>';
       html += '</div>';
     }
     
@@ -1023,11 +1081,11 @@ if (minersFracas && minersFracas.length > 0) {
   html += '<th onclick="UI_Inventario.ordenarInstaladas(\'cells\')" style="cursor: pointer;">Cél ' + (this.instaladaSort.column === 'cells' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
   html += '<th onclick="UI_Inventario.ordenarInstaladas(\'power\')" style="cursor: pointer;">Power ' + (this.instaladaSort.column === 'power' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
   html += '<th onclick="UI_Inventario.ordenarInstaladas(\'bonus\')" style="cursor: pointer;">Bônus ' + (this.instaladaSort.column === 'bonus' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
-  html += '<th onclick="UI_Inventario.ordenarInstaladas(\'impacto\')" style="cursor: pointer;">Imp. ' + (this.instaladaSort.column === 'impacto' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
+  html += '<th onclick="UI_Inventario.ordenarInstaladas(\'impacto\')" style="cursor: pointer;">Impacto ' + (this.instaladaSort.column === 'impacto' ? (this.instaladaSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
   html += '<th>Vende</th>';
-  html += '<th style="width: 60px;">Ação</th>';
+  html += '<th style="width: 35px;">Ação</th>';
   html += '</tr>';
-  
+
   // Criar mapa de racks
   const racksPorSala = {};
   userData.roomData.racks.forEach((rack) => {
@@ -1091,7 +1149,7 @@ if (minersFracas && minersFracas.length > 0) {
     html += '<td>' + vendeText + '</td>';
     
     html += '<td style="text-align: center;">';
-    html += '<button onclick="UI_Inventario.toggleRemoverMiner(' + m.minerIndex + ')" style="padding: 5px 10px; background: ' + (isRemoved ? '#6c757d' : '#dc3545') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
+    html += '<button onclick="UI_Inventario.toggleRemoverMiner(' + m.minerIndex + ')" style="padding: 2px 4px; background: ' + (isRemoved ? '#6c757d' : '#dc3545') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 9px;">';
     html += isRemoved ? '🔄' : '❌';
     html += '</button>';
     html += '</td>';
@@ -1121,9 +1179,9 @@ html += '<th onclick="UI_Inventario.ordenar(\'bonus\')" style="cursor: pointer;"
 html += '<th onclick="UI_Inventario.ordenar(\'impacto\')" style="cursor: pointer;">Ganho ' + (this.currentSort.column === 'impacto' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
 html += '<th onclick="UI_Inventario.ordenar(\'status\')" style="cursor: pointer;">Status ' + (this.currentSort.column === 'status' ? (this.currentSort.direction === 'desc' ? '▼' : '▲') : '↕️') + '</th>';
 html += '<th>Vende</th>';
-html += '<th style="width: 60px;">Ação</th>';
+html += '<th style="width: 35px;">Ação</th>';
 html += '</tr>';
-    
+
     for (let i = 0; i < miners.length; i++) {
       const m = miners[i];
       const cor = i < 5 ? 'high-impact' : (i < 15 ? 'medium-impact' : '');
@@ -1173,7 +1231,7 @@ html += '</tr>';
       
       const uniqueId = this.getMinerUniqueId(m);
       const btnId = 'btn-inv-' + i;
-      html += '<button id="' + btnId + '" data-minerid="' + uniqueId + '" style="padding: 5px 10px; background: ' + (isAdded ? '#6c757d' : '#28a745') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">';
+      html += '<button id="' + btnId + '" data-minerid="' + uniqueId + '" style="padding: 2px 4px; background: ' + (isAdded ? '#6c757d' : '#28a745') + '; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 9px;">';
       html += isAdded ? '🔄' : '✅';
       html += '</button>';
       html += '</td>';
@@ -1209,25 +1267,6 @@ html += '</tr>';
     }, 0);
   },
   
-  debugParsing: function() {
-    const texto = document.getElementById('inventarioText').value;
-    if (!texto) {
-      alert('Cole o texto primeiro!');
-      return;
-    }
-    
-    console.log('\n\n🐛🐛🐛 DEBUG PARSING INICIADO 🐛🐛🐛\n');
-    const resultado = this.extrair(texto);
-    
-    console.log('\n📊 RESULTADO:');
-    console.log('Total extraídas:', resultado.length);
-    resultado.forEach((m, i) => {
-      console.log((i + 1) + '.', m.name, '→', m.level, '|', m.quantity, 'unidades | Bonus:', m.bonus, '% | Vendível:', m.catalogData?.canBeSold);
-    });
-    
-    alert('✅ Veja o Console (F12) para detalhes!');
-  },
-  
   recarregar: function() {
     if (this.minersCached && this.minersCached.length > 0) {
       this.renderResultado();
@@ -1236,4 +1275,3 @@ html += '</tr>';
 };
 
 window.UI_Inventario = UI_Inventario;
-console.log('✅ UI_Inventario v11.2 - CSS Cleanup loaded');
