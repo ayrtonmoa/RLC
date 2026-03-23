@@ -19,8 +19,16 @@ const UI_BuyAnalyzer = {
             <input type="text" id="minerName" placeholder="Ex: Rare Mega Maner" class="form-input">
           </div>
           <div class="form-group">
-            <label for="minerPower" class="form-label">Power (cole exato do site):</label>
-            <input type="text" id="minerPower" placeholder="Ex: 899 430 Gh/s" class="form-input">
+            <label for="minerPower" class="form-label">Power:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <input type="number" id="minerPower" placeholder="Ex: 899430" class="form-input" step="any">
+              <select id="minerPowerUnit" class="form-input">
+                <option value="1">Gh/s</option>
+                <option value="1000">Th/s</option>
+                <option value="1000000">Ph/s</option>
+                <option value="1000000000">Eh/s</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label for="minerBonus" class="form-label">Bonus (%):</label>
@@ -57,14 +65,15 @@ const UI_BuyAnalyzer = {
     }
 
     const nome = document.getElementById('minerName').value.trim();
-    const powerText = document.getElementById('minerPower').value.trim();
+    const powerValue = parseFloat(document.getElementById('minerPower').value);
+    const powerUnit = parseFloat(document.getElementById('minerPowerUnit').value);
     const bonusText = document.getElementById('minerBonus').value.trim();
     const precoText = document.getElementById('minerPrice').value.trim();
-    
+
     const resultDiv = document.getElementById('resultadoAnalise');
-    
+
     // Validação - agora preço é opcional
-    if (!nome || !powerText || !bonusText) {
+    if (!nome || isNaN(powerValue) || !bonusText) {
       resultDiv.innerHTML = `
         <div class="info-box-red">
           <h4>❌ Erro</h4>
@@ -78,7 +87,7 @@ const UI_BuyAnalyzer = {
 
     try {
       // Parse dos valores
-      const power = Utils.parsePowerText(powerText);
+      const power = powerValue * powerUnit;
       const bonusNumber = Utils.parseBonusText(bonusText);
       
       // Preço é opcional

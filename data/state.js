@@ -7,6 +7,7 @@ console.log('Carregando State...');
   
   const State = {
     userData: null,
+    userDataOriginal: null,
     debugInfo: [],
     minersRemovidasTemporariamente: [],
     
@@ -26,6 +27,8 @@ console.log('Carregando State...');
     // Setters
     setUserData: function(data) {
       this.userData = data;
+      // Guardar cópia completa dos dados originais (deep copy)
+      this.userDataOriginal = JSON.parse(JSON.stringify(data));
     },
     
     addDebugInfo: function(info) {
@@ -59,18 +62,23 @@ console.log('Carregando State...');
     },
     
     restaurarMiners: function() {
-      if (!this.userData || !this.userData.roomData) return 0;
-      
+      if (!this.userData || !this.userDataOriginal) return 0;
+
       const quantidade = this.minersRemovidasTemporariamente.length;
-      this.userData.roomData.miners.push(...this.minersRemovidasTemporariamente);
+
+      // Restaurar tudo aos valores originais (deep copy da cópia salva)
+      this.userData.roomData.miners = JSON.parse(JSON.stringify(this.userDataOriginal.roomData.miners));
+      this.userData.powerData = JSON.parse(JSON.stringify(this.userDataOriginal.powerData));
+
       this.minersRemovidasTemporariamente = [];
-      
+
       return quantidade;
     },
     
     // Reset completo
     reset: function() {
       this.userData = null;
+      this.userDataOriginal = null;
       this.debugInfo = [];
       this.minersRemovidasTemporariamente = [];
     }

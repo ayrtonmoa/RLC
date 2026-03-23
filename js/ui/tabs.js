@@ -2,17 +2,17 @@
 
 const UI_Tabs = {
   init() {
-    const tabs = document.querySelectorAll('.tab');
+    const navItems = document.querySelectorAll('.nav-item');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', function() {
+    navItems.forEach(item => {
+      item.addEventListener('click', function() {
         const targetTab = this.dataset.tab;
-        
-        // Remove active de todas
-        tabs.forEach(t => t.classList.remove('active'));
+
+        // Remove active de todos
+        navItems.forEach(n => n.classList.remove('active'));
         tabContents.forEach(tc => tc.classList.remove('active'));
-        
+
         // Adiciona active na selecionada
         this.classList.add('active');
         document.getElementById(targetTab).classList.add('active');
@@ -151,14 +151,14 @@ else if (targetTab === 'inventario') {
       });
     });
     
-    console.log('✅ UI_Tabs inicializado com', tabs.length, 'abas');
+    console.log('✅ UI_Tabs inicializado com', navItems.length, 'itens de navegação');
   },
   
   switchTo(tabName) {
-    const tab = document.querySelector(`[data-tab="${tabName}"]`);
-    if (tab) {
+    const navItem = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+    if (navItem) {
       console.log('🔄 Mudando para aba:', tabName);
-      tab.click();
+      navItem.click();
     } else {
       console.warn('⚠️ Aba não encontrada:', tabName);
     }

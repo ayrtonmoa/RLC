@@ -446,63 +446,197 @@ body.dark-mode .farm-badge-no-withdraw {
   background: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
+  margin-top: 16px;
 }
 
 body.dark-mode .farm-history-section {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
 }
 
 .farm-history-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
+}
+
+.farm-history-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+body.dark-mode .farm-history-header h3 {
+  color: #e2e8f0;
 }
 
 .farm-history-scroll {
   max-height: 400px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
+/* Card do item */
 .farm-history-item {
-  background: white;
-  padding: 12px;
-  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #1d4ed8;
   border-radius: 6px;
-  border: 1px solid #ddd;
+  padding: 10px 12px;
   position: relative;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.farm-history-item:hover {
+  border-color: #93c5fd;
+  border-left-color: #1d4ed8;
+  background: #f9fafb;
 }
 
 body.dark-mode .farm-history-item {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-left: 3px solid #1d4ed8;
 }
 
+body.dark-mode .farm-history-item:hover {
+  background: #1c2433;
+  border-color: #3b82f6;
+  border-left-color: #3b82f6;
+}
+
+/* Botão delete — escondido, aparece no hover */
 .farm-history-delete {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #dc3545;
-  color: white;
+  background: transparent;
+  color: #9ca3af;
   border: none;
-  padding: 4px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
-.farm-history-delete:hover {
+.farm-history-item:hover .farm-history-delete {
   opacity: 1;
 }
 
+.farm-history-delete:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+body.dark-mode .farm-history-delete {
+  color: #6b7280;
+}
+
+body.dark-mode .farm-history-item:hover .farm-history-delete {
+  opacity: 1;
+}
+
+body.dark-mode .farm-history-delete:hover {
+  background: rgba(220, 38, 38, 0.15);
+  color: #f87171;
+}
+
+/* Layout interno */
 .farm-history-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-right: 40px;
+  padding-right: 32px;
+}
+
+/* Data e time ago */
+.farm-history-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+body.dark-mode .farm-history-date {
+  color: #e2e8f0;
+}
+
+.farm-history-ago {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-left: 6px;
+}
+
+body.dark-mode .farm-history-ago {
+  color: #6b7280;
+}
+
+/* Stats (Power e Rede) */
+.farm-history-stats {
+  display: flex;
+  gap: 12px;
+  text-align: right;
+}
+
+.farm-history-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.farm-history-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+}
+
+body.dark-mode .farm-history-stat-label {
+  color: #6b7280;
+}
+
+.farm-history-stat-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.farm-history-stat-value.power {
+  color: #1d4ed8;
+}
+
+body.dark-mode .farm-history-stat-value.power {
+  color: #60a5fa;
+}
+
+.farm-history-stat-value.network {
+  color: #7c3aed;
+}
+
+body.dark-mode .farm-history-stat-value.network {
+  color: #a78bfa;
+}
+
+/* Table styles for Farm Calculator */
+#farmcalculator table {
+  color: #333;
+}
+
+body.dark-mode #farmcalculator table {
+  color: #e2e8f0;
+}
+
+body.dark-mode #farmcalculator table th {
+  color: white;
+}
+
+body.dark-mode #farmcalculator table td {
+  color: #e2e8f0;
 }
 
 /* Responsive */

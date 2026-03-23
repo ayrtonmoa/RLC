@@ -28,49 +28,92 @@
 </script>
 
 <body>
-  <div class="container">
-    <div class="header-bar">
-      <h1>RollerCoin Analyzer Pro</h1>       <button id="darkModeToggle" class="dark-toggle">🌙</button>
-    </div>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-emoji">🎮</span>
+        <h2>RAP</h2>
+      </div>
 
-<div class="card">
-  <label for="username">Username:</label>
-  <div class="card-input-group">
-    <input type="text" id="username" placeholder="Digite seu username" value="">
-    <button id="analisarBtn">🔍 Analisar</button>
-  </div>
-  <div id="status" class="status">Digite um username e clique em Analisar</div>
-  
-  <div id="progress" class="progress">
-    <div id="progress-bar" class="progress-bar"></div>
-  </div>
-</div>
+      <!-- Search -->
+      <div class="sidebar-search">
+        <input type="text" id="username" placeholder="Username">
+        <button id="analisarBtn">🔍 Analisar</button>
+        <div id="status" class="status">Digite um username</div>
+        <div id="progress" class="progress">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+      </div>
 
-    <div class="tabs">
-      <div class="tab active" data-tab="guia">Como Utilizar</div>
-      <div class="tab" data-tab="resumo">Resumo & Perfil</div>
-      <div class="tab" data-tab="miners">Impact Analyzer</div>
-      <div class="tab" data-tab="buyanalyzer">Buy Analyzer</div>
-      <div class="tab" data-tab="farmcalculator">Farm Calculator</div>
-      <div class="tab" data-tab="mergecalculator">Merge Calculator</div>
-      <div class="tab" data-tab="mergevsmarket">Merge Vs Market</div>
-      <div class="tab" data-tab="rstsellanalyzer">RST Sell Analyzer</div>
-      <div class="tab" data-tab="inventario">Inventário & Troca</div>
-      <div class="tab" data-tab="debug">Debug Info</div>
-      <div class="tab" data-tab="racks">Racks</div>
-    </div>
+      <!-- Navigation -->
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-tab="guia">
+          <span class="nav-icon">📖</span>
+          <span class="nav-label">Guia</span>
+        </div>
+        <div class="nav-item" data-tab="resumo">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Resumo</span>
+        </div>
+        <div class="nav-item" data-tab="miners">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-label">Impact</span>
+        </div>
+        <div class="nav-item" data-tab="buyanalyzer">
+          <span class="nav-icon">🛒</span>
+          <span class="nav-label">Buy</span>
+        </div>
+        <div class="nav-item" data-tab="farmcalculator">
+          <span class="nav-icon">🌾</span>
+          <span class="nav-label">Farm</span>
+        </div>
+        <div class="nav-item" data-tab="mergecalculator">
+          <span class="nav-icon">🔀</span>
+          <span class="nav-label">Merge</span>
+        </div>
+        <div class="nav-item" data-tab="mergevsmarket">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Merge vs Market</span>
+        </div>
+        <div class="nav-item" data-tab="rstsellanalyzer">
+          <span class="nav-icon">💰</span>
+          <span class="nav-label">RST Sell</span>
+        </div>
+        <div class="nav-item" data-tab="inventario">
+          <span class="nav-icon">📦</span>
+          <span class="nav-label">Inventário</span>
+        </div>
+        <div class="nav-item" data-tab="racks">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-label">Racks</span>
+        </div>
+        <div class="nav-item" data-tab="debug">
+          <span class="nav-icon">🐛</span>
+          <span class="nav-label">Debug</span>
+        </div>
+      </nav>
 
-    <div id="guia" class="card tab-content active"></div>
-    <div id="resumo" class="card tab-content"></div>
-    <div id="miners" class="card tab-content"></div>
-    <div id="buyanalyzer" class="card tab-content"></div>
-    <div id="farmcalculator" class="card tab-content"></div>
-    <div id="mergecalculator" class="card tab-content"></div>
-    <div id="mergevsmarket" class="tab-content"></div>
-    <div id="rstsellanalyzer" class="tab-content"></div>
-    <div id="inventario" class="card tab-content"></div>
-    <div id="debug" class="card tab-content"></div>
-    <div id="racks" class="card tab-content"></div>
+      <!-- Footer -->
+      <div class="sidebar-footer">
+        <button id="darkModeToggle" class="dark-mode-toggle-btn">🌙</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div id="guia" class="card tab-content active"></div>
+      <div id="resumo" class="card tab-content"></div>
+      <div id="miners" class="card tab-content"></div>
+      <div id="buyanalyzer" class="card tab-content"></div>
+      <div id="farmcalculator" class="card tab-content"></div>
+      <div id="mergecalculator" class="card tab-content"></div>
+      <div id="mergevsmarket" class="tab-content"></div>
+      <div id="rstsellanalyzer" class="tab-content"></div>
+      <div id="inventario" class="card tab-content"></div>
+      <div id="debug" class="card tab-content"></div>
+      <div id="racks" class="card tab-content"></div>
+    </main>
   </div>
 
   <!-- Chart.js para gráficos -->
@@ -188,26 +231,29 @@
 
       console.log('✅ Sistema inicializado com sucesso!');
     });
-    // Dark Mode Toggle
+    // Dark Mode Toggle (Gaming Dark Default)
 const darkModeToggle = document.getElementById('darkModeToggle');
 const body = document.body;
 
-// Carregar preferência salva
-const darkMode = localStorage.getItem('darkMode');
-if (darkMode === 'enabled') {
-  body.classList.add('dark-mode');
+// Carregar preferência salva (default: gaming dark)
+const savedMode = localStorage.getItem('themeMode');
+if (savedMode === 'light') {
+  body.classList.add('light-mode');
+  darkModeToggle.textContent = '🌙';
+} else {
+  body.classList.add('dark-mode'); // default
   darkModeToggle.textContent = '☀️';
 }
 
 darkModeToggle.addEventListener('click', () => {
-  body.classList.toggle('dark-mode');
-  
   if (body.classList.contains('dark-mode')) {
-    darkModeToggle.textContent = '☀️';
-    localStorage.setItem('darkMode', 'enabled');
-  } else {
+    body.classList.replace('dark-mode', 'light-mode');
     darkModeToggle.textContent = '🌙';
-    localStorage.setItem('darkMode', 'disabled');
+    localStorage.setItem('themeMode', 'light');
+  } else {
+    body.classList.replace('light-mode', 'dark-mode');
+    darkModeToggle.textContent = '☀️';
+    localStorage.setItem('themeMode', 'dark');
   }
 });
 Utils.showProgress = function() {

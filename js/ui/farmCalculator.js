@@ -560,20 +560,25 @@ const UI_FarmCalculator = {
   // Renderizar gráfico
   renderChart() {
     if (this.state.history.length < 2) return;
-    
+
     const canvas = document.getElementById('farmChart');
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
-    
+
     if (this.state.chartInstance) {
       this.state.chartInstance.destroy();
     }
-    
+
+    // Detectar dark mode
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const textColor = isDarkMode ? '#e2e8f0' : '#333';
+    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
     const labels = this.state.history.slice(0, 10).reverse().map(h => this.formatDate(h.timestamp));
     const powerData = this.state.history.slice(0, 10).reverse().map(h => h.power);
     const networkData = this.state.history.slice(0, 10).reverse().map(h => h.networkTotal / 1000);
-    
+
     this.state.chartInstance = new Chart(ctx, {
       type: 'line',
       data: {
@@ -606,12 +611,12 @@ const UI_FarmCalculator = {
         },
         plugins: {
           legend: {
-            labels: { color: '#333' }
+            labels: { color: textColor }
           },
           title: {
             display: true,
             text: '📈 Evolução do Poder',
-            color: '#333',
+            color: textColor,
             font: { size: 16, weight: 'bold' }
           }
         },
@@ -631,8 +636,8 @@ const UI_FarmCalculator = {
             grid: { drawOnChartArea: false }
           },
           x: {
-            ticks: { color: '#333' },
-            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+            ticks: { color: textColor },
+            grid: { color: gridColor }
           }
         }
       }
@@ -970,12 +975,18 @@ const UI_FarmCalculator = {
           html += `<button onclick="UI_FarmCalculator.deleteHistoryEntry(${idx})" class="farm-history-delete">🗑️</button>`;
           html += '<div class="farm-history-content">';
           html += '<div>';
-          html += `<span style="font-weight: 600;">${this.formatDate(entry.timestamp)}</span>`;
-          html += `<span style="color: #999; font-size: 12px; margin-left: 8px;">(${this.getTimeAgo(entry.timestamp)})</span>`;
+          html += `<span class="farm-history-date">${this.formatDate(entry.timestamp)}</span>`;
+          html += `<span class="farm-history-ago">(${this.getTimeAgo(entry.timestamp)})</span>`;
           html += '</div>';
-          html += '<div style="text-align: right;">';
-          html += `<div style="color: #007bff; font-size: 14px;">Power: ${entry.power.toFixed(3)} Eh/s</div>`;
-          html += `<div style="color: #6f42c1; font-size: 12px;">Rede: ${(entry.networkTotal / 1000).toFixed(3)} Zh/s</div>`;
+          html += '<div class="farm-history-stats">';
+          html += '<div class="farm-history-stat">';
+          html += '<span class="farm-history-stat-label">Power</span>';
+          html += `<span class="farm-history-stat-value power">${entry.power.toFixed(3)} Eh/s</span>`;
+          html += '</div>';
+          html += '<div class="farm-history-stat">';
+          html += '<span class="farm-history-stat-label">Rede</span>';
+          html += `<span class="farm-history-stat-value network">${(entry.networkTotal / 1000).toFixed(3)} Zh/s</span>`;
+          html += '</div>';
           html += '</div>';
           html += '</div>';
           html += '</div>';

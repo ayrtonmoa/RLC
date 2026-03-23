@@ -1,22 +1,35 @@
-/* ========== CSS Variables ========== */
-:root {
-  --bg-primary: #f4f4f4;
-  --bg-secondary: #fff;
-  --text-primary: #333;
-  --text-secondary: #666;
-  --border-color: #ddd;
-  --accent: #007bff;
-  --accent-hover: #0056b3;
+/* ========== CSS Variables - Gaming Dark Theme ========== */
+:root,
+body.dark-mode {
+  /* Dark/Gaming Default */
+  --bg-body: #0d1117;
+  --sidebar-bg: #161b22;
+  --bg-primary: #0d1117;
+  --bg-secondary: #1f2937;
+  --bg-card: #1f2937;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --border-color: #30363d;
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --neon: #fbbf24;
+  --neon-hover: #f59e0b;
+  --sidebar-width: 200px;
 }
 
-body.dark-mode {
-  --bg-primary: #1e1e1e;
-  --bg-secondary: #2d2d2d;
-  --text-primary: #e0e0e0;
-  --text-secondary: #aaa;
-  --border-color: #3a3a3a;
-  --accent: #3a3a3a;
-  --accent-hover: #444;
+/* Light Mode Override */
+body.light-mode {
+  --bg-body: #f4f4f4;
+  --sidebar-bg: #1e293b;
+  --bg-primary: #f4f4f4;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --neon: #fbbf24;
 }
 
 /* ========== Reset ========== */
@@ -25,11 +38,11 @@ body.dark-mode {
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background: var(--bg-primary);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-body);
   color: var(--text-primary);
-  padding: 20px 40px;
   margin: 0;
+  padding: 0;
 }
 
 /* ========== Typography ========== */
@@ -204,13 +217,161 @@ body.dark-mode .info-box-yellow {
   margin-top: 0;
 }
 
+/* ========== Modal (Generic) ========== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+body.dark-mode .modal-content {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.modal-title {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.modal-info-box {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .modal-info-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.modal-grid-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+body.dark-mode .modal-grid-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.modal-power-current,
+.modal-power-after {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.modal-power-value {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.modal-impact-box {
+  background: #fff3e0;
+  border-left: 4px solid #FF9800;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .modal-impact-box {
+  background: #3a3a2a;
+}
+
+.modal-impact-box h4 {
+  margin-top: 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modal-btn-close,
+.modal-btn-confirm {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.modal-btn-close {
+  background: #6c757d;
+  color: white;
+}
+
+.modal-btn-close:hover {
+  background: #5a6268;
+}
+
+.modal-btn-confirm {
+  background: #dc3545;
+  color: white;
+}
+
+.modal-btn-confirm:hover {
+  background: #c82333;
+}
+
+/* Utility classes for modal content */
+.value-danger {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.value-success {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.value-muted {
+  color: var(--text-secondary);
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
-  table { 
-    font-size: 10px; 
+  table {
+    font-size: 10px;
   }
-  
-  th, td { 
-    padding: 4px; 
+
+  th, td {
+    padding: 4px;
+  }
+
+  .modal-grid {
+    grid-template-columns: 1fr;
   }
 }

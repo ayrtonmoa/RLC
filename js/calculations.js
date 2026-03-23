@@ -156,19 +156,20 @@ calcularImpactos(user) {
   
   recalcularPoderTotal(userData) {
     if (!userData) return;
-    
+
     const novaBaseTotalMiners = userData.roomData.miners.reduce((sum, miner) => sum + miner.power, 0);
-    
+
     const uniqueMiners = userData.roomData.miners.filter((miner, index, self) =>
       index === self.findIndex((m) => m.miner_id === miner.miner_id)
     );
     const novoBonusPercentTotal = uniqueMiners.reduce((sum, miner) => sum + miner.bonus_percent, 0);
     const novoBonusPower = novaBaseTotalMiners * (novoBonusPercentTotal / 10000);
-    
-    const rackBonusOriginal = userData.powerData.racks;
+
+    // Usar original_racks se disponível, senão usar racks atual
+    const rackBonusOriginal = userData.powerData.original_racks || userData.powerData.racks;
     const baseTotalOriginal = novaBaseTotalMiners + State.getMinersRemovidas().reduce((sum, m) => sum + m.power, 0);
     const novoRackBonus = baseTotalOriginal > 0 ? rackBonusOriginal * (novaBaseTotalMiners / baseTotalOriginal) : 0;
-    
+
     userData.powerData.current_power = novaBaseTotalMiners + novoBonusPower + novoRackBonus + userData.powerData.games + userData.powerData.temp;
     userData.powerData.bonus = novoBonusPower;
     userData.powerData.bonus_percent = novoBonusPercentTotal;

@@ -527,24 +527,22 @@ const UI_Miners = {
       
       this.fecharModal();
       Utils.mostrarNotificacao('✅ Miner "' + minerOriginal.name + '" removida temporariamente. Use "Restaurar Todas" para desfazer.', 'success');
-      
-      UI_Tabs.switchTo('resumo');
+
+      UI_Tabs.switchTo('miners');
     }
   },
   
   restaurarTodas() {
     const userData = State.getUserData();
     if (!userData) return;
-    
+
     if (State.getMinersRemovidas().length === 0) {
       Utils.mostrarNotificacao('⚠️ Nenhuma miner foi removida temporariamente.', 'warning');
       return;
     }
-    
+
     const quantidade = State.restaurarMiners();
-    
-    Calculations.recalcularPoderOriginal(userData);
-    
+
     UI_Resumo.mostrar(userData);
     UI_Miners.mostrar(userData);
     UI_Racks.mostrar(userData);
