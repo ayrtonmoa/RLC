@@ -12,6 +12,9 @@ const UI_Inventario = {
     active: false
   },
 
+  ocultarSets: false,
+  setsColapsados: {},
+
   mostrar: function(user) {
     const div = document.getElementById('inventario');
     div.innerHTML = `
@@ -277,6 +280,8 @@ const UI_Inventario = {
         supply: m.catalogData?.supply,
         canBeSold: m.catalogData?.canBeSold,
         rarityGroup: m.catalogData?.rarityGroup,
+        isInSet: m.catalogData?.isInSet || (MINERS_DATABASE.find(d => d.name.toLowerCase() === m.name.toLowerCase() && d.isInSet)?.isInSet) || false,
+        setTitle: m.catalogData?.setTitle || (MINERS_DATABASE.find(d => d.name.toLowerCase() === m.name.toLowerCase() && d.isInSet)?.setTitle) || null,
         catalogData: m.catalogData
       };
     }).sort((a, b) => b.impacto - a.impacto);
@@ -705,6 +710,16 @@ const UI_Inventario = {
     this.renderResultado();
   },
   
+  toggleOcultarSets: function() {
+    this.ocultarSets = !this.ocultarSets;
+    this.renderResultado();
+  },
+
+  toggleSet: function(setKey) {
+    this.setsColapsados[setKey] = !this.setsColapsados[setKey];
+    this.renderResultado();
+  },
+
   limparSimulacao: function() {
     this.simulationState.removedMiners = [];
     this.simulationState.addedMiners = [];
@@ -804,6 +819,13 @@ const UI_Inventario = {
     
     let miners = [...this.minersCached];
     let minersFracas = [...this.minersFracasCached];
+
+    const minersFracasCompleto = [...minersFracas];
+
+    if (this.ocultarSets) {
+      miners = miners.filter(m => !m.isInSet);
+      minersFracas = minersFracas.filter(m => !MINERS_DATABASE.find(d => d.name.toLowerCase() === m.name.toLowerCase() && d.isInSet));
+    }
     
     // FILTRAR
     if (this.currentFilter === 'nao_possui') {
@@ -1062,8 +1084,79 @@ const UI_Inventario = {
       html += '</div>';
     }
     
+    // SEÇÃO DE SETS — baseada nas miners INSTALADAS
+    const setTotals = {};
+    MINERS_DATABASE.forEach(m => {
+      if (m.isInSet && m.setTitle) {
+        setTotals[m.setTitle] = (setTotals[m.setTitle] || 0) + 1;
+      }
+    });
+
+    const setsInstalados = {};
+    minersFracasCompleto.forEach(m => {
+      const dbMiner = MINERS_DATABASE.find(d => d.name.toLowerCase() === m.name.toLowerCase() && d.isInSet);
+      if (dbMiner) {
+        if (!setsInstalados[dbMiner.setTitle]) setsInstalados[dbMiner.setTitle] = [];
+        setsInstalados[dbMiner.setTitle].push({ ...m, setTitle: dbMiner.setTitle });
+      }
+    });
+
+    const temSets = Object.keys(setsInstalados).length > 0;
+
+    if (temSets) {
+      html += '<div style="margin-bottom: 25px;">';
+      html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
+      html += '<h3 style="margin: 0;">🎯 Sets Detectados na Sala</h3>';
+      html += '<button onclick="UI_Inventario.toggleOcultarSets()" style="padding: 6px 14px; border: 1px solid #6c757d; border-radius: 4px; cursor: pointer; font-size: 12px; background: ' + (this.ocultarSets ? '#6c757d' : 'white') + '; color: ' + (this.ocultarSets ? 'white' : '#333') + ';">';
+      html += this.ocultarSets ? '👁️ Mostrar na tabela' : '🙈 Ocultar da tabela';
+      html += '</button>';
+      html += '</div>';
+
+      html += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">';
+
+      Object.entries(setsInstalados).sort((a, b) => a[0].localeCompare(b[0])).forEach(([setName, setMiners]) => {
+        const total = setTotals[setName] || '?';
+        const count = setMiners.length;
+        const completo = count >= total;
+        const setKey = setName.replace(/\s+/g, '_');
+        const colapsado = this.setsColapsados[setKey];
+        const corBorda = completo ? '#28a745' : '#667eea';
+
+        html += '<div style="border: 2px solid ' + corBorda + '; border-radius: 8px; overflow: hidden;">';
+
+        html += '<div onclick="UI_Inventario.toggleSet(\'' + setKey + '\')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: ' + corBorda + '20; cursor: pointer;">';
+        html += '<div>';
+        html += '<strong style="font-size: 14px;">' + setName + '</strong>';
+        if (completo) html += ' <span style="background: #28a745; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px;">✅ Completo</span>';
+        html += '</div>';
+        html += '<div style="display: flex; align-items: center; gap: 8px;">';
+        html += '<span style="font-size: 13px; font-weight: bold; color: ' + corBorda + ';">' + count + '/' + total + '</span>';
+        html += '<span style="font-size: 11px; color: #666;">' + (colapsado ? '▼' : '▲') + '</span>';
+        html += '</div>';
+        html += '</div>';
+
+        if (!colapsado) {
+          html += '<div style="padding: 8px;">';
+          setMiners.forEach(m => {
+            const emojiMap = { 'Common': '⚪', 'Uncommon': '🟢', 'Rare': '🔵', 'Epic': '🟣', 'Legendary': '🟡', 'Unreal': '🔴' };
+            const emoji = emojiMap[m.level] || '❓';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 6px; border-bottom: 1px solid #eee; font-size: 12px;">';
+            html += '<span>' + emoji + ' <strong>' + m.name + '</strong></span>';
+            html += '<span style="color: #666;">' + m.level + ' &nbsp;|&nbsp; ' + Utils.formatPower(m.basePower * 1e9) + '</span>';
+            html += '</div>';
+          });
+          html += '</div>';
+        }
+
+        html += '</div>';
+      });
+
+      html += '</div>';
+      html += '</div>';
+    }
+
     html += '<div class="tables-grid">';
-    
+
 // COLUNA 1: MINERS INSTALADAS
 html += '<div>'; // ← ADICIONAR ESTA LINHA
 
@@ -1127,9 +1220,12 @@ if (minersFracas && minersFracas.length > 0) {
     html += '<td>#' + (i + 1);
     if (isRemoved) html += ' <span style="background: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">🔴</span>';
     html += '</td>';
-    html += '<td><strong>' + m.name + '</strong></td>';
+    const dbMinerInstalled = MINERS_DATABASE.find(d => d.name.toLowerCase() === m.name.toLowerCase() && d.isInSet);
+    html += '<td><strong>' + m.name + '</strong>';
+    if (dbMinerInstalled) html += ' <span style="background: #667eea; color: white; padding: 1px 5px; border-radius: 3px; font-size: 9px;">🎯 ' + dbMinerInstalled.setTitle + '</span>';
+    html += '</td>';
     html += '<td>' + m.level + '</td>';
-    
+
     const rackInfo = rackMap[m.rackId] || { sala: '?', rack: '?' };
     html += '<td style="font-size: 9px; color: #666;">S' + rackInfo.sala + ' rack ' + rackInfo.rack + '</td>';
     
