@@ -728,7 +728,7 @@ const UI_Inventario = {
           <div><strong>Células:</strong><br>${preview.celulasTotal}</div>
           <div><strong>Power:</strong><br><span style="color: #28a745; font-weight: bold;">${Utils.formatPower(preview.impactoTotal * 1e9)}</span></div>
         </div>
-        <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 3px; font-size: 12px;">
+        <div style="margin-top: 10px; padding: 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 3px; font-size: 12px; color: var(--text-primary);">
           <strong>Detalhamento:</strong><br>
           • 1ª: ${Utils.formatPower(preview.impactoPrimeira * 1e9)} ${preview.comBonus ? '✅' : '❌'}<br>
           ${qty > 1 ? '• Demais ' + (qty - 1) + ': ' + Utils.formatPower(preview.impactoDemais * 1e9) + ' ❌' : ''}
