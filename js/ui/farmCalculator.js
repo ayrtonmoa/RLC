@@ -32,6 +32,17 @@ const UI_FarmCalculator = {
     BLOCKS_PER_DAY_USDT: 149.74, // 09:37 segundos por bloco para USDT ← ADICIONAR
     GAME_COINS: ['RLT', 'RST', 'HMT'],
     NON_WITHDRAWABLE: ['ALGO', 'USDT'],
+    WITHDRAW_MIN: {
+      BTC: 0.00085,
+      ETH: 0.014,
+      BNB: 0.06,
+      LTC: 5,
+      XRP: 40,
+      DOGE: 220,
+      TRX: 300,
+      POL: 300,
+      SOL: 0.6
+    },
     FIXED_PRICES: {
       RLT: 1.00,
       RST: 0.01,
@@ -119,51 +130,51 @@ const UI_FarmCalculator = {
   },
   '68af01ce48490927df92d684': {
     name: 'Silver I',
-    rewards: { RLT: 0.91, RST: 69, BTC: 0.00000439, LTC: 0.0026, BNB: 0.000444, POL: 3.27, XRP: 0.252, USDT: 0.14287 }
+    rewards: { RLT: 0.91, RST: 69, BTC: 0.00000456, LTC: 0.0027, BNB: 0.000436, POL: 3.27, XRP: 0.257, USDT: 0.14287 }
   },
   '68af01ce48490927df92d683': {
     name: 'Silver II',
-    rewards: { RLT: 1.07, RST: 81, BTC: 0.00000469, LTC: 0.0027, BNB: 0.000428, POL: 2.99, XRP: 0.219, DOGE: 5.6463, USDT: 0.195529 }
+    rewards: { RLT: 1.07, RST: 81, BTC: 0.00000492, LTC: 0.00279, BNB: 0.00042, POL: 2.99, XRP: 0.228, DOGE: 5.5616, USDT: 0.195529 }
   },
   '68af01ce48490927df92d682': {
     name: 'Silver III',
-    rewards: { RLT: 0.88, RST: 66, BTC: 0.00000418, LTC: 0.0023, BNB: 0.000345, POL: 2.29, XRP: 0.161, DOGE: 3.899, ETH: 0.00019, USDT: 0.274038 }
+    rewards: { RLT: 0.88, RST: 66, BTC: 0.00000439, LTC: 0.00237, BNB: 0.000338, POL: 2.29, XRP: 0.167, DOGE: 3.8405, ETH: 0.0001958, USDT: 0.274038 }
   },
   '68af01ce48490927df92d681': {
     name: 'Gold I',
-    rewards: { RLT: 0.66, RST: 50, BTC: 0.00000351, LTC: 0.0018, BNB: 0.000262, POL: 1.667, XRP: 0.11, DOGE: 2.5355, ETH: 0.000122, TRX: 2.185, USDT: 0.151647 }
+    rewards: { RLT: 0.66, RST: 50, BTC: 0.00000373, LTC: 0.00189, BNB: 0.000244, POL: 1.617, XRP: 0.115, DOGE: 2.676, ETH: 0.000121, TRX: 2.036, USDT: 0.151647 }
   },
   '68af01ce48490927df92d680': {
     name: 'Gold II',
-    rewards: { RLT: 1.06, RST: 80, BTC: 0.00000561, LTC: 0.0023, BNB: 0.000349, POL: 2.011, XRP: 0.129, DOGE: 2.9918, ETH: 0.000138, TRX: 2.451, SOL: 0.0088, HMT: 625, USDT: 0.274038 }
+    rewards: { RLT: 1.06, RST: 80, BTC: 0.00000607, LTC: 0.0025, BNB: 0.000325, POL: 1.951, XRP: 0.132, DOGE: 3.158, ETH: 0.000137, TRX: 2.237, SOL: 0.00838, HMT: 625, USDT: 0.274038 }
   },
   '68af01ce48490927df92d67f': {
     name: 'Gold III',
-    rewards: { RLT: 2.72, RST: 204, BTC: 0.00001562, LTC: 0.0073, BNB: 0.001105, POL: 6.779, XRP: 0.45, DOGE: 10.6261, ETH: 0.000508, TRX: 9.235, SOL: 0.0234, HMT: 1528, USDT: 1 }
+    rewards: { RLT: 2.72, RST: 204, BTC: 0.00001691, LTC: 0.00777, BNB: 0.00103, POL: 6.575, XRP: 0.459, DOGE: 11.215, ETH: 0.000505, TRX: 8.431, SOL: 0.02233, HMT: 1528, USDT: 1 }
   },
   '68af01ce48490927df92d67e': {
     name: 'Platinum I',
-    rewards: { RLT: 4.5, RST: 338, BTC: 0.00003147, LTC: 0.0152, BNB: 0.002376, POL: 15.074, XRP: 1.023, DOGE: 25.0678, ETH: 0.001234, TRX: 23.062, SOL: 0.0302, ALGO: 27.413, HMT: 3125, USDT: 2.340383 }
+    rewards: { RLT: 5.575, RST: 420, BTC: 0.00004224, LTC: 0.02005, BNB: 0.00274, POL: 18.131, XRP: 1.294, DOGE: 32.8, ETH: 0.00152, TRX: 26.107, SOL: 0.03583, ALGO: 33.992, HMT: 3875, USDT: 2.902 }
   },
   '68af01ce48490927df92d67d': {
     name: 'Platinum II',
-    rewards: { RLT: 2.11, RST: 158, BTC: 0.00001928, LTC: 0.0093, BNB: 0.001512, POL: 9.765, XRP: 0.68, DOGE: 17.1362, ETH: 0.000863, TRX: 16.499, SOL: 0.0332, ALGO: 11.467, HMT: 2430, USDT: 1.46274 }
+    rewards: { RLT: 2.481, RST: 187, BTC: 0.00002458, LTC: 0.01166, BNB: 0.00166, POL: 11.158, XRP: 0.817, DOGE: 21.306, ETH: 0.00101, TRX: 17.744, SOL: 0.0374, ALGO: 13.508, HMT: 2863, USDT: 1.723 }
   },
   '68af01ce48490927df92d67c': {
     name: 'Platinum III',
-    rewards: { RLT: 1.21, RST: 91, BTC: 0.00001301, LTC: 0.0064, BNB: 0.001085, POL: 7.227, XRP: 0.523, DOGE: 13.6452, ETH: 0.000709, TRX: 13.997, SOL: 0.0354, ALGO: 7.382, HMT: 2084, USDT: 1.316466 }
+    rewards: { RLT: 1.504, RST: 113.13, BTC: 0.00001749, LTC: 0.00837, BNB: 0.00126, POL: 8.706, XRP: 0.662, DOGE: 17.887, ETH: 0.00088, TRX: 15.871, SOL: 0.04198, ALGO: 9.168, HMT: 2588, USDT: 1.635 }
   },
   '68af01ce48490927df92d67b': {
     name: 'Diamond I',
-    rewards: { RST: 81, BTC: 0.00001267, LTC: 0.0137, BNB: 0.001254, POL: 14.094, XRP: 0.87, DOGE: 14.4234, ETH: 0.000654, TRX: 4.326, SOL: 0.0099, ALGO: 16.512, USDT: 1.170192 }
+    rewards: { RST: 113, BTC: 0.00001907, LTC: 0.02027, BNB: 0.00162, POL: 19, XRP: 1.232, DOGE: 21.16, ETH: 0.0009, TRX: 5.49, SOL: 0.01308, ALGO: 23, USDT: 1.627 }
   },
   '68af01ce48490927df92d67a': {
     name: 'Diamond II',
-    rewards: { RST: 45.59218, BTC: 0.00002695, LTC: 0.02255, BNB: 0.003047, POL: 16.271, XRP: 1, DOGE: 30.6835, ETH: 0.000754, TRX: 4.998, SOL: 0.0163, ALGO: 35.088, USDT: 2.7 }
+    rewards: { RST: 45.59218, BTC: 0.00002918, LTC: 0.02393, BNB: 0.002839, POL: 15.783, XRP: 1.019, DOGE: 32.384, ETH: 0.00075, TRX: 4.563, SOL: 0.0156, ALGO: 35.088, USDT: 2.7 }
   },
   '68af01ce48490927df92d679': {
     name: 'Diamond III',
-    rewards: { RST: 352, BTC: 0.00000416, LTC: 0.00508, BNB: 0.00052, POL: 3.812, XRP: 0.275, DOGE: 4.7027, ETH: 0.000233, TRX: 1.705, SOL: 0.0058, ALGO: 8.18484, USDT: 1.38888 }
+    rewards: { RST: 352, BTC: 0.00000451, LTC: 0.00539, BNB: 0.000484, POL: 3.698, XRP: 0.28, DOGE: 4.963, ETH: 0.0002281, TRX: 1.557, SOL: 0.00546, ALGO: 8.18484, USDT: 1.38888 }
   }
 };
     try {
@@ -344,26 +355,32 @@ const UI_FarmCalculator = {
   // Parser de dados da rede
   parseNetworkData(text) {
     const network = {};
-    
-    // Buscar Zh/s (Zettahash) - converter para Eh/s multiplicando por 1000
-    const regexZh = /([a-z]+)\s+([A-Z]+)\s+([\d.]+)\s+Zh\/s/gi;
     let match;
-    
+
+    // Formato novo: SYMBOL\n\nX%\n\nPower\n\nVALOR Zh/s (cole da página da rede)
+    const regexNovoZh = /([A-Z]{2,6})\s+\d+%\s+Power\s+([\d.]+)\s+Zh\/s/gi;
+    while ((match = regexNovoZh.exec(text)) !== null) {
+      network[match[1].toUpperCase()] = parseFloat(match[2]) * 1000;
+    }
+
+    const regexNovoEh = /([A-Z]{2,6})\s+\d+%\s+Power\s+([\d.]+)\s+Eh\/s/gi;
+    while ((match = regexNovoEh.exec(text)) !== null) {
+      network[match[1].toUpperCase()] = parseFloat(match[2]);
+    }
+
+    // Formato antigo: rlt RLT 2.823 Zh/s (mantido para compatibilidade)
+    const regexZh = /([a-z]+)\s+([A-Z]+)\s+([\d.]+)\s+Zh\/s/gi;
     while ((match = regexZh.exec(text)) !== null) {
-      const symbol = match[2];
-      const value = parseFloat(match[3]);
-      network[symbol] = value * 1000;
+      const symbol = match[2].toUpperCase();
+      if (!network[symbol]) network[symbol] = parseFloat(match[3]) * 1000;
     }
-    
-    // Buscar Eh/s (Exahash)
+
     const regexEh = /([a-z]+)\s+([A-Z]+)\s+([\d.]+)\s+Eh\/s/gi;
-    
     while ((match = regexEh.exec(text)) !== null) {
-      const symbol = match[2];
-      const value = parseFloat(match[3]);
-      network[symbol] = value;
+      const symbol = match[2].toUpperCase();
+      if (!network[symbol]) network[symbol] = parseFloat(match[3]);
     }
-    
+
     return network;
   },
 
@@ -715,46 +732,35 @@ const UI_FarmCalculator = {
     // Campo Network Data
     html += '<div>';
     html += '<label class="farm-input-label">Rede das moedas:</label>';
-    html += `<textarea id="farmNetworkData" rows="3" placeholder="Total 59.869 Zh/s  rlt RLT 2.823 Zh/s rst RST 1.471 Zh/s...">${this.state.networkData}</textarea>`;
+    html += '<div class="farm-network-notice">';
+    html += '⚠️ <strong>Atenção:</strong> a fonte dos dados da rede mudou. ';
+    html += 'Acesse <a href="https://rollercoin.com/game/league" target="_blank">rollercoin.com/game/league</a>, ';
+    html += 'clique na aba <strong>League Power</strong> (por padrão abre em My Power), ';
+    html += 'copie tudo que está em <strong>League Power Partition</strong> e cole aqui abaixo.';
+    html += '</div>';
+    html += `<textarea id="farmNetworkData" rows="6" placeholder="Cole os dados da rede. Formato novo:\nRST\n2%\nPower\n8.082 Zh/s\n\nBTC\n8%\nPower\n34.870 Zh/s">${this.state.networkData}</textarea>`;
     html += '</div>';
     
     html += '</div>';
 
-    // Seção da Liga
+    // Seção da Liga (compacta)
     if (this.state.results) {
       const userData = State.getUserData();
       const leagueInfo = userData && userData.league_id ? this.leagueData[userData.league_id] : null;
       const blockRewards = this.getBlockRewards(userData);
-      
-      html += '<div class="farm-league-section">';
-      html += '<div class="farm-league-header">';
-      html += '<div>';
-      html += '<h3 style="margin: 0; color: white;">🏆 Sua Liga</h3>';
-      if (leagueInfo) {
-        html += `<div class="farm-league-name">${leagueInfo.name}</div>`;
-      } else {
-        html += '<div style="font-size: 18px; margin-top: 5px;">Liga não detectada</div>';
-      }
-      html += '</div>';
-      if (userData && userData.league && userData.league.main_img_url) {
-        html += `<img src="${userData.league.main_img_url}" alt="Liga" style="height: 80px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">`;
-      }
-      html += '</div>';
-      
-      html += '<div class="farm-league-rewards">';
-      html += '<h4 style="margin: 0 0 12px 0; color: white;">📦 Block Rewards (sua liga)</h4>';
-      html += '<div class="farm-rewards-grid">';
-      
+      const leagueName = leagueInfo ? leagueInfo.name : 'Liga não detectada';
+      const leagueImg = userData && userData.league && userData.league.main_img_url
+        ? `<img src="${userData.league.main_img_url}" alt="Liga" style="height: 28px; vertical-align: middle; margin-right: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">`
+        : '';
+
+      html += `<div style="display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:8px; padding:10px 16px; margin-bottom:12px; flex-wrap:wrap;">`;
+      html += `<div style="display:flex; align-items:center; color:white; font-weight:bold; font-size:14px; white-space:nowrap;">${leagueImg}🏆 ${leagueName}</div>`;
+      html += `<div style="display:flex; gap:8px; flex-wrap:wrap; overflow-x:auto;">`;
       Object.entries(blockRewards).forEach(([coin, reward]) => {
         const isGameCoin = this.CONFIG.GAME_COINS.includes(coin);
-        html += '<div class="farm-reward-item">';
-        html += `<div style="font-size: 11px; opacity: 0.9; margin-bottom: 4px;">${coin}</div>`;
-        html += `<div style="font-size: 14px; font-weight: bold;">${isGameCoin ? reward.toFixed(6) : reward.toFixed(8)}</div>`;
-        html += `<div style="font-size: 10px; opacity: 0.8;">${isGameCoin ? 'tokens' : 'crypto'}</div>`;
-        html += '</div>';
+        const val = isGameCoin ? reward.toFixed(4) : reward.toFixed(8);
+        html += `<span style="background:rgba(255,255,255,0.1); border-radius:4px; padding:3px 8px; color:white; font-size:12px; white-space:nowrap;"><strong>${coin}</strong> ${val}</span>`;
       });
-      
-      html += '</div>';
       html += '</div>';
       html += '</div>';
     }
@@ -863,40 +869,6 @@ const UI_FarmCalculator = {
       }
     }
 
-    // Painel de Preços
-    html += '<div class="farm-prices-panel">';
-    html += '<div class="farm-prices-header">';
-    html += '<h3 style="margin: 0;">💰 Cotações</h3>';
-    html += '<button onclick="UI_FarmCalculator.fetchPrices()" style="padding: 6px 12px; font-size: 12px;">🔄 Atualizar</button>';
-    html += '</div>';
-    
-    const statusIcon = this.state.priceStatus === 'success' ? '🟢' : this.state.priceStatus === 'fallback' ? '🟡' : '⚪';
-    const statusText = this.state.priceStatus === 'fallback' ? ' (fallback)' : '';
-    html += '<div class="farm-prices-info">';
-    html += `<div>${statusIcon} 📡 Fonte: <strong style="color: #007bff;">CoinGecko API</strong>${statusText} (1 chamada para tudo!)</div>`;
-    html += `<div>💰 Preços em tempo real | 💱 Câmbio: <strong>R$ ${this.state.usdToBrl.toFixed(4)}</strong> | <strong>€${this.state.usdToEur.toFixed(4)}</strong></div>`;
-    html += '</div>';
-    
-    html += '<div class="farm-prices-scroll">';
-    Object.entries(this.state.prices).forEach(([coin, price]) => {
-      html += '<div class="farm-price-item">';
-      html += '<div class="farm-price-row">';
-      html += `<span style="font-weight: 600;">${coin}</span>`;
-      html += '<div style="text-align: right;">';
-      html += `<div style="color: #ff9800; font-size: 14px; font-weight: bold;">$${price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
-      html += `<div style="color: #666; font-size: 12px;">R$ ${(price * this.state.usdToBrl).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
-      html += `<div style="color: #666; font-size: 12px;">€${(price * this.state.usdToEur).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
-      html += '</div>';
-      html += '</div>';
-      html += '</div>';
-    });
-    html += '</div>';
-    
-    if (this.state.lastUpdate) {
-      html += `<div style="margin-top: 12px; color: #999; font-size: 11px; text-align: center;">⏰ Atualizado ${this.getTimeAgo(this.state.lastUpdate.toISOString())}</div>`;
-    }
-    html += '</div>';
-
     // Gráfico
     if (this.state.history.length >= 2) {
       html += '<div class="farm-chart-container">';
@@ -954,6 +926,52 @@ const UI_FarmCalculator = {
       
       html += '</tbody></table>';
       html += '</div>';
+
+      // Seção de tempo para saque
+      const withdrawRows = this.state.results.filter(r =>
+        !r.isGameCoin && this.CONFIG.WITHDRAW_MIN[r.coin] && r.dailyQty > 0
+      );
+      if (withdrawRows.length > 0) {
+        html += '<div style="margin-top: 20px;">';
+        html += '<h4 style="margin-bottom: 10px;">⏳ Tempo para Atingir Mínimo de Saque</h4>';
+        html += '<div style="overflow-x: auto;">';
+        html += '<table><thead><tr>';
+        html += '<th>Moeda</th>';
+        html += '<th style="text-align: right;">Mínimo</th>';
+        html += '<th style="text-align: right;">Farm/dia</th>';
+        html += '<th style="text-align: right;">Dias necessários</th>';
+        html += '</tr></thead><tbody>';
+
+        withdrawRows.forEach(r => {
+          const min = this.CONFIG.WITHDRAW_MIN[r.coin];
+          const days = min / r.dailyQty;
+          let daysLabel, color;
+          if (days <= 7) {
+            daysLabel = days < 1 ? 'Menos de 1 dia' : `${Math.ceil(days)} dias`;
+            color = '#28a745';
+          } else if (days <= 30) {
+            daysLabel = `${Math.ceil(days)} dias`;
+            color = '#fd7e14';
+          } else {
+            const months = days / 30;
+            daysLabel = months >= 12
+              ? `~${(months / 12).toFixed(1)} anos`
+              : `~${months.toFixed(1)} meses`;
+            color = '#dc3545';
+          }
+          html += '<tr>';
+          html += `<td><strong>${r.coin}</strong></td>`;
+          html += `<td style="text-align: right;">${min} ${r.coin}</td>`;
+          html += `<td style="text-align: right;">${r.dailyQty.toFixed(6)} ${r.coin}</td>`;
+          html += `<td style="text-align: right; font-weight: bold; color: ${color};">${daysLabel}</td>`;
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        html += '</div>';
+        html += '</div>';
+      }
+
       html += '</div>';
     }
 
@@ -995,6 +1013,37 @@ const UI_FarmCalculator = {
       }
       html += '</div>';
     }
+
+    // Painel de Cotações (última seção)
+    const statusIcon = this.state.priceStatus === 'success' ? '🟢' : this.state.priceStatus === 'fallback' ? '🟡' : '⚪';
+    const statusText = this.state.priceStatus === 'fallback' ? ' (fallback)' : '';
+    html += '<div class="farm-prices-panel">';
+    html += '<div class="farm-prices-header">';
+    html += '<h3 style="margin: 0;">💰 Cotações</h3>';
+    html += '<button onclick="UI_FarmCalculator.fetchPrices()" style="padding: 6px 12px; font-size: 12px;">🔄 Atualizar</button>';
+    html += '</div>';
+    html += '<div class="farm-prices-info">';
+    html += `<div>${statusIcon} 📡 Fonte: <strong style="color: #007bff;">CoinGecko API</strong>${statusText}</div>`;
+    html += `<div>💱 Câmbio: <strong>R$ ${this.state.usdToBrl.toFixed(4)}</strong> | <strong>€${this.state.usdToEur.toFixed(4)}</strong></div>`;
+    html += '</div>';
+    html += '<div class="farm-prices-scroll">';
+    Object.entries(this.state.prices).forEach(([coin, price]) => {
+      html += '<div class="farm-price-item">';
+      html += '<div class="farm-price-row">';
+      html += `<span style="font-weight: 600;">${coin}</span>`;
+      html += '<div style="text-align: right;">';
+      html += `<div style="color: #ff9800; font-size: 14px; font-weight: bold;">$${price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+      html += `<div style="color: #666; font-size: 12px;">R$ ${(price * this.state.usdToBrl).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+      html += `<div style="color: #666; font-size: 12px;">€${(price * this.state.usdToEur).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    if (this.state.lastUpdate) {
+      html += `<div style="margin-top: 12px; color: #999; font-size: 11px; text-align: center;">⏰ Atualizado ${this.getTimeAgo(this.state.lastUpdate.toISOString())}</div>`;
+    }
+    html += '</div>';
 
     container.innerHTML = html;
 

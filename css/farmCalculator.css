@@ -9,6 +9,32 @@ body.dark-mode #farmcalculator button {
   color: white !important;
 }
 
+/* Aviso de mudança na fonte de dados */
+.farm-network-notice {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #856404;
+}
+
+.farm-network-notice a {
+  color: #0056b3;
+  font-weight: bold;
+}
+
+body.dark-mode .farm-network-notice {
+  background: #2d2600;
+  border-color: #997a00;
+  color: #ffd966;
+}
+
+body.dark-mode .farm-network-notice a {
+  color: #7db8f7;
+}
+
 /* Input Section */
 .farm-input-section {
   background: #f8f9fa;

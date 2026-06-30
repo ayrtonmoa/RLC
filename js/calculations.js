@@ -92,9 +92,9 @@ calcularImpactos(user) {
     const novoBonusPercentual = bonusPercentualAtual - minerBonusPercent;
     const novoBonusPower = novaBaseTotal * novoBonusPercentual;
     
-    // ✅ CORREÇÃO: Rack bonus NÃO muda ao remover miners!
-    const novoRackBonus = user.powerData.racks; // Permanece fixo
-    const perdaRackBonus = 0; // Sem perda de rack bonus
+    // Rack bonus diminui proporcionalmente ao poder da miner removida naquele rack
+    const perdaRackBonus = basePowerGHS * rackBonusFactor;
+    const novoRackBonus = user.powerData.racks - perdaRackBonus;
     
     const novoPoderTotal = novaBaseTotal + novoBonusPower + novoRackBonus + user.powerData.games + user.powerData.temp;
     const impactoReal = poderTotalAtual - novoPoderTotal;
@@ -165,10 +165,14 @@ calcularImpactos(user) {
     const novoBonusPercentTotal = uniqueMiners.reduce((sum, miner) => sum + miner.bonus_percent, 0);
     const novoBonusPower = novaBaseTotalMiners * (novoBonusPercentTotal / 10000);
 
-    // Usar original_racks se disponível, senão usar racks atual
-    const rackBonusOriginal = userData.powerData.original_racks || userData.powerData.racks;
-    const baseTotalOriginal = novaBaseTotalMiners + State.getMinersRemovidas().reduce((sum, m) => sum + m.power, 0);
-    const novoRackBonus = baseTotalOriginal > 0 ? rackBonusOriginal * (novaBaseTotalMiners / baseTotalOriginal) : 0;
+    // Recalcular rack bonus somando contribuição real de cada miner no seu rack
+    const racks = userData.roomData.racks || [];
+    const rackFactorMap = {};
+    racks.forEach(r => { rackFactorMap[r._id] = (r.bonus || 0) / 10000; });
+    const novoRackBonus = userData.roomData.miners.reduce((sum, m) => {
+      const factor = rackFactorMap[m.placement?.user_rack_id] || 0;
+      return sum + m.power * factor;
+    }, 0);
 
     userData.powerData.current_power = novaBaseTotalMiners + novoBonusPower + novoRackBonus + userData.powerData.games + userData.powerData.temp;
     userData.powerData.bonus = novoBonusPower;
