@@ -170,7 +170,9 @@ const UI_Inventario = {
       let html = `<div class="merge-card${partsOnly ? ' parts-only' : ''}">`;
 
       // título
-      html += `<div class="merge-card-title">${m.name} <span style="opacity:.6;font-size:12px;">${m.level}</span> → <strong>${nextTier.name}</strong> <span style="opacity:.6;font-size:12px;">Lv${nextTier.level}</span></div>`;
+      const imgUrl = m.catalogData?.imageUrl || nextTier.imageUrl || '';
+      const imgHtml = imgUrl ? `<img src="${imgUrl}" alt="${m.name}" style="width:48px;height:48px;object-fit:contain;vertical-align:middle;margin-right:8px;border-radius:4px;">` : '';
+      html += `<div class="merge-card-title">${imgHtml}${m.name} <span style="opacity:.6;font-size:12px;">${m.level}</span> → <strong>${nextTier.name}</strong> <span style="opacity:.6;font-size:12px;">Lv${nextTier.level}</span></div>`;
 
       // power
       html += '<div class="merge-card-power">';
@@ -192,6 +194,12 @@ const UI_Inventario = {
         html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}">${icon} ${lbl}</span>`;
       });
       html += '</div>';
+
+      // preço do merge
+      if (nextTier.price) {
+        const priceRlt = (nextTier.price / 1000000).toFixed(2);
+        html += `<div style="margin: 6px 0; font-size: 12px;">💰 Custo base: <strong>${priceRlt} RLT</strong> <span style="opacity:.6;">(sem desconto de forja)</span></div>`;
+      }
 
       // ingredientes
       html += '<div class="merge-card-section-label">Ingredientes</div>';
@@ -1515,7 +1523,9 @@ if (minersFracas && minersFracas.length > 0) {
     if (isRemoved) html += ' <span style="background: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">🔴</span>';
     html += '</td>';
     const dbMinerInstalled = MINERS_DATABASE.find(d => d.name.toLowerCase() === m.name.toLowerCase() && d.isInSet);
-    html += '<td><strong>' + m.name + '</strong>';
+    const dbMinerImg = MINERS_DATABASE.find(d => d.name.toLowerCase() === m.name.toLowerCase() && d.imageUrl);
+    const salaImgHtml = dbMinerImg?.imageUrl ? `<img src="${dbMinerImg.imageUrl}" alt="${m.name}" style="width:30px;height:30px;object-fit:contain;vertical-align:middle;margin-right:5px;border-radius:3px;">` : '';
+    html += '<td>' + salaImgHtml + '<strong>' + m.name + '</strong>';
     if (dbMinerInstalled) html += ' <span style="background: #667eea; color: white; padding: 1px 5px; border-radius: 3px; font-size: 9px;">🎯 ' + dbMinerInstalled.setTitle + '</span>';
     html += '</td>';
     html += '<td>' + m.level + '</td>';
@@ -1606,7 +1616,9 @@ html += '</tr>';
       html += '<td>' + (i + 1);
       if (isAdded) html += ' <span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">' + qtyAdicionada + 'x</span>';
       html += '</td>';
-      html += '<td><strong>' + m.name + '</strong>';
+      const invImgUrl = m.catalogData?.imageUrl || MINERS_DATABASE.find(d => d.name.toLowerCase() === m.name.toLowerCase() && d.imageUrl)?.imageUrl || '';
+      const invImgHtml = invImgUrl ? `<img src="${invImgUrl}" alt="${m.name}" style="width:30px;height:30px;object-fit:contain;vertical-align:middle;margin-right:5px;border-radius:3px;">` : '';
+      html += '<td>' + invImgHtml + '<strong>' + m.name + '</strong>';
       if (m.isManual) html += ' <span style="background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 9px; margin-left: 5px;">✏️ MANUAL</span>';
       html += '</td>';
       html += '<td>' + emoji + ' ' + nivel + '</td>';
@@ -1680,6 +1692,12 @@ html += '</tr>';
             html += '<span class="merge-level-chip ' + chipClass + extra + '">' + icon + ' ' + label + (isNext ? ' ←' : '') + '</span>';
           });
           html += '</div>';
+
+          // Custo do merge
+          if (nextTier.price) {
+            const priceRlt = (nextTier.price / 1000000).toFixed(2);
+            html += '<div style="font-size:12px; margin-bottom:8px;">💰 Custo base: <strong>' + priceRlt + ' RLT</strong> <span style="opacity:.6;">(valor sem desconto — o seu custo real depende do nível da sua forja)</span></div>';
+          }
 
           // Ingredientes
           html += '<div class="merge-ingredients">';
