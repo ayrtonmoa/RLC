@@ -272,7 +272,7 @@ const UI_MergeCalculator = {
       }
     });
 
-    // Renderizar resultado
+    if (typeof Analytics !== 'undefined') Analytics.partsCalculado('normal', results.length);
     this.mostrarResultadoNormal(results, totalCost);
   },
 
@@ -469,7 +469,7 @@ const UI_MergeCalculator = {
       }
     });
 
-    // Renderizar resultado
+    if (typeof Analytics !== 'undefined') Analytics.partsCalculado('reverso', results.length);
     this.mostrarResultadoReverso(results, totalCost, startTier);
   },
 

@@ -131,6 +131,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <!-- Scripts em ordem de dependência - MUITO IMPORTANTE A ORDEM! -->
+  <script src="js/analytics.js"></script>
   <script src="data/minersData.js"></script>
   <script src="data/state.js"></script>
   <script src="js/config.js"></script>
@@ -168,12 +169,7 @@
       try {
         const user = await API.getUserDataByNick(username);
         State.setUserData(user);
-        if (typeof gtag !== 'undefined') {
-          gtag('event', 'perfil_analisado', {
-            'username': username
-          });
-          console.log('📊 Analytics: Perfil analisado -', username);
-        }
+        if (typeof Analytics !== 'undefined') Analytics.perfilAnalisado(username, user);
         UI_Resumo.mostrar(user);
         UI_Miners.mostrar(user);
         UI_BuyAnalyzer.mostrar(user);
@@ -182,13 +178,12 @@
         UI_Debug.mostrar(user);
         UI_Racks.mostrar(user);
 
-        // Merge Analyzer é inicializado sob demanda (ao clicar na aba)
-
         Utils.hideProgress();
         document.getElementById('status').innerHTML = '<span class="success">Análise concluída com sucesso!</span>';
       } catch (err) {
         Utils.hideProgress();
         document.getElementById('status').innerHTML = '<span class="error">Erro: ' + err.message + '</span>';
+        if (typeof Analytics !== 'undefined') Analytics.perfilErro(username, err.message);
         console.error(err);
       } finally {
         button.disabled = false;
@@ -261,10 +256,12 @@ darkModeToggle.addEventListener('click', () => {
     body.classList.replace('dark-mode', 'light-mode');
     darkModeToggle.textContent = '🌙';
     localStorage.setItem('themeMode', 'light');
+    if (typeof Analytics !== 'undefined') Analytics.darkModeAlternado('light');
   } else {
     body.classList.replace('light-mode', 'dark-mode');
     darkModeToggle.textContent = '☀️';
     localStorage.setItem('themeMode', 'dark');
+    if (typeof Analytics !== 'undefined') Analytics.darkModeAlternado('dark');
   }
 });
 Utils.showProgress = function() {

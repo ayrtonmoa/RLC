@@ -117,6 +117,7 @@ const UI_Inventario = {
       const minersFracas = this.get50MinersMaisFracas(userData);
 
       this.partsCached = this.parseParts(partsTexto);
+      if (typeof Analytics !== 'undefined') Analytics.inventarioAnalisado(minersAgrupadas.length);
       this.mostrarResultado(comImpacto, minersFracas);
 
     } catch (error) {
@@ -202,6 +203,10 @@ const UI_Inventario = {
     }
 
     if (prontos.length === 0 && faltaPartes.length === 0 && faltaMiners.length === 0) return '';
+
+    if (typeof Analytics !== 'undefined') {
+      Analytics.mergePlannerVisto(prontos.length, faltaPartes.length, faltaMiners.length);
+    }
 
     const sortEntries = (list) => {
       const mode = this.mergeSortMode;
@@ -361,6 +366,7 @@ const UI_Inventario = {
 
   setMergeSort: function(mode) {
     this.mergeSortMode = mode;
+    if (typeof Analytics !== 'undefined') Analytics.mergeSortUsado(mode);
     this.renderResultado();
   },
 

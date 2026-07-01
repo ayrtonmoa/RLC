@@ -439,14 +439,19 @@ const UI_FarmCalculator = {
     });
     
     calculations.sort((a, b) => b.monthly - a.monthly);
-    
+
     this.state.results = calculations;
-    
+
     const username = userData?.name || 'unknown';
     this.saveToStorage(miningPower, networkData, calculations, username);
-    
+
+    if (typeof Analytics !== 'undefined') {
+      const best = calculations.find(c => !c.nonWithdrawable);
+      Analytics.farmCalculado(best?.coin ?? null, calculations.length);
+    }
+
     this.state.loading = false;
-    
+
     this.render();
     this.renderChart();
   },
@@ -680,6 +685,7 @@ const UI_FarmCalculator = {
   // Exportar CSV
   exportCSV() {
     if (!this.state.results) return;
+    if (typeof Analytics !== 'undefined') Analytics.farmCsvExportado();
     
     const csvContent = [
       ['Moeda', 'Tipo', 'Contribuição %', 'Por Bloco', 'Diário', 'Semanal', 'Mensal'],

@@ -16,8 +16,8 @@ const UI_Tabs = {
         // Adiciona active na selecionada
         this.classList.add('active');
         document.getElementById(targetTab).classList.add('active');
-        
-        // ⬇️ ADICIONE ESTAS LINHAS AQUI
+
+        if (typeof Analytics !== 'undefined') Analytics.tabView(targetTab);
       
     
         
