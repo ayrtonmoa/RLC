@@ -24,7 +24,7 @@ const UI_MergeVsMarket = {
 
     const div = document.getElementById('mergevsmarket');
     div.innerHTML = `
-      <h2>💰 Merge vs Market</h2>
+      <h2>📈 Parts vs Market</h2>
       
       <div class="info-box-green">
         <h4>💡 Sugestão do BBJ</h4>

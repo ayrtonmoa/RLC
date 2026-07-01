@@ -1,0 +1,263 @@
+/* ========== Guia - Hero ========== */
+.guia-hero {
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  border-radius: 12px;
+  padding: 36px 32px;
+  margin-bottom: 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.guia-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 60% 50%, rgba(102, 126, 234, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.guia-title {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #667eea, #a78bfa, #f9a8d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 10px;
+  letter-spacing: -0.5px;
+}
+
+.guia-subtitle {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ========== Updates / Changelog ========== */
+.guia-updates-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.guia-updates-badge {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.guia-updates-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.guia-timeline {
+  border-left: 2px solid var(--border-color);
+  margin-left: 8px;
+  margin-bottom: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.guia-tl-entry {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 10px 0 10px 20px;
+  position: relative;
+}
+
+.guia-tl-entry::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #667eea;
+  border: 2px solid var(--bg-card);
+}
+
+.guia-tl-date {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  padding-top: 2px;
+  min-width: 80px;
+  line-height: 1.4;
+}
+
+.guia-tl-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: #667eea;
+  letter-spacing: 0.5px;
+}
+
+.guia-tl-content {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.guia-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-right: 6px;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+
+.tag-new     { background: #065f46; color: #6ee7b7; }
+.tag-improved { background: #1e3a5f; color: #93c5fd; }
+.tag-fix     { background: #451a03; color: #fcd34d; }
+
+/* ========== Seção header ========== */
+.guia-section-header {
+  margin: 28px 0 16px;
+}
+
+.guia-section-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  text-align: left;
+  color: var(--text-primary);
+}
+
+.guia-section-header p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ========== Grid de abas ========== */
+.guia-tabs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.guia-tab-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.guia-tab-card:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+}
+
+.guia-tab-card.guia-tab-highlight {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102,126,234,0.08), var(--bg-secondary));
+}
+
+.guia-tab-icon {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.guia-tab-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: var(--text-primary);
+}
+
+.guia-tab-card p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ========== How-To steps ========== */
+.guia-howto {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.guia-howto-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.guia-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.guia-step-num {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.guia-howto-note {
+  font-size: 12px;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 6px;
+  padding: 8px 12px;
+  line-height: 1.5;
+}
+
+/* ========== Footer ========== */
+.guia-footer-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* ========== Links ========== */
+#guia a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+#guia a:hover {
+  text-decoration: underline;
+}

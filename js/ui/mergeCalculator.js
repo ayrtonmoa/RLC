@@ -12,7 +12,7 @@ const UI_MergeCalculator = {
   mostrar() {
     const div = document.getElementById('mergecalculator');
     div.innerHTML = `
-      <h2>🔧 Merge Calculator</h2>
+      <h2>🔧 Parts Calculator</h2>
       
       <div class="info-box-green">
         <h4>💡 Como Usar</h4>
