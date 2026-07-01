@@ -1,3 +1,4 @@
+// @ts-nocheck
 // data/minersData.js
 const MINERS_DATABASE = [
   {

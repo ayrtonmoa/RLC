@@ -13,6 +13,7 @@ const UI_Inventario = {
   },
 
   expandedMergeRows: {},
+  mergeSortMode: 'efficiency',
 
   ocultarSets: false,
   setsColapsados: {},
@@ -144,35 +145,101 @@ const UI_Inventario = {
 
     const prontos = [];
     const faltaPartes = [];
+    const faltaMiners = [];
 
-    this.minersCached.forEach(m => {
-      if (this.getTotalMinerCount(m) < 2) return;
-      const info = this.getMergeInfoForMiner(m);
-      if (!info) return;
-
-      const { currentPowerHz, resultPowerHz } = info;
-      const gain = resultPowerHz - currentPowerHz;
-      const entry = { m, info, gain };
-
+    const categorize = (entry, info) => {
       if (info.podeFazer) prontos.push(entry);
       else if (info.ingredientes.filter(i => !i.ok).every(i => i.tipo === 'parte')) faltaPartes.push(entry);
+      else if (info.ingredientes.some(i => i.tipo === 'miner' && !i.ok)) faltaMiners.push(entry);
+    };
+
+    // Miners do inventário (pelo menos 1 cópia para considerar)
+    this.minersCached.forEach(m => {
+      if (this.getTotalMinerCount(m) < 1) return;
+      const info = this.getMergeInfoForMiner(m);
+      if (!info) return;
+      const { currentPowerHz, resultPowerHz } = info;
+      const gain = resultPowerHz - currentPowerHz;
+      categorize({ m, info, gain }, info);
     });
 
-    if (prontos.length === 0 && faltaPartes.length === 0) return '';
+    // Miners apenas na sala (2+ instaladas, sem cópia no inventário)
+    if (userData?.roomData?.miners) {
+      const invNames = new Set(this.minersCached.map(m => m.name.toLowerCase() + '|' + m.level));
+      const roomGroups = {};
+      userData.roomData.miners.forEach(rm => {
+        const label = rm.level_label || CONFIG.MINER_LEVELS[rm.level] || 'Common';
+        const key = rm.name.toLowerCase() + '|' + label;
+        if (!invNames.has(key)) roomGroups[key] = (roomGroups[key] || []).concat(rm);
+      });
+      Object.values(roomGroups).forEach(group => {
+        if (group.length < 2) return;
+        const rm = group[0];
+        const label = rm.level_label || CONFIG.MINER_LEVELS[rm.level] || 'Common';
+        const catalogData = APIData.findByName(rm.name).find(d => {
+          const lbl = d.type === 'merge' ? (rarityMap[d.level] || 'Unknown') : (d.rarityGroup?.title || 'Common');
+          return lbl === label;
+        });
+        if (!catalogData) return;
+        const fakeM = {
+          name: rm.name,
+          power: rm.power,
+          level: label,
+          quantity: 0,
+          cells: catalogData.width || 2,
+          bonus: catalogData.bonusPower / 100 || 0,
+          impacto: 0,
+          catalogData: catalogData,
+          isManual: false
+        };
+        const info = this.getMergeInfoForMiner(fakeM);
+        if (!info) return;
+        const { currentPowerHz, resultPowerHz } = info;
+        const gain = resultPowerHz - currentPowerHz;
+        categorize({ m: fakeM, info, gain }, info);
+      });
+    }
 
-    prontos.sort((a, b) => b.gain - a.gain);
-    faltaPartes.sort((a, b) => b.gain - a.gain);
+    if (prontos.length === 0 && faltaPartes.length === 0 && faltaMiners.length === 0) return '';
 
-    const buildCard = (entry, partsOnly) => {
+    const sortEntries = (list) => {
+      const mode = this.mergeSortMode;
+      list.sort((a, b) => {
+        if (mode === 'cost') {
+          const ca = a.info.nextTier.price || 0;
+          const cb = b.info.nextTier.price || 0;
+          return ca - cb;
+        }
+        if (mode === 'efficiency') {
+          const priceA = a.info.nextTier.price || 0;
+          const priceB = b.info.nextTier.price || 0;
+          // merges gratuitos ficam no topo; entre pagos, maior H/s por RLT primeiro
+          if (priceA === 0 && priceB === 0) return b.gain - a.gain;
+          if (priceA === 0) return -1;
+          if (priceB === 0) return 1;
+          return (b.gain / priceB) - (a.gain / priceA);
+        }
+        // gain (padrão)
+        return b.gain - a.gain;
+      });
+    };
+
+    sortEntries(prontos);
+    sortEntries(faltaPartes);
+    sortEntries(faltaMiners);
+
+    const buildCard = (entry, category) => {
       const { m, info } = entry;
-      const { nextTier, ingredientes, tiers, userHasLevel, currentPowerHz, resultPowerHz } = info;
+      const { nextTier, ingredientes, tiers, userHasLevel, currentPowerHz, resultPowerHz, nextTierAlreadyOwned } = info;
 
-      let html = `<div class="merge-card${partsOnly ? ' parts-only' : ''}">`;
+      const cardClass = category === 'parts' ? ' parts-only' : category === 'miners' ? ' missing-miners' : '';
+      let html = `<div class="merge-card${cardClass}">`;
 
       // título
       const imgUrl = m.catalogData?.imageUrl || nextTier.imageUrl || '';
       const imgHtml = imgUrl ? `<img src="${imgUrl}" alt="${m.name}" style="width:48px;height:48px;object-fit:contain;vertical-align:middle;margin-right:8px;border-radius:4px;">` : '';
-      html += `<div class="merge-card-title">${imgHtml}${m.name} <span style="opacity:.6;font-size:12px;">${m.level}</span> → <strong>${nextTier.name}</strong> <span style="opacity:.6;font-size:12px;">Lv${nextTier.level}</span></div>`;
+      const nextLabel = nextTier.type === 'merge' ? (rarityMap[nextTier.level] || 'Lv' + nextTier.level) : (nextTier.rarityGroup?.title || 'Common');
+      html += `<div class="merge-card-title">${imgHtml}${m.name} <span style="opacity:.6;font-size:12px;">${m.level}</span> → <strong>${nextTier.name}</strong> <span style="opacity:.6;font-size:12px;">${nextLabel}</span></div>`;
 
       // power
       html += '<div class="merge-card-power">';
@@ -182,16 +249,32 @@ const UI_Inventario = {
       html += `<span class="gain">+${Utils.formatPower(resultPowerHz - currentPowerHz)}</span>`;
       html += '</div>';
 
+      // aviso de duplicado
+      if (nextTierAlreadyOwned) {
+        const { status: dupStatus, count: dupCount } = userHasLevel[nextTier.id] || { status: null, count: 1 };
+        const onde = dupStatus === 'room' ? 'na sala' : 'no inventário';
+        const minerIngredient = ingredientes.find(i => i.tipo === 'miner');
+        const consumeDesc = minerIngredient ? minerIngredient.precisa + '× ' + m.level : '2× ' + m.level;
+        html += `<div class="merge-alert">⚠️ Este merge consome <strong>${consumeDesc}</strong> e produz <strong>1 ${nextLabel}</strong>. Você já tem <strong>${dupCount} ${nextLabel}</strong> ${onde} — ficará com <strong>${dupCount + 1} ${nextLabel}s</strong>.</div>`;
+      }
+
       // níveis
+      const rarityEmoji = { 'Common': '⚪', 'Uncommon': '🟢', 'Rare': '🔵', 'Epic': '🟣', 'Legendary': '🟡', 'Unreal': '🔴' };
       html += '<div class="merge-card-section-label">Níveis que você tem</div>';
       html += '<div class="merge-card-levels">';
       tiers.forEach(t => {
         const lbl = t.type === 'merge' ? (rarityMap[t.level] || 'Lv' + t.level) : (t.rarityGroup?.title || 'Common');
-        const status = userHasLevel[t.id];
+        const { status, count } = userHasLevel[t.id] || { status: null, count: 0 };
         const isNext = t.id === nextTier.id;
         const chipClass = status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
-        const icon = status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
-        html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}">${icon} ${lbl}</span>`;
+        const statusIcon = status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
+        const rarityDot = rarityEmoji[lbl] || '';
+        const countBadge = count > 0 ? ` <span class="chip-count">×${count}</span>` : '';
+        const statusTip = status === 'inv' ? `No inventário (${count}×)` : status === 'room' ? `Instalada na sala (${count}×)` : 'Não possui';
+        const powerTip = `⚡ ${Utils.formatPower(t.power * 1e9)}`;
+        const costTip = t.price ? `💰 ${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? '💰 gratuito' : '');
+        const dataTip = [statusTip, powerTip, costTip].filter(Boolean).join(' · ');
+        html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}" data-tip="${dataTip}">${statusIcon} ${rarityDot} ${lbl}${countBadge}</span>`;
       });
       html += '</div>';
 
@@ -208,7 +291,12 @@ const UI_Inventario = {
         const label = ing.tipo === 'miner'
           ? `${ing.precisa}× ${ing.nome} (${ing.rarity})`
           : `${ing.precisa}× ${ing.rarity} ${ing.nome}`;
-        html += `<div class="merge-ingredient-chip ${ing.ok ? 'ok' : 'nok'}">${ing.ok ? '✅' : '❌'} ${label} <span style="opacity:.65;">(${ing.tem}/${ing.precisa})</span></div>`;
+        const pct = Math.min(100, ing.precisa > 0 ? Math.round((ing.tem / ing.precisa) * 100) : 0);
+        html += `<div class="merge-ingredient-chip ${ing.ok ? 'ok' : 'nok'}">`;
+        html += `<span class="ing-label">${ing.ok ? '✅' : '❌'} ${label}</span>`;
+        html += `<div class="ing-progress-wrap"><div class="ing-progress-fill" style="width:${pct}%"></div></div>`;
+        html += `<span class="ing-fraction">${ing.tem}/${ing.precisa}</span>`;
+        html += `</div>`;
       });
       html += '</div>';
 
@@ -216,22 +304,42 @@ const UI_Inventario = {
       return html;
     };
 
+    const sortMode = this.mergeSortMode;
     let html = '<div class="merge-planner">';
-    html += '<h3 style="margin:0 0 16px 0;">🔧 Plano de Merges</h3>';
+    html += '<div class="merge-planner-header">';
+    html += '<h3 style="margin:0;">🔧 Plano de Merges</h3>';
+    html += '<div class="merge-sort-controls">';
+    html += '<span style="font-size:12px;opacity:.6;margin-right:6px;">Ordenar por:</span>';
+    [
+      { key: 'efficiency', label: '⚡ Custo-benefício' },
+      { key: 'gain',       label: '📈 Maior ganho'     },
+      { key: 'cost',       label: '💰 Menor custo'     },
+    ].forEach(({ key, label }) => {
+      const active = sortMode === key;
+      html += `<button class="merge-sort-btn${active ? ' active' : ''}" onclick="UI_Inventario.setMergeSort('${key}')">${label}</button>`;
+    });
+    html += '</div></div>';
     html += '<div class="merge-planner-groups">';
 
     html += '<div class="merge-planner-group">';
     html += `<h4 style="color:#28a745;">✅ Prontos para merge (${prontos.length})</h4>`;
     if (prontos.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge disponível agora.</p>';
     html += '<div class="merge-cards">';
-    prontos.forEach(e => { html += buildCard(e, false); });
+    prontos.forEach(e => { html += buildCard(e, 'ready'); });
     html += '</div></div>';
 
     html += '<div class="merge-planner-group">';
     html += `<h4 style="color:#fd7e14;">🔩 Falta só peças (${faltaPartes.length})</h4>`;
     if (faltaPartes.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge nessa situação.</p>';
     html += '<div class="merge-cards">';
-    faltaPartes.forEach(e => { html += buildCard(e, true); });
+    faltaPartes.forEach(e => { html += buildCard(e, 'parts'); });
+    html += '</div></div>';
+
+    html += '<div class="merge-planner-group">';
+    html += `<h4 style="color:#6c757d;">⛏️ Falta miners (${faltaMiners.length})</h4>`;
+    if (faltaMiners.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge nessa situação.</p>';
+    html += '<div class="merge-cards">';
+    faltaMiners.forEach(e => { html += buildCard(e, 'miners'); });
     html += '</div></div>';
 
     html += '</div></div>';
@@ -240,6 +348,11 @@ const UI_Inventario = {
 
   toggleMergeRow: function(uid) {
     this.expandedMergeRows[uid] = !this.expandedMergeRows[uid];
+    this.renderResultado();
+  },
+
+  setMergeSort: function(mode) {
+    this.mergeSortMode = mode;
     this.renderResultado();
   },
 
@@ -274,9 +387,7 @@ const UI_Inventario = {
     const userData = State.getUserData();
     if (userData?.roomData?.miners) {
       userData.roomData.miners.forEach(m => {
-        const db = APIData.findByNameAndPower(m.name, m.power * 1e9);
-        if (!db) return;
-        const lbl = db.type === 'merge' ? (rarityMap[db.level] || 'Unknown') : (db.rarityGroup?.title || 'Common');
+        const lbl = m.level_label || CONFIG.MINER_LEVELS[m.level] || 'Common';
         const key = `${m.name.toLowerCase()}|${lbl}`;
         contagem[key] = (contagem[key] || 0) + 1;
       });
@@ -303,25 +414,26 @@ const UI_Inventario = {
 
     // Monta mapa de níveis que o usuário possui (inventário + sala)
     const rarityMap2 = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
-    const userHasLevel = {}; // key: db.id → 'inv' | 'room' | null
+    const userHasLevel = {}; // key: db.id → { status: 'inv'|'room'|null, count: number }
 
     tiers.forEach(t => {
       const tLabel = t.type === 'merge' ? (rarityMap2[t.level] || 'Unknown') : (t.rarityGroup?.title || 'Common');
-      const invEntry = this.minersCached?.find(mc =>
-        mc.name.toLowerCase() === t.name.toLowerCase() && mc.level === tLabel
-      );
-      if (invEntry && invEntry.quantity > 0) { userHasLevel[t.id] = 'inv'; return; }
 
-      const inRoom = userData?.roomData?.miners?.find(rm => {
-        const rmDb = APIData.findByNameAndPower(rm.name, rm.power * 1e9);
-        return rmDb && rmDb.id === t.id;
-      });
-      if (inRoom) { userHasLevel[t.id] = 'room'; return; }
+      const invCount = (this.minersCached || [])
+        .filter(mc => mc.name.toLowerCase() === t.name.toLowerCase() && mc.level === tLabel)
+        .reduce((sum, mc) => sum + (mc.quantity || 1), 0);
+      if (invCount > 0) { userHasLevel[t.id] = { status: 'inv', count: invCount }; return; }
 
-      userHasLevel[t.id] = null;
+      const roomCount = (userData?.roomData?.miners || []).filter(rm => {
+        const rmLabel = rm.level_label || CONFIG.MINER_LEVELS[rm.level] || 'Common';
+        return rm.name.toLowerCase() === t.name.toLowerCase() && rmLabel === tLabel;
+      }).length;
+      if (roomCount > 0) { userHasLevel[t.id] = { status: 'room', count: roomCount }; return; }
+
+      userHasLevel[t.id] = { status: null, count: 0 };
     });
 
-    const nextTierAlreadyOwned = userHasLevel[nextTier.id] !== null;
+    const nextTierAlreadyOwned = userHasLevel[nextTier.id]?.status !== null;
 
     // corrige power se DB estiver desatualizado (ex: miner bufada pelo jogo)
     const currentPowerHz = miner.power * 1e9;
@@ -366,11 +478,8 @@ const UI_Inventario = {
     });
     // Também conta miners instaladas na sala
     userData.roomData.miners.forEach(m => {
-      const db = APIData.findByNameAndPower(m.name, m.power * 1e9);
-      if (!db) return;
-      const rarityMap = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
-      const level = db.type === 'merge' ? (rarityMap[db.level] || 'Unknown') : (db.rarityGroup?.title || 'Common');
-      const key = `${m.name.toLowerCase()}|${level}`;
+      const lbl = m.level_label || CONFIG.MINER_LEVELS[m.level] || 'Common';
+      const key = `${m.name.toLowerCase()}|${lbl}`;
       contagem[key] = (contagem[key] || 0) + 1;
     });
 
@@ -1665,8 +1774,10 @@ html += '</tr>';
           html += '<div class="merge-subrow' + (!podeFazer ? ' merge-warning' : '') + '">';
 
           // Cabeçalho
+          const rarityLabelsLocal2 = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
+          const nextTierLabel = nextTier.type === 'merge' ? (rarityLabelsLocal2[nextTier.level] || 'Lv' + nextTier.level) : (nextTier.rarityGroup?.title || 'Common');
           html += '<div class="merge-subrow-header">';
-          html += '<span><strong>🔧 Merge → ' + nextTier.name + ' Lv' + nextTier.level + '</strong></span>';
+          html += '<span><strong>🔧 Merge → ' + nextTier.name + ' ' + nextTierLabel + '</strong></span>';
           html += '<span>Power atual: <strong>' + currentPower + '</strong></span>';
           html += '<span>→ Resultado: <strong>' + resultPower + '</strong></span>';
           html += '<span><strong>+' + gainPower + '</strong></span>';
@@ -1675,21 +1786,37 @@ html += '</tr>';
 
           // Aviso se já possui o próximo nível
           if (nextTierAlreadyOwned) {
-            const onde = userHasLevel[nextTier.id] === 'room' ? 'na sala' : 'no inventário';
-            html += '<div class="merge-alert">⚠️ Você já possui <strong>' + nextTier.name + ' Lv' + nextTier.level + '</strong> ' + onde + '. Mergear criaria um duplicado.</div>';
+            const rarityLabelsLocal = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
+            const nextLbl = nextTier.type === 'merge' ? (rarityLabelsLocal[nextTier.level] || 'Lv' + nextTier.level) : (nextTier.rarityGroup?.title || 'Common');
+            const { status: dupStatus, count: dupCount } = userHasLevel[nextTier.id] || { status: null, count: 1 };
+            const onde = dupStatus === 'room' ? 'na sala' : 'no inventário';
+            const minerIngredient = ingredientes.find(i => i.tipo === 'miner');
+            const consumeDesc = minerIngredient ? minerIngredient.precisa + '× ' + m.level : '2× ' + m.level;
+            html += '<div class="merge-alert">'
+              + '⚠️ Este merge consome <strong>' + consumeDesc + '</strong> e produz <strong>1 ' + nextLbl + '</strong>. '
+              + 'Você já tem <strong>' + dupCount + ' ' + nextLbl + '</strong> ' + onde
+              + ' — ficará com <strong>' + (dupCount + 1) + ' ' + nextLbl + 's</strong> instalados.'
+              + '</div>';
           }
 
           // Linha de níveis
           html += '<div style="font-size:12px; margin-bottom:6px; font-weight:600;">Níveis de ' + m.name + ':</div>';
           html += '<div class="merge-levels">';
+          const rarityEmojiSub = { 'Common': '⚪', 'Uncommon': '🟢', 'Rare': '🔵', 'Epic': '🟣', 'Legendary': '🟡', 'Unreal': '🔴' };
           tiers.forEach(t => {
             const label = t.type === 'merge' ? (rarityLabels[t.level] || 'Lv' + t.level) : (t.rarityGroup?.title || 'Common');
-            const status = userHasLevel[t.id];
+            const { status, count } = userHasLevel[t.id] || { status: null, count: 0 };
             const isNext = t.id === nextTier.id;
-            let chipClass = status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
-            const icon = status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
+            const chipClass = status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
+            const statusIcon = status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
+            const rarityDot = rarityEmojiSub[label] || '';
+            const countBadge = count > 0 ? ' <span class="chip-count">×' + count + '</span>' : '';
+            const statusTip = status === 'inv' ? 'No inventário (' + count + '×)' : status === 'room' ? 'Instalada na sala (' + count + '×)' : 'Não possui';
+            const powerTip = '⚡ ' + Utils.formatPower(t.power * 1e9);
+            const costTip = t.price ? '💰 ' + (t.price / 1e6).toFixed(2) + ' RLT' : (t.level > 0 ? '💰 gratuito' : '');
+            const dataTip = [statusTip, powerTip, costTip].filter(Boolean).join(' · ');
             const extra = isNext ? ' next-tier' : '';
-            html += '<span class="merge-level-chip ' + chipClass + extra + '">' + icon + ' ' + label + (isNext ? ' ←' : '') + '</span>';
+            html += '<span class="merge-level-chip ' + chipClass + extra + '" data-tip="' + dataTip + '">' + statusIcon + ' ' + rarityDot + ' ' + label + countBadge + (isNext ? ' ←' : '') + '</span>';
           });
           html += '</div>';
 
