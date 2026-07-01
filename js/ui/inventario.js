@@ -248,6 +248,7 @@ const UI_Inventario = {
       html += '<span style="opacity:.5;">→</span>';
       html += `<span><strong>${Utils.formatPower(resultPowerHz)}</strong></span>`;
       html += `<span class="gain">+${Utils.formatPower(resultPowerHz - currentPowerHz)}</span>`;
+      if (nextTier.bonusPower) html += `<span style="opacity:.65; font-size:11px;">🎯 +${(nextTier.bonusPower / 100).toFixed(2)}% bônus</span>`;
       html += '</div>';
 
       // aviso de duplicado
@@ -273,7 +274,7 @@ const UI_Inventario = {
         const countBadge = count > 0 ? ` <span class="chip-count">×${count}</span>` : '';
         const statusTip = status === 'inv' ? `No inventário (${count}×)` : status === 'room' ? `Instalada na sala (${count}×)` : 'Não possui';
         const powerVal = Utils.formatPower(t.power * 1e9);
-        const bonusVal = t.bonusPower ? `${t.bonusPower}%` : '';
+        const bonusVal = t.bonusPower ? `${(t.bonusPower / 100).toFixed(2)}%` : '';
         const costVal = t.price ? `${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? 'gratuito' : '');
         const partsEncoded = (t.craftRecipe || []).map(r => `${r.name}|${r.rarity || ''}|${r.count}`).join('~');
         html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}" data-tip-status="${statusTip}" data-tip-power="${powerVal}" data-tip-bonus="${bonusVal}" data-tip-cost="${costVal}" data-tip-parts="${partsEncoded}">${statusIcon} ${rarityDot} ${lbl}${countBadge}</span>`;
@@ -1849,6 +1850,7 @@ html += '</tr>';
           html += '<span>Power atual: <strong>' + currentPower + '</strong></span>';
           html += '<span>→ Resultado: <strong>' + resultPower + '</strong></span>';
           html += '<span><strong>+' + gainPower + '</strong></span>';
+          if (nextTier.bonusPower) html += '<span style="opacity:.65; font-size:11px;">🎯 +' + (nextTier.bonusPower / 100).toFixed(2) + '% bônus</span>';
           if (podeFazer && !nextTierAlreadyOwned) html += '<span>✅ <strong>Pode fazer agora!</strong></span>';
           html += '</div>';
 
@@ -1881,7 +1883,7 @@ html += '</tr>';
             const countBadge = count > 0 ? ' <span class="chip-count">×' + count + '</span>' : '';
             const statusTip = status === 'inv' ? 'No inventário (' + count + '×)' : status === 'room' ? 'Instalada na sala (' + count + '×)' : 'Não possui';
             const powerVal = Utils.formatPower(t.power * 1e9);
-            const bonusVal = t.bonusPower ? t.bonusPower + '%' : '';
+            const bonusVal = t.bonusPower ? (t.bonusPower / 100).toFixed(2) + '%' : '';
             const costVal = t.price ? (t.price / 1e6).toFixed(2) + ' RLT' : (t.level > 0 ? 'gratuito' : '');
             const partsEncoded = (t.craftRecipe || []).map(r => r.name + '|' + (r.rarity || '') + '|' + r.count).join('~');
             const extra = isNext ? ' next-tier' : '';
