@@ -231,7 +231,7 @@ const UI_Inventario = {
 
     const buildCard = (entry, category) => {
       const { m, info } = entry;
-      const { nextTier, ingredientes, tiers, userHasLevel, currentPowerHz, resultPowerHz, nextTierAlreadyOwned } = info;
+      const { nextTier, ingredientes, tiers, userHasLevel, currentPowerHz, resultPowerHz, nextTierAlreadyOwned, currentDbEntry } = info;
 
       const cardClass = category === 'parts' ? ' parts-only' : category === 'miners' ? ' missing-miners' : '';
       let html = `<div class="merge-card${cardClass}">`;
@@ -248,7 +248,12 @@ const UI_Inventario = {
       html += '<span style="opacity:.5;">→</span>';
       html += `<span><strong>${Utils.formatPower(resultPowerHz)}</strong></span>`;
       html += `<span class="gain">+${Utils.formatPower(resultPowerHz - currentPowerHz)}</span>`;
-      if (nextTier.bonusPower) html += `<span style="opacity:.65; font-size:11px;">🎯 +${(nextTier.bonusPower / 100).toFixed(2)}% bônus</span>`;
+      if (nextTier.bonusPower) {
+        const curBonus  = ((currentDbEntry?.bonusPower  || 0) / 100).toFixed(2);
+        const nextBonus = (nextTier.bonusPower / 100).toFixed(2);
+        const diffBonus = ((nextTier.bonusPower - (currentDbEntry?.bonusPower || 0)) / 100).toFixed(2);
+        html += `<span style="opacity:.65; font-size:11px;">🎯 ${curBonus}% → ${nextBonus}% <strong style="color:#28a745;">+${diffBonus}%</strong> bônus</span>`;
+      }
       html += '</div>';
 
       // aviso de duplicado
@@ -509,7 +514,7 @@ const UI_Inventario = {
     const scaleFactor = currentDbEntry.power > 0 ? currentPowerHz / currentDbEntry.power : 1;
     const resultPowerHz = nextTier.power * scaleFactor;
 
-    return { nextTier, ingredientes, podeFazer: ingredientes.every(i => i.ok), tiers, userHasLevel, nextTierAlreadyOwned, currentPowerHz, resultPowerHz };
+    return { nextTier, ingredientes, podeFazer: ingredientes.every(i => i.ok), tiers, userHasLevel, nextTierAlreadyOwned, currentPowerHz, resultPowerHz, currentDbEntry };
   },
 
   parseParts: function(texto) {
@@ -1833,7 +1838,7 @@ html += '</tr>';
       if (this.getTotalMinerCount(m) >= 2 && this.expandedMergeRows[uniqueId]) {
         const mergeInfo = this.getMergeInfoForMiner(m);
         if (mergeInfo) {
-          const { nextTier, ingredientes, podeFazer, tiers, userHasLevel, nextTierAlreadyOwned, currentPowerHz, resultPowerHz } = mergeInfo;
+          const { nextTier, ingredientes, podeFazer, tiers, userHasLevel, nextTierAlreadyOwned, currentPowerHz, resultPowerHz, currentDbEntry } = mergeInfo;
           const rarityLabels = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
           const currentPower = Utils.formatPower(currentPowerHz);
           const resultPower  = Utils.formatPower(resultPowerHz);
@@ -1850,7 +1855,12 @@ html += '</tr>';
           html += '<span>Power atual: <strong>' + currentPower + '</strong></span>';
           html += '<span>→ Resultado: <strong>' + resultPower + '</strong></span>';
           html += '<span><strong>+' + gainPower + '</strong></span>';
-          if (nextTier.bonusPower) html += '<span style="opacity:.65; font-size:11px;">🎯 +' + (nextTier.bonusPower / 100).toFixed(2) + '% bônus</span>';
+          if (nextTier.bonusPower) {
+            const curBonus  = (((currentDbEntry?.bonusPower  || 0)) / 100).toFixed(2);
+            const nextBonus = (nextTier.bonusPower / 100).toFixed(2);
+            const diffBonus = ((nextTier.bonusPower - (currentDbEntry?.bonusPower || 0)) / 100).toFixed(2);
+            html += '<span style="opacity:.65; font-size:11px;">🎯 ' + curBonus + '% → ' + nextBonus + '% <strong style="color:#28a745;">+' + diffBonus + '%</strong> bônus</span>';
+          }
           if (podeFazer && !nextTierAlreadyOwned) html += '<span>✅ <strong>Pode fazer agora!</strong></span>';
           html += '</div>';
 
