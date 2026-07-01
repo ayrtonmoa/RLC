@@ -128,6 +128,46 @@
 .tag-improved { background: #1e3a5f; color: #93c5fd; }
 .tag-fix     { background: #451a03; color: #fcd34d; }
 
+/* ========== Caixa "Por onde começar" ========== */
+.guia-start-box {
+  background: linear-gradient(135deg, rgba(102,126,234,0.12), rgba(118,75,162,0.08));
+  border: 1px solid rgba(102,126,234,0.35);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
+
+.guia-start-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #a78bfa;
+  margin-bottom: 14px;
+  letter-spacing: 0.3px;
+}
+
+.guia-start-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.guia-start-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.guia-start-step code {
+  background: rgba(255,255,255,0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #93c5fd;
+}
+
 /* ========== Seção header ========== */
 .guia-section-header {
   margin: 28px 0 16px;

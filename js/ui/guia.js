@@ -69,10 +69,28 @@ const UI_Guia = {
 
       </div>
 
+      <!-- COMO COMEÇAR -->
+      <div class="guia-start-box">
+        <div class="guia-start-title">🚀 Por onde começar</div>
+        <div class="guia-start-steps">
+          <div class="guia-start-step">
+            <div class="guia-step-num">1</div>
+            <div>Acesse <a href="https://rollercoin.com/profile/personal-profile" target="_blank">rollercoin.com/profile/personal-profile</a> e localize seu <strong>Profile Link</strong>.</div>
+          </div>
+          <div class="guia-start-step">
+            <div class="guia-step-num">2</div>
+            <div>Copie apenas a parte após <code>/p/</code> da URL — ex: se o link for <code>rollercoin.com/p/PlayerExample</code>, use <strong>PlayerExample</strong>.</div>
+          </div>
+          <div class="guia-start-step">
+            <div class="guia-step-num">3</div>
+            <div>Cole no campo <strong>Username</strong> no topo e clique em <strong>🔍 Analisar</strong>.</div>
+          </div>
+        </div>
+      </div>
+
       <!-- REFERÊNCIA RÁPIDA -->
       <div class="guia-section-header">
         <h2>Referência Rápida</h2>
-        <p>Analise seu perfil primeiro — clique em <strong>Analisar</strong> com seu username do RollerCoin.</p>
       </div>
 
       <div class="guia-tabs-grid">
@@ -102,9 +120,9 @@ const UI_Guia = {
         </div>
 
         <div class="guia-tab-card">
-          <div class="guia-tab-icon">🔀</div>
-          <div class="guia-tab-name">Merge Analyzer</div>
-          <p>Simule merges antes de fazer. Veja poder total resultante e ganho/perda líquida com bônus de coleção.</p>
+          <div class="guia-tab-icon">🔧</div>
+          <div class="guia-tab-name">Parts</div>
+          <p>Calcule quanto custa fazer merge das suas peças (Fan, Wire, Hashboard). Normal e reverso.</p>
         </div>
 
         <div class="guia-tab-card">
