@@ -724,34 +724,25 @@ body.dark-mode .merge-alert {
   user-select: none;
   position: relative;
 }
-.merge-level-chip[data-tip]:hover::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+#tier-chip-tooltip {
   background: #1a1a2e;
   color: #e2e8f0;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: normal;
-  white-space: nowrap;
-  z-index: 200;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  min-width: 180px;
+  max-width: 260px;
+  line-height: 1.5;
 }
-.merge-level-chip[data-tip]:hover::before {
-  content: '';
-  position: absolute;
-  bottom: calc(100% + 3px);
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: #1a1a2e;
-  z-index: 200;
-  pointer-events: none;
+.ctt-row { margin: 1px 0; }
+.ctt-status { font-weight: 600; margin-bottom: 4px; }
+.ctt-divider {
+  border-top: 1px solid rgba(255,255,255,0.15);
+  margin: 6px 0;
 }
+.ctt-label { opacity: .7; font-size: 11px; margin-bottom: 2px; }
+.ctt-part { padding-left: 4px; opacity: .9; }
 .merge-level-chip.has-inv  { background: #d4edda; color: #155724; border-color: #28a745; }
 .merge-level-chip.has-room { background: #cce5ff; color: #004085; border-color: #007bff; }
 .merge-level-chip.missing  { background: #f8d7da; color: #721c24; border-color: #dc3545; }

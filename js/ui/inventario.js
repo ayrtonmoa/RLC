@@ -14,6 +14,7 @@ const UI_Inventario = {
 
   expandedMergeRows: {},
   mergeSortMode: 'efficiency',
+  _chipTooltipEl: null,
 
   ocultarSets: false,
   setsColapsados: {},
@@ -271,10 +272,10 @@ const UI_Inventario = {
         const rarityDot = rarityEmoji[lbl] || '';
         const countBadge = count > 0 ? ` <span class="chip-count">×${count}</span>` : '';
         const statusTip = status === 'inv' ? `No inventário (${count}×)` : status === 'room' ? `Instalada na sala (${count}×)` : 'Não possui';
-        const powerTip = `⚡ ${Utils.formatPower(t.power * 1e9)}`;
-        const costTip = t.price ? `💰 ${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? '💰 gratuito' : '');
-        const dataTip = [statusTip, powerTip, costTip].filter(Boolean).join(' · ');
-        html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}" data-tip="${dataTip}">${statusIcon} ${rarityDot} ${lbl}${countBadge}</span>`;
+        const powerVal = Utils.formatPower(t.power * 1e9);
+        const costVal = t.price ? `${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? 'gratuito' : '');
+        const partsEncoded = (t.craftRecipe || []).map(r => `${r.name}|${r.rarity || ''}|${r.count}`).join('~');
+        html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}" data-tip-status="${statusTip}" data-tip-power="${powerVal}" data-tip-cost="${costVal}" data-tip-parts="${partsEncoded}">${statusIcon} ${rarityDot} ${lbl}${countBadge}</span>`;
       });
       html += '</div>';
 
@@ -354,6 +355,71 @@ const UI_Inventario = {
   setMergeSort: function(mode) {
     this.mergeSortMode = mode;
     this.renderResultado();
+  },
+
+  initChipTooltip: function() {
+    if (this._chipTooltipEl) return;
+    const el = document.createElement('div');
+    el.id = 'tier-chip-tooltip';
+    el.style.cssText = 'display:none;position:fixed;z-index:9999;pointer-events:none;';
+    document.body.appendChild(el);
+    this._chipTooltipEl = el;
+
+    const show = (chip, x, y) => {
+      const status  = chip.dataset.tipStatus  || '';
+      const power   = chip.dataset.tipPower   || '';
+      const cost    = chip.dataset.tipCost    || '';
+      const parts   = chip.dataset.tipParts   || '';
+
+      let inner = `<div class="ctt-row ctt-status">${status}</div>`;
+      if (power) inner += `<div class="ctt-row">⚡ <strong>${power}</strong></div>`;
+      if (cost)  inner += `<div class="ctt-row">💰 ${cost}</div>`;
+
+      if (parts) {
+        inner += `<div class="ctt-divider"></div>`;
+        inner += `<div class="ctt-row ctt-label">🧩 Ingredientes para este nível:</div>`;
+        parts.split('~').forEach(p => {
+          const [name, rarity, count] = p.split('|');
+          const rarityStr = rarity ? ` (${rarity})` : '';
+          inner += `<div class="ctt-row ctt-part">• ${count}× ${name}${rarityStr}</div>`;
+        });
+      } else if (chip.dataset.tipPower) {
+        inner += `<div class="ctt-divider"></div>`;
+        inner += `<div class="ctt-row ctt-label" style="opacity:.5;">Sem receita (nível base)</div>`;
+      }
+
+      el.innerHTML = inner;
+      el.style.display = 'block';
+      this._positionChipTooltip(x, y);
+    };
+
+    document.addEventListener('mouseover', e => {
+      const chip = e.target.closest('.merge-level-chip[data-tip-power]');
+      if (chip) show(chip, e.clientX, e.clientY);
+      else el.style.display = 'none';
+    });
+    document.addEventListener('mousemove', e => {
+      if (el.style.display === 'none') return;
+      const chip = e.target.closest('.merge-level-chip[data-tip-power]');
+      if (chip) this._positionChipTooltip(e.clientX, e.clientY);
+      else el.style.display = 'none';
+    });
+  },
+
+  _positionChipTooltip: function(x, y) {
+    const el = this._chipTooltipEl;
+    if (!el) return;
+    const gap = 12;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    el.style.left = '0'; el.style.top = '0'; // reset for measurement
+    const w = el.offsetWidth, h = el.offsetHeight;
+    let left = x + gap;
+    let top  = y - h / 2;
+    if (left + w > vw - 8) left = x - w - gap;
+    if (top < 8) top = 8;
+    if (top + h > vh - 8) top = vh - h - 8;
+    el.style.left = left + 'px';
+    el.style.top  = top  + 'px';
   },
 
   getMergeInfoForMiner: function(miner) {
@@ -1812,11 +1878,11 @@ html += '</tr>';
             const rarityDot = rarityEmojiSub[label] || '';
             const countBadge = count > 0 ? ' <span class="chip-count">×' + count + '</span>' : '';
             const statusTip = status === 'inv' ? 'No inventário (' + count + '×)' : status === 'room' ? 'Instalada na sala (' + count + '×)' : 'Não possui';
-            const powerTip = '⚡ ' + Utils.formatPower(t.power * 1e9);
-            const costTip = t.price ? '💰 ' + (t.price / 1e6).toFixed(2) + ' RLT' : (t.level > 0 ? '💰 gratuito' : '');
-            const dataTip = [statusTip, powerTip, costTip].filter(Boolean).join(' · ');
+            const powerVal = Utils.formatPower(t.power * 1e9);
+            const costVal = t.price ? (t.price / 1e6).toFixed(2) + ' RLT' : (t.level > 0 ? 'gratuito' : '');
+            const partsEncoded = (t.craftRecipe || []).map(r => r.name + '|' + (r.rarity || '') + '|' + r.count).join('~');
             const extra = isNext ? ' next-tier' : '';
-            html += '<span class="merge-level-chip ' + chipClass + extra + '" data-tip="' + dataTip + '">' + statusIcon + ' ' + rarityDot + ' ' + label + countBadge + (isNext ? ' ←' : '') + '</span>';
+            html += '<span class="merge-level-chip ' + chipClass + extra + '" data-tip-status="' + statusTip + '" data-tip-power="' + powerVal + '" data-tip-cost="' + costVal + '" data-tip-parts="' + partsEncoded + '">' + statusIcon + ' ' + rarityDot + ' ' + label + countBadge + (isNext ? ' ←' : '') + '</span>';
           });
           html += '</div>';
 
@@ -1850,7 +1916,8 @@ html += '</tr>';
     html += this.renderMergePlanner();
 
     div.innerHTML = html;
-    
+    this.initChipTooltip();
+
     // Event listeners
     const inventoryButtons = div.querySelectorAll('button[data-minerid]');
     inventoryButtons.forEach(btn => {
