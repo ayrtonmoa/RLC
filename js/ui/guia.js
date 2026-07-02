@@ -20,6 +20,30 @@ const UI_Guia = {
       <div class="guia-timeline">
 
         <div class="guia-tl-entry">
+          <div class="guia-tl-date">02 Jul 2026<br><span class="guia-tl-time">14:30</span></div>
+          <div class="guia-tl-content">
+            <span class="guia-tag tag-new">NOVO</span>
+            <strong>Planejador de Sala</strong> — visualize e edite suas racks igual ao jogo (carrossel de salas, imagens das miners, bônus por rack), com Auto-Otimizar sugerindo a melhor distribuição das miners considerando poder, bônus de coleção e bônus de rack. Miners de set ficam protegidas e nunca são movidas.
+          </div>
+        </div>
+
+        <div class="guia-tl-entry">
+          <div class="guia-tl-date">02 Jul 2026<br><span class="guia-tl-time">14:20</span></div>
+          <div class="guia-tl-content">
+            <span class="guia-tag tag-improved">MELHORIA</span>
+            <strong>Simulação do Inventário integrada</strong> — remover/adicionar miners na tabela agora reflete direto no Planejador de Sala (e vice-versa), com cálculo de poder mais preciso, ancorado no valor real da API.
+          </div>
+        </div>
+
+        <div class="guia-tl-entry">
+          <div class="guia-tl-date">02 Jul 2026<br><span class="guia-tl-time">14:10</span></div>
+          <div class="guia-tl-content">
+            <span class="guia-tag tag-new">NOVO</span>
+            <strong>Aba MinerMerge</strong> — o antigo Plano de Merges ganhou aba própria, separado do Inventário.
+          </div>
+        </div>
+
+        <div class="guia-tl-entry">
           <div class="guia-tl-date">30 Jun 2026<br><span class="guia-tl-time">23:11</span></div>
           <div class="guia-tl-content">
             <span class="guia-tag tag-new">NOVO</span>

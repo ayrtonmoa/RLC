@@ -4,17 +4,11 @@ const UI_Inventario = {
   currentSort: { column: 'impacto', direction: 'desc' },
   currentFilter: 'all',
   instaladaSort: { column: 'impacto', direction: 'asc' },
-  
-  // Estado da simulação
-  simulationState: {
-    removedMiners: [],
-    addedMiners: [],
-    active: false
-  },
+
+  // O estado de simulação (remover/adicionar miners) mora em SimState (js/ui/simState.js),
+  // compartilhado com o Planejador de Sala — mexer aqui reflete lá e vice-versa.
 
   expandedMergeRows: {},
-  mergeSortMode: 'efficiency',
-  _chipTooltipEl: null,
 
   ocultarSets: false,
   setsColapsados: {},
@@ -140,300 +134,9 @@ const UI_Inventario = {
     return invCount + roomCount;
   },
 
-  renderMergePlanner: function() {
-    if (!this.minersCached) return '';
-    const userData = State.getUserData();
-    const rarityMap = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
-
-    const prontos = [];
-    const faltaPartes = [];
-    const faltaMiners = [];
-
-    const categorize = (entry, info) => {
-      if (info.podeFazer) prontos.push(entry);
-      else if (info.ingredientes.filter(i => !i.ok).every(i => i.tipo === 'parte')) faltaPartes.push(entry);
-      else if (info.ingredientes.some(i => i.tipo === 'miner' && !i.ok)) faltaMiners.push(entry);
-    };
-
-    // Miners do inventário (pelo menos 1 cópia para considerar)
-    this.minersCached.forEach(m => {
-      if (this.getTotalMinerCount(m) < 1) return;
-      const info = this.getMergeInfoForMiner(m);
-      if (!info) return;
-      const { currentPowerHz, resultPowerHz } = info;
-      const gain = resultPowerHz - currentPowerHz;
-      categorize({ m, info, gain }, info);
-    });
-
-    // Miners apenas na sala (2+ instaladas, sem cópia no inventário)
-    if (userData?.roomData?.miners) {
-      const invNames = new Set(this.minersCached.map(m => m.name.toLowerCase() + '|' + m.level));
-      const roomGroups = {};
-      userData.roomData.miners.forEach(rm => {
-        const label = rm.level_label || CONFIG.MINER_LEVELS[rm.level] || 'Common';
-        const key = rm.name.toLowerCase() + '|' + label;
-        if (!invNames.has(key)) roomGroups[key] = (roomGroups[key] || []).concat(rm);
-      });
-      Object.values(roomGroups).forEach(group => {
-        if (group.length < 2) return;
-        const rm = group[0];
-        const label = rm.level_label || CONFIG.MINER_LEVELS[rm.level] || 'Common';
-        const catalogData = APIData.findByName(rm.name).find(d => {
-          const lbl = d.type === 'merge' ? (rarityMap[d.level] || 'Unknown') : (d.rarityGroup?.title || 'Common');
-          return lbl === label;
-        });
-        if (!catalogData) return;
-        const fakeM = {
-          name: rm.name,
-          power: rm.power,
-          level: label,
-          quantity: 0,
-          cells: catalogData.width || 2,
-          bonus: catalogData.bonusPower / 100 || 0,
-          impacto: 0,
-          catalogData: catalogData,
-          isManual: false
-        };
-        const info = this.getMergeInfoForMiner(fakeM);
-        if (!info) return;
-        const { currentPowerHz, resultPowerHz } = info;
-        const gain = resultPowerHz - currentPowerHz;
-        categorize({ m: fakeM, info, gain }, info);
-      });
-    }
-
-    if (prontos.length === 0 && faltaPartes.length === 0 && faltaMiners.length === 0) return '';
-
-    if (typeof Analytics !== 'undefined') {
-      Analytics.mergePlannerVisto(prontos.length, faltaPartes.length, faltaMiners.length);
-    }
-
-    const sortEntries = (list) => {
-      const mode = this.mergeSortMode;
-      list.sort((a, b) => {
-        if (mode === 'cost') {
-          const ca = a.info.nextTier.price || 0;
-          const cb = b.info.nextTier.price || 0;
-          return ca - cb;
-        }
-        if (mode === 'efficiency') {
-          const priceA = a.info.nextTier.price || 0;
-          const priceB = b.info.nextTier.price || 0;
-          // merges gratuitos ficam no topo; entre pagos, maior H/s por RLT primeiro
-          if (priceA === 0 && priceB === 0) return b.gain - a.gain;
-          if (priceA === 0) return -1;
-          if (priceB === 0) return 1;
-          return (b.gain / priceB) - (a.gain / priceA);
-        }
-        // gain (padrão)
-        return b.gain - a.gain;
-      });
-    };
-
-    sortEntries(prontos);
-    sortEntries(faltaPartes);
-    sortEntries(faltaMiners);
-
-    const buildCard = (entry, category) => {
-      const { m, info } = entry;
-      const { nextTier, ingredientes, tiers, userHasLevel, currentPowerHz, resultPowerHz, nextTierAlreadyOwned, currentDbEntry } = info;
-
-      const cardClass = category === 'parts' ? ' parts-only' : category === 'miners' ? ' missing-miners' : '';
-      let html = `<div class="merge-card${cardClass}">`;
-
-      // título
-      const imgUrl = m.catalogData?.imageUrl || nextTier.imageUrl || '';
-      const imgHtml = imgUrl ? `<img src="${imgUrl}" alt="${m.name}" style="width:48px;height:48px;object-fit:contain;vertical-align:middle;margin-right:8px;border-radius:4px;">` : '';
-      const nextLabel = nextTier.type === 'merge' ? (rarityMap[nextTier.level] || 'Lv' + nextTier.level) : (nextTier.rarityGroup?.title || 'Common');
-      html += `<div class="merge-card-title">${imgHtml}${m.name} <span style="opacity:.6;font-size:12px;">${m.level}</span> → <strong>${nextTier.name}</strong> <span style="opacity:.6;font-size:12px;">${nextLabel}</span></div>`;
-
-      // power
-      html += '<div class="merge-card-power">';
-      html += `<span>${Utils.formatPower(currentPowerHz)}</span>`;
-      html += '<span style="opacity:.5;">→</span>';
-      html += `<span><strong>${Utils.formatPower(resultPowerHz)}</strong></span>`;
-      html += `<span class="gain">+${Utils.formatPower(resultPowerHz - currentPowerHz)}</span>`;
-      if (nextTier.bonusPower) {
-        const curBonus  = ((currentDbEntry?.bonusPower  || 0) / 100).toFixed(2);
-        const nextBonus = (nextTier.bonusPower / 100).toFixed(2);
-        const diffBonus = ((nextTier.bonusPower - (currentDbEntry?.bonusPower || 0)) / 100).toFixed(2);
-        html += `<span style="opacity:.65; font-size:11px;">🎯 ${curBonus}% → ${nextBonus}% <strong style="color:#28a745;">+${diffBonus}%</strong> bônus</span>`;
-      }
-      html += '</div>';
-
-      // aviso de duplicado
-      if (nextTierAlreadyOwned) {
-        const { status: dupStatus, count: dupCount } = userHasLevel[nextTier.id] || { status: null, count: 1 };
-        const onde = dupStatus === 'room' ? 'na sala' : 'no inventário';
-        const minerIngredient = ingredientes.find(i => i.tipo === 'miner');
-        const consumeDesc = minerIngredient ? minerIngredient.precisa + '× ' + m.level : '2× ' + m.level;
-        html += `<div class="merge-alert">⚠️ Este merge consome <strong>${consumeDesc}</strong> e produz <strong>1 ${nextLabel}</strong>. Você já tem <strong>${dupCount} ${nextLabel}</strong> ${onde} — ficará com <strong>${dupCount + 1} ${nextLabel}s</strong>.</div>`;
-      }
-
-      // níveis
-      const rarityEmoji = { 'Common': '⚪', 'Uncommon': '🟢', 'Rare': '🔵', 'Epic': '🟣', 'Legendary': '🟡', 'Unreal': '🔴' };
-      html += '<div class="merge-card-section-label">Níveis que você tem</div>';
-      html += '<div class="merge-card-levels">';
-      tiers.forEach(t => {
-        const lbl = t.type === 'merge' ? (rarityMap[t.level] || 'Lv' + t.level) : (t.rarityGroup?.title || 'Common');
-        const { status, count } = userHasLevel[t.id] || { status: null, count: 0 };
-        const isNext = t.id === nextTier.id;
-        const chipClass = status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
-        const statusIcon = status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
-        const rarityDot = rarityEmoji[lbl] || '';
-        const countBadge = count > 0 ? ` <span class="chip-count">×${count}</span>` : '';
-        const statusTip = status === 'inv' ? `No inventário (${count}×)` : status === 'room' ? `Instalada na sala (${count}×)` : 'Não possui';
-        const powerVal = Utils.formatPower(t.power * 1e9);
-        const bonusVal = t.bonusPower ? `${(t.bonusPower / 100).toFixed(2)}%` : '';
-        const costVal = t.price ? `${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? 'gratuito' : '');
-        const partsEncoded = (t.craftRecipe || []).map(r => `${r.name}|${r.rarity || ''}|${r.count}`).join('~');
-        html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}" data-tip-status="${statusTip}" data-tip-power="${powerVal}" data-tip-bonus="${bonusVal}" data-tip-cost="${costVal}" data-tip-parts="${partsEncoded}">${statusIcon} ${rarityDot} ${lbl}${countBadge}</span>`;
-      });
-      html += '</div>';
-
-      // preço do merge
-      if (nextTier.price) {
-        const priceRlt = (nextTier.price / 1000000).toFixed(2);
-        html += `<div style="margin: 6px 0; font-size: 12px;">💰 Custo base: <strong>${priceRlt} RLT</strong> <span style="opacity:.6;">(sem desconto de forja)</span></div>`;
-      }
-
-      // ingredientes
-      html += '<div class="merge-card-section-label">Ingredientes</div>';
-      html += '<div class="merge-card-ingredients">';
-      ingredientes.forEach(ing => {
-        const label = ing.tipo === 'miner'
-          ? `${ing.precisa}× ${ing.nome} (${ing.rarity})`
-          : `${ing.precisa}× ${ing.rarity} ${ing.nome}`;
-        const pct = Math.min(100, ing.precisa > 0 ? Math.round((ing.tem / ing.precisa) * 100) : 0);
-        html += `<div class="merge-ingredient-chip ${ing.ok ? 'ok' : 'nok'}">`;
-        html += `<span class="ing-label">${ing.ok ? '✅' : '❌'} ${label}</span>`;
-        html += `<div class="ing-progress-wrap"><div class="ing-progress-fill" style="width:${pct}%"></div></div>`;
-        html += `<span class="ing-fraction">${ing.tem}/${ing.precisa}</span>`;
-        html += `</div>`;
-      });
-      html += '</div>';
-
-      html += '</div>';
-      return html;
-    };
-
-    const sortMode = this.mergeSortMode;
-    let html = '<div class="merge-planner">';
-    html += '<div class="merge-planner-header">';
-    html += '<h3 style="margin:0;">🔧 Plano de Merges</h3>';
-    html += '<div class="merge-sort-controls">';
-    html += '<span style="font-size:12px;opacity:.6;margin-right:6px;">Ordenar por:</span>';
-    [
-      { key: 'efficiency', label: '⚡ Custo-benefício' },
-      { key: 'gain',       label: '📈 Maior ganho'     },
-      { key: 'cost',       label: '💰 Menor custo'     },
-    ].forEach(({ key, label }) => {
-      const active = sortMode === key;
-      html += `<button class="merge-sort-btn${active ? ' active' : ''}" onclick="UI_Inventario.setMergeSort('${key}')">${label}</button>`;
-    });
-    html += '</div></div>';
-    html += '<div class="merge-planner-groups">';
-
-    html += '<div class="merge-planner-group">';
-    html += `<h4 style="color:#28a745;">✅ Prontos para merge (${prontos.length})</h4>`;
-    if (prontos.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge disponível agora.</p>';
-    html += '<div class="merge-cards">';
-    prontos.forEach(e => { html += buildCard(e, 'ready'); });
-    html += '</div></div>';
-
-    html += '<div class="merge-planner-group">';
-    html += `<h4 style="color:#fd7e14;">🔩 Falta só peças (${faltaPartes.length})</h4>`;
-    if (faltaPartes.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge nessa situação.</p>';
-    html += '<div class="merge-cards">';
-    faltaPartes.forEach(e => { html += buildCard(e, 'parts'); });
-    html += '</div></div>';
-
-    html += '<div class="merge-planner-group">';
-    html += `<h4 style="color:#6c757d;">⛏️ Falta miners (${faltaMiners.length})</h4>`;
-    if (faltaMiners.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge nessa situação.</p>';
-    html += '<div class="merge-cards">';
-    faltaMiners.forEach(e => { html += buildCard(e, 'miners'); });
-    html += '</div></div>';
-
-    html += '</div></div>';
-    return html;
-  },
-
   toggleMergeRow: function(uid) {
     this.expandedMergeRows[uid] = !this.expandedMergeRows[uid];
     this.renderResultado();
-  },
-
-  setMergeSort: function(mode) {
-    this.mergeSortMode = mode;
-    if (typeof Analytics !== 'undefined') Analytics.mergeSortUsado(mode);
-    this.renderResultado();
-  },
-
-  initChipTooltip: function() {
-    if (this._chipTooltipEl) return;
-    const el = document.createElement('div');
-    el.id = 'tier-chip-tooltip';
-    el.style.cssText = 'display:none;position:fixed;z-index:9999;pointer-events:none;';
-    document.body.appendChild(el);
-    this._chipTooltipEl = el;
-
-    const show = (chip, x, y) => {
-      const status  = chip.dataset.tipStatus  || '';
-      const power   = chip.dataset.tipPower   || '';
-      const bonus   = chip.dataset.tipBonus   || '';
-      const cost    = chip.dataset.tipCost    || '';
-      const parts   = chip.dataset.tipParts   || '';
-
-      let inner = `<div class="ctt-row ctt-status">${status}</div>`;
-      if (power) inner += `<div class="ctt-row">⚡ <strong>${power}</strong>${bonus ? ` <span style="opacity:.65;">+${bonus} bônus</span>` : ''}</div>`;
-      if (cost)  inner += `<div class="ctt-row">💰 ${cost}</div>`;
-
-      if (parts) {
-        inner += `<div class="ctt-divider"></div>`;
-        inner += `<div class="ctt-row ctt-label">🧩 Ingredientes para este nível:</div>`;
-        parts.split('~').forEach(p => {
-          const [name, rarity, count] = p.split('|');
-          const rarityStr = rarity ? ` (${rarity})` : '';
-          inner += `<div class="ctt-row ctt-part">• ${count}× ${name}${rarityStr}</div>`;
-        });
-      } else if (chip.dataset.tipPower) {
-        inner += `<div class="ctt-divider"></div>`;
-        inner += `<div class="ctt-row ctt-label" style="opacity:.5;">Sem receita (nível base)</div>`;
-      }
-
-      el.innerHTML = inner;
-      el.style.display = 'block';
-      this._positionChipTooltip(x, y);
-    };
-
-    document.addEventListener('mouseover', e => {
-      const chip = e.target.closest('.merge-level-chip[data-tip-power]');
-      if (chip) show(chip, e.clientX, e.clientY);
-      else el.style.display = 'none';
-    });
-    document.addEventListener('mousemove', e => {
-      if (el.style.display === 'none') return;
-      const chip = e.target.closest('.merge-level-chip[data-tip-power]');
-      if (chip) this._positionChipTooltip(e.clientX, e.clientY);
-      else el.style.display = 'none';
-    });
-  },
-
-  _positionChipTooltip: function(x, y) {
-    const el = this._chipTooltipEl;
-    if (!el) return;
-    const gap = 12;
-    const vw = window.innerWidth, vh = window.innerHeight;
-    el.style.left = '0'; el.style.top = '0'; // reset for measurement
-    const w = el.offsetWidth, h = el.offsetHeight;
-    let left = x + gap;
-    let top  = y - h / 2;
-    if (left + w > vw - 8) left = x - w - gap;
-    if (top < 8) top = 8;
-    if (top + h > vh - 8) top = vh - h - 8;
-    el.style.left = left + 'px';
-    el.style.top  = top  + 'px';
   },
 
   getMergeInfoForMiner: function(miner) {
@@ -781,6 +484,8 @@ const UI_Inventario = {
   mostrarResultado: function(miners, minersFracas) {
     this.minersCached = miners;
     this.minersFracasCached = minersFracas;
+    this._plannerMode = 'atual';
+    this._autoResult = null;
     this.renderResultado();
   },
   
@@ -818,29 +523,31 @@ const UI_Inventario = {
   },
   
   toggleRemoverMiner: function(minerIndex) {
-    const idx = this.simulationState.removedMiners.findIndex(m => m.minerIndex === minerIndex);
-    
-    if (idx > -1) {
-      this.simulationState.removedMiners.splice(idx, 1);
-      Utils.mostrarNotificacao('🔄 Remoção desfeita!', 'info');
-    } else {
-      const userData = State.getUserData();
-      
-      if (!userData || !userData.roomData || !userData.roomData.miners) {
-        Utils.mostrarNotificacao('❌ Erro: Dados do usuário não disponíveis!', 'error');
-        return;
-      }
-      
-      const impacts = Calculations.calcularImpactos(userData);
-      const impact = impacts.find(i => i.minerIndex === minerIndex);
-      
-      if (impact) {
-        this.simulationState.removedMiners.push(impact);
-        Utils.mostrarNotificacao('❌ Miner marcada para remoção!', 'warning');
-      }
+    const userData = State.getUserData();
+
+    if (!userData || !userData.roomData || !userData.roomData.miners) {
+      Utils.mostrarNotificacao('❌ Erro: Dados do usuário não disponíveis!', 'error');
+      return;
     }
-    
-    this.simulationState.active = this.simulationState.removedMiners.length > 0 || this.simulationState.addedMiners.length > 0;
+
+    const miner = userData.roomData.miners[minerIndex];
+    if (miner && SimState._isSetMiner(miner.name)) {
+      Utils.mostrarNotificacao('🔒 Essa miner faz parte de um set e não pode ser removida por aqui.', 'warning');
+      return;
+    }
+
+    if (SimState.estaRemovida(minerIndex)) {
+      const resultado = SimState.desfazerRemocaoPorIndice(userData, minerIndex);
+      if (resultado === 'sem_espaco') {
+        Utils.mostrarNotificacao('⚠️ O rack original está cheio agora — use o Planejador de Sala pra escolher outro lugar.', 'warning');
+      } else {
+        Utils.mostrarNotificacao('🔄 Remoção desfeita!', 'info');
+      }
+    } else {
+      const ok = SimState.removerInstaladaPorIndice(userData, minerIndex);
+      if (ok) Utils.mostrarNotificacao('❌ Miner marcada para remoção!', 'warning');
+    }
+
     this.renderResultado();
   },
   
@@ -853,17 +560,11 @@ const UI_Inventario = {
     
     const miner = this.minersCached[inventoryIndex];
     if (!miner) return;
-    
-    const jaAdicionada = this.simulationState.addedMiners.find(am => 
-      am.name === miner.name && 
-      am.level === miner.level && 
-      Math.abs(am.power - miner.power) < 10
-    );
-    
-    if (jaAdicionada) {
-      const idx = this.simulationState.addedMiners.indexOf(jaAdicionada);
-      this.simulationState.addedMiners.splice(idx, 1);
-      this.simulationState.active = this.simulationState.removedMiners.length > 0 || this.simulationState.addedMiners.length > 0;
+
+    const origemKey = this.getMinerUniqueId(miner);
+    if (SimState.contarPorOrigem(origemKey) > 0) {
+      const userData = State.getUserData();
+      SimState.removerPorOrigem(userData, origemKey);
       this.renderResultado();
       Utils.mostrarNotificacao('🔄 Adição desfeita!', 'info');
       return;
@@ -1159,10 +860,14 @@ const UI_Inventario = {
       return;
     }
     
+    const userData = State.getUserData();
+    if (userData) {
+      this.minersCached.filter(m => m.isManual).forEach(m => {
+        SimState.removerPorOrigem(userData, this.getMinerUniqueId(m));
+      });
+    }
     this.minersCached = this.minersCached.filter(m => !m.isManual);
-    this.simulationState.addedMiners = this.simulationState.addedMiners.filter(m => !m.isManual);
-    this.simulationState.active = this.simulationState.removedMiners.length > 0 || this.simulationState.addedMiners.length > 0;
-    
+
     this.renderResultado();
     Utils.mostrarNotificacao('🗑️ ' + count + ' miner(s) manual(is) removida(s)!', 'success');
   },
@@ -1170,34 +875,19 @@ const UI_Inventario = {
   adicionarMinerComQuantidade: function(inventoryIndex, quantidade) {
     const miner = this.minersCached[inventoryIndex];
     if (!miner) return;
-    
+
     const userData = State.getUserData();
-    
+
     if (!userData || !userData.roomData || !userData.roomData.miners || !userData.powerData || !userData.roomData.racks) {
       Utils.mostrarNotificacao('❌ Erro: Dados do usuário não disponíveis!', 'error');
       return;
     }
-    
-    const impactoCalculado = this.calcularImpactoMultiplo(miner, quantidade);
-    
-    const minerParaAdicionar = {
-      ...miner,
-      quantidadeAdicionada: quantidade,
-      impactoTotal: impactoCalculado.impactoTotal,
-      celulasTotal: impactoCalculado.celulasTotal
-    };
-    
-    this.simulationState.addedMiners.push(minerParaAdicionar);
-    
-    const simResult = this.calcularPowerSimulado(userData);
-    
-    if (simResult.espacoLivre < 0) {
-      Utils.mostrarNotificacao('⚠️ Faltam ' + Math.abs(simResult.espacoLivre) + ' células!', 'warning');
-    } else {
-      Utils.mostrarNotificacao('✅ ' + quantidade + ' unidade' + (quantidade > 1 ? 's' : '') + ' adicionada' + (quantidade > 1 ? 's' : '') + '!', 'success');
-    }
-    
-    this.simulationState.active = true;
+
+    const origemKey = this.getMinerUniqueId(miner);
+    SimState.adicionarAoBanco(userData, miner, quantidade, origemKey);
+
+    Utils.mostrarNotificacao('✅ ' + quantidade + ' unidade' + (quantidade > 1 ? 's' : '') + ' adicionada' + (quantidade > 1 ? 's' : '') + ' ao banco do Planejador de Sala! Vá lá pra escolher em qual rack encaixar.', 'success');
+
     this.renderResultado();
   },
   
@@ -1212,9 +902,8 @@ const UI_Inventario = {
   },
 
   limparSimulacao: function() {
-    this.simulationState.removedMiners = [];
-    this.simulationState.addedMiners = [];
-    this.simulationState.active = false;
+    const userData = State.getUserData();
+    if (userData) SimState.resetar(userData);
     this.renderResultado();
     Utils.mostrarNotificacao('🔄 Simulação limpa!', 'info');
   },
@@ -1223,6 +912,8 @@ const UI_Inventario = {
     this.limparSimulacao();
   },
   
+  // Delega pro SimState (compartilhado com o Planejador de Sala), que calcula o poder
+  // simulado de forma precisa por rack — não mais pela aproximação de bônus médio.
   calcularPowerSimulado: function(userData) {
     if (!userData || !userData.roomData || !userData.roomData.miners || !userData.powerData || !userData.roomData.racks) {
       return {
@@ -1235,13 +926,15 @@ const UI_Inventario = {
         espacoLivre: 0
       };
     }
-    
-    const baseAtual = userData.roomData.miners.reduce((s, m) => s + m.power, 0);
-    const bonusPercentualAtual = userData.powerData.bonus_percent / 10000;
+
+    SimState.garantirInicializado(userData);
+    SimState.recalcular(userData);
+
     const poderAtual = userData.powerData.current_power;
-    
-    const celulasOcupadas = userData.roomData.miners.reduce((s, m) => s + (m.width || 2), 0);
-    
+    const novoPoderTotal = SimState.poderEstimado;
+
+    const celulasOcupadas = Object.values(SimState.rackAssignments).flat().reduce((s, m) => s + SimState._cellsOf(m), 0);
+
     let capacidadeTotal = 0;
     if (userData.roomData.room_levels && Array.isArray(userData.roomData.room_levels)) {
       capacidadeTotal = userData.roomData.room_levels.reduce((s, r) => s + (r === 3 ? 60 : r === 2 ? 36 : 18), 0);
@@ -1252,36 +945,28 @@ const UI_Inventario = {
     } else {
       capacidadeTotal = celulasOcupadas;
     }
-    
-    let powerRemoved = 0;
-    let celulasLiberadas = 0;
-    
-    this.simulationState.removedMiners.forEach(rm => {
-      powerRemoved += rm.impact;
-      celulasLiberadas += (rm.width || 2);
-    });
-    
-    let powerAdded = 0;
-    let celulasOcupadasNovas = 0;
-    
-    this.simulationState.addedMiners.forEach(am => {
-      powerAdded += am.impactoTotal;
-      celulasOcupadasNovas += am.celulasTotal;
-    });
-    
-    const novoPoderTotal = poderAtual - powerRemoved + powerAdded;
-    const novasOcupadas = celulasOcupadas - celulasLiberadas + celulasOcupadasNovas;
-    const espacoLivre = capacidadeTotal - novasOcupadas;
-    
+
+    const espacoLivre = capacidadeTotal - celulasOcupadas;
+
     return {
       poderAtual,
       novoPoderTotal,
       diferencaPower: novoPoderTotal - poderAtual,
       percentualMudanca: ((novoPoderTotal - poderAtual) / poderAtual) * 100,
       capacidadeTotal,
-      celulasOcupadas: novasOcupadas,
+      celulasOcupadas,
       espacoLivre
     };
+  },
+
+  // Contagem de miners removidas/adicionadas na simulação atual, pros badges de resumo.
+  _contarSimulacao: function() {
+    const removidas = SimState.banco.filter(m => m._minerIndexOriginal != null).length;
+    const origens = new Set();
+    SimState.banco.concat(Object.values(SimState.rackAssignments).flat()).forEach(m => {
+      if (m._origemKey) origens.add(m._origemKey);
+    });
+    return { removidas, adicionadas: origens.size };
   },
   
   renderResultado: function() {
@@ -1437,7 +1122,8 @@ const UI_Inventario = {
     });
     
     let html = '<h3>Análise Completa</h3>';
-    
+    html += '<div id="roomPlannerInline"></div>';
+
     const totalUnidades = this.minersCached.reduce((sum, m) => sum + m.quantity, 0);
     const minersUnicas = this.minersCached.length;
     
@@ -1498,8 +1184,9 @@ const UI_Inventario = {
     let salaCheia = espacoLivre <= 0;
     
     // PAINEL DE SIMULAÇÃO
-    if (this.simulationState.active) {
+    if (SimState.ativo) {
       const simResult = this.calcularPowerSimulado(userData);
+      const simCounts = this._contarSimulacao();
       espacoLivre = simResult.espacoLivre;
       salaCheia = espacoLivre <= 0;
       
@@ -1542,25 +1229,29 @@ const UI_Inventario = {
       html += '</div>';
       
       // Sumário de mudanças (se houver)
-      if (this.simulationState.removedMiners.length > 0 || this.simulationState.addedMiners.length > 0) {
+      if (simCounts.removidas > 0 || simCounts.adicionadas > 0) {
         html += '<div style="margin-top: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">';
 
-        if (this.simulationState.removedMiners.length > 0) {
+        if (simCounts.removidas > 0) {
           html += '<div style="background: rgba(220,53,69,0.1); border-left: 4px solid #dc3545; padding: 12px; border-radius: 4px;">';
-          html += '<p style="margin: 0; font-size: 12px; color: #dc3545;"><strong>🗑️ Removidas:</strong> ' + this.simulationState.removedMiners.length + '</p>';
+          html += '<p style="margin: 0; font-size: 12px; color: #dc3545;"><strong>🗑️ Removidas:</strong> ' + simCounts.removidas + '</p>';
           html += '</div>';
         }
 
-        if (this.simulationState.addedMiners.length > 0) {
+        if (simCounts.adicionadas > 0) {
           html += '<div style="background: rgba(40,167,69,0.1); border-left: 4px solid #28a745; padding: 12px; border-radius: 4px;">';
-          html += '<p style="margin: 0; font-size: 12px; color: #28a745;"><strong>➕ Adicionadas:</strong> ' + this.simulationState.addedMiners.length + '</p>';
+          html += '<p style="margin: 0; font-size: 12px; color: #28a745;"><strong>➕ Adicionadas:</strong> ' + simCounts.adicionadas + '</p>';
           html += '</div>';
         }
 
         html += '</div>';
       }
 
-      html += '<button onclick="UI_Inventario.limparSimulacao()" style="width: 100%; margin-top: 20px; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;">🔄 Limpar Simulação</button>';
+      html += '<p style="margin: 15px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.85);">📍 Miners adicionadas ficam no banco do Planejador de Sala, esperando você escolher o rack.</p>';
+      html += '<div style="display: flex; gap: 10px; margin-top: 12px;">';
+      html += '<button onclick="document.getElementById(\'roomPlannerInline\').scrollIntoView({behavior:\'smooth\'})" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">🏠 Ver no Planejador de Sala</button>';
+      html += '<button onclick="UI_Inventario.limparSimulacao()" style="flex: 1; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;">🔄 Limpar Simulação</button>';
+      html += '</div>';
       html += '</div>';
     }
     
@@ -1704,7 +1395,7 @@ if (minersFracas && minersFracas.length > 0) {
   for (let i = 0; i < minersFracas.length; i++) {
     const m = minersFracas[i];
     const cor = i < 10 ? 'low-impact' : (i < 30 ? 'medium-impact' : 'high-impact');
-    const isRemoved = this.simulationState.removedMiners.some(rm => rm.minerIndex === m.minerIndex);
+    const isRemoved = SimState.estaRemovida(m.minerIndex);
     const trStyle = isRemoved ? 'opacity: 0.5; text-decoration: line-through;' : '';
     
     html += '<tr class="' + cor + '" style="' + trStyle + '">';
@@ -1789,15 +1480,8 @@ html += '</tr>';
       
       const vendeText = m.canBeSold === true ? '✅' : (m.canBeSold === false ? '❌' : '❓');
       
-      const isAdded = this.simulationState.addedMiners.some(am => 
-        am.name === m.name && 
-        am.level === m.level && 
-        Math.abs(am.power - m.power) < 10
-      );
-      
-      const qtyAdicionada = isAdded ? this.simulationState.addedMiners.find(am => 
-        am.name === m.name && am.level === m.level && Math.abs(am.power - m.power) < 10
-      ).quantidadeAdicionada : 0;
+      const qtyAdicionada = SimState.contarPorOrigem(this.getMinerUniqueId(m));
+      const isAdded = qtyAdicionada > 0;
       
       const trStyle = isAdded ? 'background: #e8f5e8;' : '';
       
@@ -1934,10 +1618,14 @@ html += '</tr>';
     html += '</div>';
     html += '</div>';
 
-    html += this.renderMergePlanner();
+    html += '<div class="inv-legacy-notice">🔀 O Plano de Merges agora tem aba própria: <button onclick="UI_Tabs.switchTo(\'minermerge\')" class="inv-legacy-notice-btn">Ir para MinerMerge</button></div>';
 
     div.innerHTML = html;
-    this.initChipTooltip();
+    ChipTooltip.init();
+
+    if (typeof UI_RoomPlanner !== 'undefined') {
+      UI_RoomPlanner.mostrar(State.getUserData(), 'roomPlannerInline');
+    }
 
     // Event listeners
     const inventoryButtons = div.querySelectorAll('button[data-minerid]');
@@ -1966,7 +1654,8 @@ html += '</tr>';
     if (this.minersCached && this.minersCached.length > 0) {
       this.renderResultado();
     }
-  }
+  },
+
 };
 
 window.UI_Inventario = UI_Inventario;

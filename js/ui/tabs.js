@@ -127,6 +127,17 @@ else if (targetTab === 'inventario') {
   }
 }
         
+        // MinerMerge
+        else if (targetTab === 'minermerge') {
+          console.log('🎯 Aba: MinerMerge');
+          if (typeof UI_MinerMerge !== 'undefined' && typeof UI_MinerMerge.mostrar === 'function') {
+            console.log('✅ Chamando UI_MinerMerge.mostrar()');
+            UI_MinerMerge.mostrar();
+          } else {
+            console.error('❌ UI_MinerMerge não está definido!');
+          }
+        }
+
         // Racks
         else if (targetTab === 'racks') {
           console.log('🎯 Aba: Racks');

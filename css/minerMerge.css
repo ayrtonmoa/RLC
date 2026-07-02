@@ -1,0 +1,116 @@
+/* ========== MINER MERGE (Plano de Merges) ========== */
+
+/* ===== Plano de Merges ===== */
+.merge-planner {
+  margin-top: 30px;
+}
+.merge-planner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.merge-sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.merge-sort-btn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.merge-sort-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+.merge-sort-btn.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: #fff;
+  font-weight: 600;
+}
+body.dark-mode .merge-sort-btn {
+  background: var(--bg-secondary);
+}
+body.dark-mode .merge-sort-btn.active {
+  background: #667eea;
+  color: #fff;
+}
+.merge-planner-groups {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 768px) {
+  .merge-planner-groups { grid-template-columns: 1fr; }
+}
+.merge-planner-group h4 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+}
+.merge-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.merge-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 14px;
+  border-left: 4px solid #28a745;
+}
+.merge-card.parts-only {
+  border-left-color: #fd7e14;
+}
+.merge-card.missing-miners {
+  border-left-color: #6c757d;
+}
+body.dark-mode .merge-card {
+  background: var(--bg-secondary);
+}
+.merge-card-title {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.merge-card-power {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.merge-card-power .gain {
+  color: #28a745;
+  font-weight: bold;
+}
+.merge-card-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+.merge-card-levels {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.merge-card-ingredients {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
