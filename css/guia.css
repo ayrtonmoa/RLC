@@ -112,6 +112,15 @@
   line-height: 1.5;
 }
 
+.guia-tl-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.guia-tl-list li {
+  margin: 3px 0;
+}
+
 .guia-tag {
   display: inline-block;
   font-size: 9px;

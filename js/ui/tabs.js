@@ -138,6 +138,17 @@ else if (targetTab === 'inventario') {
           }
         }
 
+        // SmartRoom
+        else if (targetTab === 'roomplanner') {
+          console.log('🎯 Aba: SmartRoom');
+          if (typeof UI_RoomPlanner !== 'undefined' && typeof UI_RoomPlanner.mostrar === 'function') {
+            console.log('✅ Chamando UI_RoomPlanner.mostrar()');
+            UI_RoomPlanner.mostrar();
+          } else {
+            console.error('❌ UI_RoomPlanner não está definido!');
+          }
+        }
+
         // Racks
         else if (targetTab === 'racks') {
           console.log('🎯 Aba: Racks');

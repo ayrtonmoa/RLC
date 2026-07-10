@@ -1,8 +1,12 @@
-// js/ui/roomPlanner.js - Planejador de Sala: layout dos racks + auto-otimizacao
+// js/ui/roomPlanner.js - SmartRoom: layout dos racks + auto-otimizacao
 
 const UI_RoomPlanner = {
+  // Instância PRÓPRIA de simulação — antes era o singleton global SimState, compartilhado
+  // com o Inventário. Agora cada aba tem a sua: mexer numa não afeta a outra.
+  sim: criarSimState(),
   _plannerMode: 'atual',
   _selectedSlot: null,
+  _acoesExpandido: false,
 
   mostrar: function(user, containerId) {
     const div = document.getElementById(containerId || 'roomplanner');
@@ -27,8 +31,8 @@ const UI_RoomPlanner = {
     this._restaurarScrollSala();
   },
 
-  // Sem animação — evita o "pulo" visual toda vez que a aba Inventário re-renderiza
-  // (ex: depois de qualquer ação na tabela) e o Planejador de Sala é redesenhado junto.
+  // Sem animação — evita o "pulo" visual toda vez que o próprio SmartRoom
+  // re-renderiza (ex: depois de mover uma miner ou rodar o Auto-Otimizar).
   _restaurarScrollSala: function() {
     const viewport = document.getElementById('roomPlannerSalasViewport');
     if (!viewport) return;
@@ -87,12 +91,12 @@ const UI_RoomPlanner = {
 
     html += '<div class="room-planner-header">';
     html += '<div class="room-planner-title-row">';
-    html += '<h3 class="room-planner-title">🏠 Planejador de Sala</h3>';
+    html += '<h3 class="room-planner-title">🏠 SmartRoom</h3>';
     html += '<div class="room-planner-power-badge">⚡ Poder atual: <strong>' + Utils.formatPower(userData.powerData.current_power * 1e9) + '</strong></div>';
     html += '</div>';
     html += '<div class="room-planner-actions">';
     html += '<button onclick="UI_RoomPlanner.executarAutoOtimizacao()" class="room-planner-auto-btn">⚡ Auto-Otimizar <span class="planner-pool-count">' + poolSize + ' miners disponíveis</span></button>';
-    if (SimState.ativo) html += '<button onclick="UI_RoomPlanner.resetarSimulacao()" class="room-planner-reset-btn" title="Descarta remoções/adições/trocas e volta pro estado real">🔄 Resetar simulação</button>';
+    if (this.sim.ativo) html += '<button onclick="UI_RoomPlanner.resetarSimulacao()" class="room-planner-reset-btn" title="Descarta remoções/adições/trocas e volta pro estado real">🔄 Resetar simulação</button>';
     html += '</div>';
     html += '</div>';
 
@@ -111,15 +115,7 @@ const UI_RoomPlanner = {
     return '<div id="roomPlannerContainer">' + html + '</div>';
   },
 
-  // O Planejador de Sala vive embutido dentro da aba Inventário. Qualquer mudança
-  // aqui (trocar miner, mover pro banco, etc) precisa refazer a tabela do Inventário
-  // também — senão os badges de removida/adicionada ficam desatualizados até o usuário
-  // mexer em algo que force um re-render da tabela.
   _rerender: function() {
-    if (typeof UI_Inventario !== 'undefined' && UI_Inventario.minersCached && document.getElementById('roomPlannerInline')) {
-      UI_Inventario.renderResultado();
-      return;
-    }
     const userData = State.getUserData();
     const container = document.getElementById('roomPlannerContainer');
     if (container) container.outerHTML = this.render(userData);
@@ -185,6 +181,16 @@ const UI_RoomPlanner = {
     });
     const allMinersIndexed = allMiners.map((m, i) => ({ ...m, _impact: impactPorIndex[i], _primeira: primeiraPorIndex[i] }));
 
+    // Versão normalizada (mesmo shape usado no pool simulado) só pra calcular o impacto real
+    // de cada rack (_poderBrutoRecalculado espera name/power/bonus_percent/_rackId).
+    const poolNormalizado = allMiners.map(m => ({
+      name: m.name,
+      level: m.level_label || m.level,
+      power: m.power,
+      bonus_percent: m.bonus_percent || 0,
+      _rackId: m.placement?.user_rack_id,
+    }));
+
     const salaMap = this._agruparRacksPorSala(racks);
     return this._renderSalasCarousel(salaMap, (sala, salaNumero) => {
       let html = '';
@@ -195,7 +201,7 @@ const UI_RoomPlanner = {
         html += '<div class="room-planner-racks">';
         linhaMap[y].forEach(rack => {
           const miners = allMinersIndexed.filter(m => m.placement?.user_rack_id === rack._id);
-          html += this._renderRackCard(rack, miners, false, numeroPorRackId[rack._id]);
+          html += this._renderRackCard(rack, miners, false, numeroPorRackId[rack._id], poolNormalizado, racks);
         });
         html += '</div>';
       });
@@ -205,20 +211,32 @@ const UI_RoomPlanner = {
 
   _renderSalaOtimizada: function(userData) {
     const racks = userData.roomData.racks || [];
-    SimState.garantirInicializado(userData);
-    if (SimState.poderEstimado == null) SimState.recalcular(userData);
-    const result = SimState;
+    this.sim.garantirInicializado(userData);
+    if (this.sim.poderEstimado == null) this.sim.recalcular(userData);
+    const result = this.sim;
     const poderAtual = userData.powerData.current_power;
     const ganho = result.poderEstimado - poderAtual;
     const ganhoColor = ganho >= 0 ? '#4caf50' : '#f44336';
     const ganhoStr = (ganho >= 0 ? '+' : '') + Utils.formatPower(ganho * 1e9);
     const ganhoPercent = ((ganho / poderAtual) * 100).toFixed(2);
 
+    const bonusAtualPercent = (userData.powerData.bonus_percent || 0) / 100;
+    const bonusAtualValor = userData.powerData.bonus || 0;
+    const bonusEstimado = this._calcularBonusEstimado(Object.values(result.rackAssignments).flat(), racks, userData);
+    const bonusDeltaPercent = bonusEstimado.percentual - bonusAtualPercent;
+    const bonusDeltaColor = bonusDeltaPercent >= 0 ? '#4caf50' : '#f44336';
+
     let html = '<div class="room-planner-comparison">';
     html += '<div class="comparison-item"><span class="comparison-label">Atual</span><span class="comparison-value">' + Utils.formatPower(poderAtual * 1e9) + '</span></div>';
     html += '<div class="comparison-arrow">→</div>';
     html += '<div class="comparison-item"><span class="comparison-label">Estimado</span><span class="comparison-value">' + Utils.formatPower(result.poderEstimado * 1e9) + '</span></div>';
     html += '<div class="comparison-delta" style="color:' + ganhoColor + '">' + ganhoStr + ' (' + (ganho >= 0 ? '+' : '') + ganhoPercent + '%)</div>';
+    html += '</div>';
+    html += '<div class="room-planner-comparison room-planner-comparison-bonus">';
+    html += '<div class="comparison-item"><span class="comparison-label">Bônus atual</span><span class="comparison-value">+' + bonusAtualPercent.toFixed(2) + '% <small>(' + Utils.formatPower(bonusAtualValor * 1e9) + ')</small></span></div>';
+    html += '<div class="comparison-arrow">→</div>';
+    html += '<div class="comparison-item"><span class="comparison-label">Bônus estimado</span><span class="comparison-value">+' + bonusEstimado.percentual.toFixed(2) + '% <small>(' + Utils.formatPower(bonusEstimado.valor * 1e9) + ')</small></span></div>';
+    html += '<div class="comparison-delta" style="color:' + bonusDeltaColor + '">' + (bonusDeltaPercent >= 0 ? '+' : '') + bonusDeltaPercent.toFixed(2) + '%</div>';
     html += '</div>';
     html += '<p class="planner-pool-info">' + result.totalPlaced + ' miners alocadas de ' + result.totalPool + ' disponíveis</p>';
     html += '<p class="planner-edit-hint">✏️ Clique numa miner e depois em outra célula pra trocar, ou pegue uma miner do banco abaixo e clique num rack pra encaixar.</p>';
@@ -235,7 +253,7 @@ const UI_RoomPlanner = {
         inner += '<div class="room-planner-racks">';
         linhaMap[y].forEach(rack => {
           const miners = result.rackAssignments[rack._id] || [];
-          inner += this._renderRackCard(rack, miners, true, numeroPorRackId[rack._id]);
+          inner += this._renderRackCard(rack, miners, true, numeroPorRackId[rack._id], Object.values(result.rackAssignments).flat(), racks);
         });
         inner += '</div>';
       });
@@ -243,6 +261,7 @@ const UI_RoomPlanner = {
     });
 
     html += this._renderBanco();
+    html += this._renderListaDeAcoes(userData);
     return html;
   },
 
@@ -321,7 +340,13 @@ const UI_RoomPlanner = {
     return m.width || m.cells || 2;
   },
 
-  _renderRackCard: function(rack, miners, editable, numero) {
+  // poolCompleto/racksTodos (opcionais): quando passados, calcula o IMPACTO REAL do rack —
+  // quanto o poder total simulado cai se todas as miners desse rack saíssem de vez — em vez
+  // de só "base × (1+bônus%)" isolado. Reaproveita a mesma _poderBrutoRecalculado usada em
+  // todo o resto do otimizador, que já soma bônus de coleção + bônus de rack + bônus de SET
+  // (ver _calcularBonusDeSetsNoPool) — então se esse rack tiver a última peça de um set
+  // instalada, o impacto real mostrado já desconta a faixa de bônus do set que se perderia.
+  _renderRackCard: function(rack, miners, editable, numero, poolCompleto, racksTodos) {
     const bonusPercent = (rack.bonus || 0) / 100;
     const width = rack.rack_info?.width || 2;
     const height = rack.rack_info?.height || 3;
@@ -333,12 +358,21 @@ const UI_RoomPlanner = {
     const poderComBonusRack = poderBaseRack * (1 + bonusPercent / 100);
     const extraRack = 'Base: ' + Utils.formatPower(poderBaseRack * 1e9) + " <span style='opacity:.6;'>(sem bônus)</span>";
 
+    let impactoAttr = '';
+    if (poolCompleto && racksTodos && miners.length) {
+      const poderComRack = this._poderBrutoRecalculado(poolCompleto, racksTodos);
+      const poderSemRack = this._poderBrutoRecalculado(poolCompleto.filter(m => m._rackId !== rack._id), racksTodos);
+      const impactoRack = poderComRack - poderSemRack;
+      impactoAttr = ' data-tip-impact="' + (impactoRack >= 0 ? '+' : '') + Utils.formatPower(impactoRack * 1e9) + '"';
+    }
+
     let html = '<div class="room-planner-rack">';
     if (numero) html += '<div class="room-planner-rack-numero" title="' + rack.name + '">R' + numero + '</div>';
     html += '<div class="room-planner-rack-header"'
       + ' data-tip-status="' + rack.name + '"'
       + ' data-tip-power="' + Utils.formatPower(poderComBonusRack * 1e9) + '"'
       + ' data-tip-bonus="' + bonusPercent.toFixed(2) + '%"'
+      + impactoAttr
       + ' data-tip-extra="' + extraRack + '">';
     html += '<span class="rack-bonus' + (bonusPercent > 0 ? ' bonus-positive' : '') + '">' + (bonusPercent > 0 ? '+' : '') + bonusPercent.toFixed(2) + '%</span>';
     html += '<span class="rack-slots">' + (livres > 0 ? livres + ' livre' + (livres > 1 ? 's' : '') : 'cheio') + '</span>';
@@ -346,13 +380,29 @@ const UI_RoomPlanner = {
 
     html += '<div class="room-planner-grid" style="--rack-w:' + width + ';">';
 
-    const lista = editable ? miners : [...miners].sort((a, b) => {
-      const ay = a.placement?.y ?? 0, by = b.placement?.y ?? 0;
+    // Sempre ordena pela posição física original (y depois x) — inclusive na Simulação, senão
+    // as miners aparecem na ordem "de array" (que não bate com a posição real) e parecem ter
+    // trocado de lugar sozinhas mesmo sem nenhuma edição de verdade. Miners sem posição
+    // conhecida (recém adicionadas/movidas pelo otimizador) vão pro fim da lista (Infinity),
+    // sem empurrar as que já tinham lugar certo.
+    //
+    // CRÍTICO: ordena os ÍNDICES originais, não os objetos — se ordenássemos uma cópia dos
+    // objetos, a posição na lista ordenada (idx) deixaria de bater com a posição real no
+    // array `miners`, e o clique de remover/mover (que usa esse idx como data-slot-index)
+    // acabava agindo sobre OUTRA miner (bug real: clicar em "remover Spade Note" removia a
+    // Diamond Note ou a Club Note, que estavam em outra posição do array).
+    const ordemExibicao = miners.map((_, i) => i).sort((ia, ib) => {
+      const a = miners[ia], b = miners[ib];
+      const ay = a.placement?.y ?? a._placementY ?? Infinity;
+      const by = b.placement?.y ?? b._placementY ?? Infinity;
       if (ay !== by) return ay - by;
-      return (a.placement?.x ?? 0) - (b.placement?.x ?? 0);
+      const ax = a.placement?.x ?? a._placementX ?? Infinity;
+      const bx = b.placement?.x ?? b._placementX ?? Infinity;
+      return ax - bx;
     });
 
-    lista.forEach((m, idx) => {
+    ordemExibicao.forEach(idx => {
+      const m = miners[idx];
       const level = m.level_label || m.level || '';
       const w = Math.min(m.width || m.cells || 2, width);
       const bonus = ((m.bonus_percent ?? (m.bonus != null ? m.bonus * 100 : 0)) / 100);
@@ -417,7 +467,184 @@ const UI_RoomPlanner = {
     const rackFactorMap = {};
     racks.forEach(r => rackFactorMap[r._id] = (r.bonus || 0) / 10000);
     const rackBonus = pool.reduce((s, m) => s + m.power * (rackFactorMap[m._rackId] || 0), 0);
-    return base + colecaoBonus + rackBonus;
+    const bonusDeSets = this._calcularBonusDeSetsNoPool(pool, base, racks);
+    return base + colecaoBonus + rackBonus + bonusDeSets.percent + bonusDeSets.flat;
+  },
+
+  // Uma peça de SetsData "bate" com uma miner real por nome + poder (mesma tolerância usada
+  // em UI_Inventario.getTotalMinerCount) — não dá pra confiar em nível/label porque o
+  // SetsData usa level numérico (0,1,2...) e a API usa level_label ("Common", "Legendary"...),
+  // formatos incompatíveis. Poder é bem mais específico por tier e evita esse problema.
+  _matchSetPiece: function(setMiner, minerLike) {
+    if (!minerLike || !minerLike.name) return false;
+    if (setMiner.title.toLowerCase() !== minerLike.name.toLowerCase()) return false;
+    const tolerancia = Math.max(0.001, setMiner.power * 0.01);
+    return Math.abs((minerLike.power || 0) - setMiner.power) < tolerancia;
+  },
+
+  // Acha, dentre os racks instalados, quais são do TIPO temático de um set (por nome — ex:
+  // "Royal Rack 8" pro Royal Set). Pode haver mais de um rack do mesmo tipo. Retorna null se
+  // o set não tem rack próprio nos dados (não deveria acontecer, mas por garantia).
+  _racksDoSet: function(set, racksInstalados) {
+    if (!set.rack || !set.rack.title) return null;
+    const ids = new Set();
+    (racksInstalados || []).forEach(r => {
+      if (r.name && r.name.toLowerCase() === set.rack.title.toLowerCase()) ids.add(r._id);
+    });
+    return ids;
+  },
+
+  // Status de UM set dado um conjunto de miners "instaladas" (ou candidatas a instalar):
+  // quantas peças distintas do set batem, e se a faixa MÁXIMA do set está ativa.
+  //
+  // Confirmado com 3 testes reais (remover Spade Note sozinha, Spade+Heart, e só Heart —
+  // sempre a partir das 4 peças completas): em NENHUM caso a faixa 1 (que só exige 2 peças)
+  // ficou ativa mesmo sobrando 2 ou 3 peças — o bônus sempre foi de +45% pra 0% inteiro, nunca
+  // pra +25%. Ou seja, o bônus de set NÃO é uma escada onde qualquer faixa alcançada conta —
+  // só a faixa MÁXIMA do set é avaliada, e ela é tudo-ou-nada: só ativa com TODAS as peças que
+  // ela exige, e cai pra ZERO com qualquer peça faltando (sem faixa intermediária de consolação).
+  //
+  // O bônus de set só conta miners instaladas ESPECIFICAMENTE no rack temático do próprio set
+  // (ex: as miners do Royal Set só contam se estiverem dentro do rack "Royal Rack 8" — em
+  // qualquer outro rack, mesmo instaladas na sala, não valem nada pro set). Por isso, quando
+  // `racksDoSet` é passado, filtra `minersInstaladas` pelo `_rackId` antes de contar — passe
+  // `null`/omita quando quiser ignorar essa exigência (ex: pra saber se o usuário "possui" a
+  // peça em algum lugar, sala ou inventário, sem se importar onde).
+  _statusDoSet: function(set, minersInstaladas, racksDoSet) {
+    const elegiveis = racksDoSet ? minersInstaladas.filter(m => racksDoSet.has(m._rackId)) : minersInstaladas;
+    const pecasInstaladas = set.miners.filter(sm => elegiveis.some(m => this._matchSetPiece(sm, m)));
+    const qtd = pecasInstaladas.length;
+    const faixaMaxima = set.levels.reduce((max, lvl) => (!max || lvl.condition_amount > max.condition_amount) ? lvl : max, null);
+    const tierAtivo = (faixaMaxima && qtd >= faixaMaxima.condition_amount) ? faixaMaxima : null;
+    return { set, qtd, tierAtivo, protegidoMinimo: tierAtivo ? tierAtivo.condition_amount : 0, pecasInstaladas };
+  },
+
+  // Bônus de TODOS os sets aplicável a um pool (instalado real ou simulado) — cada set ativo
+  // contribui ou um % sobre o poder base (percent_power, mesma mecânica do bônus de coleção
+  // normal) ou um valor fixo em Gh/s (bonus_power) — nunca os dois na mesma faixa. Precisa de
+  // `racks` (os racks reais da sala) pra achar qual(is) é o rack temático de cada set.
+  _calcularBonusDeSetsNoPool: function(pool, baseTotal, racks) {
+    let percent = 0, flat = 0;
+    if (typeof SetsData === 'undefined') return { percent, flat };
+    SetsData.sets.forEach(set => {
+      const racksDoSet = this._racksDoSet(set, racks || []);
+      const status = this._statusDoSet(set, pool, racksDoSet);
+      if (!status.tierAtivo) return;
+      if (status.tierAtivo.percent_power) percent += baseTotal * (status.tierAtivo.percent_power / 10000);
+      if (status.tierAtivo.bonus_power) flat += status.tierAtivo.bonus_power;
+    });
+    return { percent, flat };
+  },
+
+  // Quanto poder REAL cada faixa de um set vale hoje, e quanto se perde caindo pra cada
+  // faixa mais baixa (ou saindo do set inteiro) — a base de referência é o poder base
+  // instalado agora, então os valores em Gh/s são reais, não uma % abstrata.
+  _progressoDeSets: function(userData) {
+    if (typeof SetsData === 'undefined') return [];
+    const racks = userData.roomData.racks || [];
+    const roomMiners = userData.roomData.miners || [];
+    const invMiners = (typeof UI_Inventario !== 'undefined' && UI_Inventario.minersCached) || [];
+
+    const instaladas = roomMiners.map(m => ({ name: m.name, power: m.power, _rackId: m.placement?.user_rack_id }));
+    const noInventario = [];
+    invMiners.forEach(m => {
+      for (let i = 0; i < (m.quantity || 1); i++) noInventario.push({ name: m.name, power: m.power });
+    });
+
+    const baseAtual = roomMiners.reduce((s, m) => s + m.power, 0);
+    const valorDaFaixa = lvl => !lvl ? 0 : (lvl.percent_power ? baseAtual * (lvl.percent_power / 10000) : lvl.bonus_power);
+
+    return SetsData.sets.map(set => {
+      const racksDoSet = this._racksDoSet(set, racks);
+      const temRackDoSet = !!(racksDoSet && racksDoSet.size);
+
+      const statusInstalado = this._statusDoSet(set, instaladas, racksDoSet);
+      // "posse total" ignora rack de propósito — é só pra saber se existe alguma unidade a
+      // mais (na sala, fora do rack certo, ou no inventário) que poderia ser movida/instalada
+      // pra contar de verdade.
+      const statusPosseTotal = this._statusDoSet(set, instaladas.concat(noInventario), null);
+      if (statusPosseTotal.qtd === 0) return null;
+
+      const niveisOrdenados = [...set.levels].sort((a, b) => a.condition_amount - b.condition_amount);
+      const valorAtual = valorDaFaixa(statusInstalado.tierAtivo);
+
+      const faixas = niveisOrdenados.map(lvl => ({
+        condition_amount: lvl.condition_amount,
+        valor: valorDaFaixa(lvl),
+        ativa: statusInstalado.tierAtivo === lvl,
+        alcancada: statusInstalado.qtd >= lvl.condition_amount,
+      }));
+
+      const proximaFaixa = niveisOrdenados.find(lvl => lvl.condition_amount > statusInstalado.qtd);
+
+      return {
+        set,
+        rackTitle: set.rack ? set.rack.title : null,
+        temRackDoSet,
+        qtdInstalada: statusInstalado.qtd,
+        totalPecas: set.miners.length,
+        temExtraForaDoRackOuInventario: statusPosseTotal.qtd > statusInstalado.qtd,
+        valorAtual,
+        faixas,
+        proximaFaixa: proximaFaixa ? {
+          faltam: proximaFaixa.condition_amount - statusInstalado.qtd,
+          ganho: valorDaFaixa(proximaFaixa) - valorAtual,
+        } : null,
+      };
+    }).filter(Boolean);
+  },
+
+  _renderProgressoSets: function(userData) {
+    const progresso = this._progressoDeSets(userData);
+    if (!progresso.length) return '';
+
+    let html = '<div class="sets-progresso">';
+    html += '<h3 class="sets-progresso-title">🎁 Progresso dos Sets</h3>';
+
+    progresso.forEach(p => {
+      html += '<div class="sets-progresso-card">';
+      html += '<div class="sets-progresso-header">';
+      html += '<strong>' + p.set.title + '</strong>';
+      html += '<span class="sets-progresso-count">' + p.qtdInstalada + '/' + p.totalPecas + ' peças no rack "' + p.rackTitle + '"' + (p.temExtraForaDoRackOuInventario ? ' (+ peças fora dele/no inventário)' : '') + '</span>';
+      html += '</div>';
+      if (!p.temRackDoSet) {
+        html += '<div class="sets-faixa-perda" style="margin-bottom:8px;">⚠️ Você ainda não tem o rack "' + p.rackTitle + '" instalado — sem ele, nenhuma peça conta pro bônus deste set, mesmo que estejam instaladas em outros racks.</div>';
+      }
+
+      html += '<div class="sets-progresso-faixas">';
+      p.faixas.forEach(f => {
+        const perda = p.valorAtual - f.valor;
+        html += '<div class="sets-faixa-linha' + (f.ativa ? ' sets-faixa-ativa' : '') + '">';
+        html += '<span class="sets-faixa-cond">' + f.condition_amount + '+ peças</span>';
+        html += '<span class="sets-faixa-valor">' + Utils.formatPower(f.valor * 1e9) + '</span>';
+        if (f.ativa) {
+          html += '<span class="sets-faixa-tag">você está aqui</span>';
+        } else if (f.alcancada) {
+          html += '<span class="sets-faixa-tag">já alcançada</span>';
+        } else if (perda > 0) {
+          html += '<span class="sets-faixa-perda">cairia aqui, perdendo ' + Utils.formatPower(perda * 1e9) + '</span>';
+        }
+        html += '</div>';
+      });
+      // faixa "0 peças" — o que se perde saindo do set inteiro
+      if (p.valorAtual > 0) {
+        html += '<div class="sets-faixa-linha">';
+        html += '<span class="sets-faixa-cond">0 peças (fora do set)</span>';
+        html += '<span class="sets-faixa-valor">0</span>';
+        html += '<span class="sets-faixa-perda">remover o set inteiro perde ' + Utils.formatPower(p.valorAtual * 1e9) + '</span>';
+        html += '</div>';
+      }
+      html += '</div>';
+
+      if (p.proximaFaixa) {
+        html += '<div class="sets-progresso-proxima">Faltam <strong>' + p.proximaFaixa.faltam + '</strong> peça' + (p.proximaFaixa.faltam > 1 ? 's' : '') + ' pra próxima faixa — ganho estimado: <strong>+' + Utils.formatPower(p.proximaFaixa.ganho * 1e9) + '</strong></div>';
+      }
+
+      html += '</div>';
+    });
+
+    html += '</div>';
+    return html;
   },
 
   // O poder real (userData.powerData.current_power) vem direto da API do jogo — é o
@@ -443,26 +670,104 @@ const UI_RoomPlanner = {
     return userData.powerData.current_power + delta;
   },
 
-  // Sets (ex: Halloween, Disco...) dão bônus próprio de coleção de set e o código
-  // não sabe recalcular/validar esse bônus — por isso o otimizador (e a edição manual)
-  // nunca tocam nessas miners: elas ficam fixas no rack onde já estão hoje.
+  // Mesma técnica de âncora+delta do _calcularPoderEstimado, só que isolando SÓ a parte do
+  // bônus (coleção + set) — sem base nem bônus de rack, pra bater com o que a API chama de
+  // "bonus"/"bonus_percent" (ver js/ui/resumo.js) e dar pra comparar lado a lado com o real.
+  _calcularBonusEstimado: function(pool, racks, userData) {
+    const poolAtualReal = (userData.roomData.miners || []).map(m => ({
+      name: m.name,
+      level: m.level_label || m.level,
+      power: m.power,
+      bonus_percent: m.bonus_percent || 0,
+      _rackId: m.placement?.user_rack_id,
+    }));
+
+    const bonusBruto = (p) => {
+      const base = p.reduce((s, m) => s + m.power, 0);
+      const seen = new Set();
+      let bonusSum = 0;
+      p.forEach(m => {
+        const key = m.name.toLowerCase() + '|' + (m.level || m.level_label || '').toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          bonusSum += (m.bonus_percent || 0);
+        }
+      });
+      const colecaoBonus = base * (bonusSum / 10000);
+      const bonusDeSets = this._calcularBonusDeSetsNoPool(p, base, racks);
+      return colecaoBonus + bonusDeSets.percent + bonusDeSets.flat;
+    };
+
+    const delta = bonusBruto(pool) - bonusBruto(poolAtualReal);
+    const valor = (userData.powerData.bonus || 0) + delta;
+    const baseSimulado = pool.reduce((s, m) => s + m.power, 0);
+    const percentual = baseSimulado > 0 ? (valor / baseSimulado) * 100 : 0;
+
+    return { valor, percentual };
+  },
+
+  // Mantido só como helper genérico ("essa miner pertence a algum set?") — a proteção real
+  // de sets não usa mais isso: ver _statusDoSet/_racksDoSet (Auto-Otimizar) e
+  // _impactoDeRemoverPecaDeSet (edição manual), que sabem calcular o bônus de verdade,
+  // exigindo inclusive o rack temático certo do set.
   _isSetMiner: function(name) {
     if (typeof MINERS_DATABASE === 'undefined') return false;
     return !!MINERS_DATABASE.find(d => d.name.toLowerCase() === name.toLowerCase() && d.isInSet);
   },
 
+  // Quanto (se algo) uma miner instalada específica (por índice em roomData.miners) protege
+  // de bônus de set — usado pra avisar o usuário ANTES de remover manualmente, em vez de
+  // simplesmente bloquear a ação. Retorna null se remover essa miner não derruba faixa
+  // nenhuma (ela não é de set, ou é excedente e sobra o suficiente sem ela).
+  _impactoDeRemoverPecaDeSet: function(userData, minerIndex) {
+    if (typeof SetsData === 'undefined') return null;
+    const racks = userData.roomData.racks || [];
+    const roomMiners = userData.roomData.miners || [];
+    const miner = roomMiners[minerIndex];
+    if (!miner) return null;
+
+    const setDoMiner = SetsData.sets.find(set => set.miners.some(sm => this._matchSetPiece(sm, miner)));
+    if (!setDoMiner) return null;
+
+    const racksDoSet = this._racksDoSet(setDoMiner, racks);
+    // se essa miner nem está no rack certo do set, ela já não contava pro bônus — remover
+    // não muda a faixa de nada.
+    if (racksDoSet && !racksDoSet.has(miner.placement?.user_rack_id)) return null;
+
+    const baseAtual = roomMiners.reduce((s, m) => s + m.power, 0);
+    const valorDaFaixa = lvl => !lvl ? 0 : (lvl.percent_power ? baseAtual * (lvl.percent_power / 10000) : lvl.bonus_power);
+
+    const instaladasAntes = roomMiners.map((m, i) => ({ name: m.name, power: m.power, index: i, _rackId: m.placement?.user_rack_id }));
+    const instaladasDepois = instaladasAntes.filter(m => m.index !== minerIndex);
+
+    const statusAntes = this._statusDoSet(setDoMiner, instaladasAntes, racksDoSet);
+    const statusDepois = this._statusDoSet(setDoMiner, instaladasDepois, racksDoSet);
+    const valorAntes = valorDaFaixa(statusAntes.tierAtivo);
+    const valorDepois = valorDaFaixa(statusDepois.tierAtivo);
+    if (valorDepois >= valorAntes) return null;
+
+    const labelFaixa = lvl => !lvl ? 'nenhuma faixa' : (lvl.percent_power ? '+' + (lvl.percent_power / 100).toFixed(2) + '%' : Utils.formatPower(lvl.bonus_power * 1e9));
+
+    return {
+      setTitle: setDoMiner.title,
+      faixaAntes: labelFaixa(statusAntes.tierAtivo),
+      faixaDepois: labelFaixa(statusDepois.tierAtivo),
+      perda: valorAntes - valorDepois,
+    };
+  },
+
   // O Auto-Otimizar sempre recalcula do ZERO a partir do estado real da sala — se já
-  // houver simulação ativa (remoções/adições feitas no Inventário, trocas feitas aqui),
-  // ele avisa e descarta, porque otimizar "em cima" de edições manuais parciais é
-  // ambíguo (não dá pra saber quais o usuário quer preservar).
+  // houver simulação ativa aqui no Planejador (trocas manuais feitas nesta aba), ele
+  // avisa e descarta, porque otimizar "em cima" de edições manuais parciais é ambíguo
+  // (não dá pra saber quais o usuário quer preservar).
   executarAutoOtimizacao: function() {
     const userData = State.getUserData();
     if (!userData) return;
 
-    if (SimState.ativo && !confirm('Isso vai descartar as remoções/adições/trocas feitas até agora e recalcular a sala do zero. Continuar?')) {
+    if (this.sim.ativo && !confirm('Isso vai descartar as remoções/adições/trocas feitas até agora e recalcular a sala do zero. Continuar?')) {
       return;
     }
-    SimState.resetar(userData);
+    this.sim.resetar(userData);
 
     const racks = userData.roomData.racks || [];
     const roomMiners = userData.roomData.miners || [];
@@ -476,55 +781,40 @@ const UI_RoomPlanner = {
       rackCapacity[r._id] = (r.rack_info?.width || 2) * (r.rack_info?.height || 3);
     });
 
-    // Miners de set ficam travadas no rack atual delas, consumindo a capacidade
-    // antes de qualquer redistribuição — o otimizador só mexe no que sobra.
-    // Se o rack_id dela não bater com nenhum rack reconhecido, ela vai pro banco
-    // (órfã) em vez de simplesmente desaparecer do resultado.
-    const setKeysFixos = new Set();
-    let setMinerCount = 0;
-    let basePowerFixos = 0;
-    const orfasFixas = [];
-    roomMiners.forEach((m, index) => {
-      if (!this._isSetMiner(m.name)) return;
-      const rackId = m.placement?.user_rack_id;
-      const cells = m.width || 2;
-      if (!rackAssignments[rackId]) {
-        orfasFixas.push({
-          name: m.name,
-          level: m.level_label || m.level,
-          power: m.power,
-          bonus_percent: m.bonus_percent || 0,
-          cells: cells,
-          _fixo: true,
-          _minerIndexOriginal: index,
-          _rackIdOriginal: rackId,
+    // Miners de set não são mais travadas (_fixo) — agora que o bônus de set entra na conta
+    // (_calcularBonusDeSetsNoPool), a proteção vira um VALOR: cada peça que hoje é o mínimo
+    // necessário pra manter a faixa de bônus atual de algum set ganha, na seleção, um reforço
+    // de valor igual à faixa dividida pelo mínimo de peças — então o otimizador só troca essa
+    // peça por outra coisa se a troca realmente compensar mais que perder a faixa inteira,
+    // em vez de simplesmente proibir qualquer mexida (que era o comportamento antigo).
+    const basePowerRealAtual = roomMiners.reduce((s, m) => s + m.power, 0);
+    const valorProtecaoPorIndice = {};
+    if (typeof SetsData !== 'undefined') {
+      const instaladasComIndex = roomMiners.map((m, index) => ({ name: m.name, power: m.power, index, _rackId: m.placement?.user_rack_id }));
+      SetsData.sets.forEach(set => {
+        const racksDoSet = this._racksDoSet(set, racks);
+        const status = this._statusDoSet(set, instaladasComIndex, racksDoSet);
+        if (!status.protegidoMinimo || !status.tierAtivo) return;
+        const valorDaFaixaAtual = status.tierAtivo.percent_power
+          ? basePowerRealAtual * (status.tierAtivo.percent_power / 10000)
+          : status.tierAtivo.bonus_power;
+        const valorPorPeca = valorDaFaixaAtual / status.protegidoMinimo;
+        const instaladas = instaladasComIndex
+          .filter(m => racksDoSet.has(m._rackId))
+          .filter(m => status.pecasInstaladas.some(sm => this._matchSetPiece(sm, m)))
+          .sort((a, b) => a.power - b.power);
+        instaladas.slice(0, status.protegidoMinimo).forEach(m => {
+          valorProtecaoPorIndice[m.index] = (valorProtecaoPorIndice[m.index] || 0) + valorPorPeca;
         });
-        return;
-      }
-      rackAssignments[rackId].push({
-        name: m.name,
-        level: m.level_label || m.level,
-        power: m.power,
-        bonus_percent: m.bonus_percent || 0,
-        cells: cells,
-        _rackId: rackId,
-        _fixo: true,
-        _minerIndexOriginal: index,
-        _rackIdOriginal: rackId,
       });
-      rackCapacity[rackId] = Math.max(0, rackCapacity[rackId] - cells);
-      setKeysFixos.add(m.name.toLowerCase() + '|' + (m.level_label || m.level || '').toLowerCase());
-      setMinerCount++;
-      basePowerFixos += m.power;
-    });
+    }
 
-    // _minerIndexOriginal/_rackIdOriginal (instaladas) e _origemKey (do inventário) são o
-    // que a tabela do Inventário usa (via SimState.estaRemovida/contarPorOrigem) pra saber
-    // quais linhas marcar como removidas/adicionadas — sem isso o Auto-Otimizar mexe nas
-    // miners mas a tabela não reflete nada.
+    // _minerIndexOriginal/_rackIdOriginal (instaladas) e _origemKey (do inventário) são a
+    // convenção que o SimState (js/ui/simState.js) usa em qualquer instância — aqui só
+    // preserva esses campos no pool pra manter esse rastreio dentro da simulação própria
+    // do SmartRoom (this.sim), que é independente da simulação do Inventário.
     const pool = [];
     roomMiners.forEach((m, index) => {
-      if (this._isSetMiner(m.name)) return;
       pool.push({
         name: m.name,
         level: m.level_label || m.level,
@@ -533,6 +823,9 @@ const UI_RoomPlanner = {
         cells: m.width || 2,
         _minerIndexOriginal: index,
         _rackIdOriginal: m.placement?.user_rack_id,
+        _valorProtecaoSet: valorProtecaoPorIndice[index] || 0,
+        _placementY: m.placement?.y,
+        _placementX: m.placement?.x,
       });
     });
     invMiners.forEach(m => {
@@ -568,8 +861,8 @@ const UI_RoomPlanner = {
     const capacidadeRestanteTotal = Object.values(rackCapacity).reduce((s, c) => s + c, 0);
 
     let capacidadeTeste = capacidadeRestanteTotal;
-    let baseEstimadaFinal = basePowerFixos;
-    const vistosEstimativa = new Set(setKeysFixos);
+    let baseEstimadaFinal = 0;
+    const vistosEstimativa = new Set();
     let bonusSumEstimado = 0;
     [...pool].sort((a, b) => b.power - a.power).forEach(m => {
       if (m.cells > capacidadeTeste) return;
@@ -583,23 +876,73 @@ const UI_RoomPlanner = {
     });
     const multiplicadorBonus = 1 + (bonusSumEstimado / 10000);
 
+    // Empurrão de valor pra peças de set que faltam pra destravar a PRÓXIMA faixa de bônus
+    // daquele set (ex: Royal Set tem +45% na faixa de 4 peças — se você tem 3 instaladas e
+    // uma 4ª está disponível pra entrar, ela vale muito mais do que o poder dela sozinha
+    // sugere). Só conta esse empurrão se TODAS as peças que faltam pra faixa realmente
+    // estiverem disponíveis no pool agora — senão a faixa não seria alcançada de qualquer
+    // jeito, e a candidata não deveria ganhar esse valor extra.
+    const valorExtraSetPorChave = {};
+    if (typeof SetsData !== 'undefined') {
+      const instaladasAgora = roomMiners.map(m => ({ name: m.name, power: m.power, _rackId: m.placement?.user_rack_id }));
+      SetsData.sets.forEach(set => {
+        const racksDoSet = this._racksDoSet(set, racks);
+        // sem o rack temático do set instalado, nenhuma peça vai contar de qualquer jeito —
+        // não faz sentido dar empurrão de valor pra elas.
+        if (!racksDoSet || !racksDoSet.size) return;
+
+        const status = this._statusDoSet(set, instaladasAgora, racksDoSet);
+        const jaTem = new Set(status.pecasInstaladas.map(sm => sm.title.toLowerCase() + '|' + sm.power));
+        const faltantes = set.miners.filter(sm => !jaTem.has(sm.title.toLowerCase() + '|' + sm.power));
+        if (!faltantes.length) return;
+
+        const proximaFaixa = set.levels
+          .filter(lvl => lvl.condition_amount > status.qtd)
+          .sort((a, b) => a.condition_amount - b.condition_amount)[0];
+        if (!proximaFaixa) return;
+
+        const faltamPraProxima = proximaFaixa.condition_amount - status.qtd;
+        const disponiveisNoPool = faltantes.filter(sm => pool.some(m => this._matchSetPiece(sm, m)));
+        if (disponiveisNoPool.length < faltamPraProxima) return;
+
+        // só vale a pena se o rack temático do set ainda tiver célula livre suficiente pras
+        // peças que faltam (elas só contam se ficarem especificamente lá dentro).
+        const celulasLivresNoRackDoSet = [...racksDoSet].reduce((s, rid) => s + (rackCapacity[rid] || 0), 0);
+        const celulasNecessarias = disponiveisNoPool.slice(0, faltamPraProxima).reduce((s, sm) => {
+          const m = pool.find(mm => this._matchSetPiece(sm, mm));
+          return s + (m ? m.cells : 2);
+        }, 0);
+        if (celulasNecessarias > celulasLivresNoRackDoSet) return;
+
+        const ganhoDaFaixa = proximaFaixa.percent_power
+          ? baseEstimadaFinal * (proximaFaixa.percent_power / 10000)
+          : proximaFaixa.bonus_power;
+        const valorPorPeca = ganhoDaFaixa / faltamPraProxima;
+        disponiveisNoPool.forEach(sm => {
+          const key = sm.title.toLowerCase() + '|' + sm.power;
+          valorExtraSetPorChave[key] = Math.max(valorExtraSetPorChave[key] || 0, valorPorPeca);
+        });
+      });
+    }
+
     // A ordem usada aqui (poder bruto) decide quem "seria" a primeira de cada nome+nível —
     // ou seja, a cópia mais forte de cada miner é quem garante o bônus, o que também é o
     // resultado mais lógico (não importa fisicamente qual cópia segura o bônus).
-    const seen = new Set(setKeysFixos);
+    const seen = new Set();
     [...pool].sort((a, b) => b.power - a.power).forEach(m => {
       const key = m.name.toLowerCase() + '|' + (m.level || '').toLowerCase();
       m._isUniqueBonus = !seen.has(key) && m.bonus_percent > 0;
       seen.add(key);
       const valorBaseComBonusAcumulado = m.power * multiplicadorBonus;
       const valorNovoBonus = m._isUniqueBonus ? (m.bonus_percent * (baseEstimadaFinal / 10000)) : 0;
-      m._valorSelecao = valorBaseComBonusAcumulado + valorNovoBonus;
+      const valorExtraSet = valorExtraSetPorChave[m.name.toLowerCase() + '|' + m.power] || 0;
+      m._valorSelecao = valorBaseComBonusAcumulado + valorNovoBonus + valorExtraSet + (m._valorProtecaoSet || 0);
     });
 
     const prioridadeSelecao = [...pool].sort((a, b) => b._valorSelecao - a._valorSelecao);
 
     const incluidos = [];
-    const bancoInicial = [...orfasFixas];
+    const bancoInicial = [];
     let capacidadeRestante = capacidadeRestanteTotal;
     prioridadeSelecao.forEach(m => {
       if (capacidadeRestante >= m.cells) {
@@ -612,16 +955,41 @@ const UI_RoomPlanner = {
 
     incluidos.sort((a, b) => b.power - a.power);
 
-    // A seleção só olha a capacidade AGREGADA da sala, não qual rack específico tem espaço
-    // (isso é fragmentação normal: a soma bate, mas nenhum rack individual sobrou com célula
-    // livre suficiente pra essa miner específica). Sem esse "else", ela simplesmente
-    // desaparecia do resultado — nem ficava alocada, nem voltava pro banco.
-    incluidos.forEach(miner => {
+    // Peças de set têm destino de rack FIXO: só contam pro bônus do set se ficarem dentro do
+    // rack temático dele (ex: Royal Set exige o rack "Royal Rack 8" especificamente) — por
+    // isso não passam pelo preenchimento genérico por bônus (que poderia mandá-las pra
+    // qualquer rack "melhor"), vão primeiro, direto pro(s) rack(s) certo(s) do próprio set.
+    const racksDoSetPorSet = new Map();
+    const setDaMiner = m => {
+      if (typeof SetsData === 'undefined') return null;
+      return SetsData.sets.find(set => set.miners.some(sm => this._matchSetPiece(sm, m))) || null;
+    };
+
+    const incluidosComRackFixo = [];
+    const incluidosGerais = [];
+    incluidos.forEach(m => {
+      const set = setDaMiner(m);
+      if (!set) { incluidosGerais.push(m); return; }
+      if (!racksDoSetPorSet.has(set)) racksDoSetPorSet.set(set, this._racksDoSet(set, racks));
+      const racksDoSet = racksDoSetPorSet.get(set);
+      if (racksDoSet && racksDoSet.size) {
+        incluidosComRackFixo.push({ miner: m, racksDoSet });
+      } else {
+        incluidosGerais.push(m);
+      }
+    });
+
+    incluidosComRackFixo.forEach(({ miner, racksDoSet }) => {
       let alocada = false;
-      for (const rack of racksOrdenados) {
-        if (rackCapacity[rack._id] >= miner.cells) {
-          rackAssignments[rack._id].push({ ...miner, _rackId: rack._id });
-          rackCapacity[rack._id] -= miner.cells;
+      const candidatos = [...racksDoSet];
+      // prioriza voltar pro rack original dela, se ele for um dos racks válidos do set
+      if (miner._rackIdOriginal && racksDoSet.has(miner._rackIdOriginal)) {
+        candidatos.sort((a, b) => (a === miner._rackIdOriginal ? -1 : b === miner._rackIdOriginal ? 1 : 0));
+      }
+      for (const rackId of candidatos) {
+        if (rackCapacity[rackId] >= miner.cells) {
+          rackAssignments[rackId].push({ ...miner, _rackId: rackId });
+          rackCapacity[rackId] -= miner.cells;
           alocada = true;
           break;
         }
@@ -629,16 +997,140 @@ const UI_RoomPlanner = {
       if (!alocada) bancoInicial.push(miner);
     });
 
+    // Racks com o MESMO % de bônus (empate) são agrupados em "camadas", preservando a ordem
+    // relativa que já vinha do sort acima. Sem isso, dois racks empatados eram preenchidos um
+    // até o talo antes de tocar no outro, numa ordem arbitrária vinda da API (que não bate com
+    // a numeração física que aparece na tela) — o poder total não muda (não importa qual rack
+    // empatado guarda a miner forte, a soma é igual), mas a distribuição ficava desequilibrada
+    // e imprevisível. O critério principal (maior bônus primeiro) continua intacto: só o
+    // desempate DENTRO da camada empatada passa a alternar entre os racks (round-robin) em vez
+    // de encher sempre o primeiro da lista.
+    const camadasPorBonus = [];
+    racksOrdenados.forEach(rack => {
+      const ultima = camadasPorBonus[camadasPorBonus.length - 1];
+      if (ultima && (ultima[0].bonus || 0) === (rack.bonus || 0)) {
+        ultima.push(rack);
+      } else {
+        camadasPorBonus.push([rack]);
+      }
+    });
+    const cursorPorCamada = camadasPorBonus.map(() => 0);
+
+    const alocarNoMelhorRackDisponivel = (miner) => {
+      for (let c = 0; c < camadasPorBonus.length; c++) {
+        const camada = camadasPorBonus[c];
+        if (!camada.some(r => rackCapacity[r._id] >= miner.cells)) continue;
+
+        // Entre racks EMPATADOS em bônus, tanto faz pro poder total qual deles guarda a
+        // miner — mas fisicamente, no jogo, mexer ela de um rack pra outro idêntico é
+        // trabalho de graça pro usuário. Por isso, antes de girar a roda do round-robin,
+        // prioriza manter a miner no rack ONDE ELA JÁ ESTÁ, se ele pertencer a essa mesma
+        // camada empatada e ainda tiver espaço — o round-robin só decide pra quem NÃO tinha
+        // lugar certo ainda (miner nova do inventário, ou que precisou mesmo trocar de rack).
+        if (miner._rackIdOriginal) {
+          const original = camada.find(r => r._id === miner._rackIdOriginal);
+          if (original && rackCapacity[original._id] >= miner.cells) {
+            rackAssignments[original._id].push({ ...miner, _rackId: original._id });
+            rackCapacity[original._id] -= miner.cells;
+            return true;
+          }
+        }
+
+        for (let tentativa = 0; tentativa < camada.length; tentativa++) {
+          const idx = (cursorPorCamada[c] + tentativa) % camada.length;
+          const rack = camada[idx];
+          if (rackCapacity[rack._id] >= miner.cells) {
+            rackAssignments[rack._id].push({ ...miner, _rackId: rack._id });
+            rackCapacity[rack._id] -= miner.cells;
+            cursorPorCamada[c] = (idx + 1) % camada.length;
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    // A seleção só olha a capacidade AGREGADA da sala, não qual rack específico tem espaço
+    // (isso é fragmentação normal: a soma bate, mas nenhum rack individual sobrou com célula
+    // livre suficiente pra essa miner específica). Sem o fallback pro banco, ela simplesmente
+    // desaparecia do resultado — nem ficava alocada, nem voltava pro banco.
+    incluidosGerais.forEach(miner => {
+      if (!alocarNoMelhorRackDisponivel(miner)) bancoInicial.push(miner);
+    });
+
+    // Reconciliação: como a alocação acima processa por ordem de PODER (não por "quem já
+    // morava aqui"), uma miner nova do inventário com mais poder pode acabar roubando o
+    // lugar de uma miner antiga antes da vez dela — mesmo quando as duas estão numa camada
+    // de bônus empatada, onde isso não muda o poder total em NADA. Sem essa reconciliação,
+    // isso gerava centenas de "trocas" na lista de ações que na prática não mudavam nada
+    // pro resultado, só davam trabalho de graça pro usuário mexer fisicamente no jogo.
+    // Estratégia: dentro de cada camada empatada, tenta devolver cada miner pro rack onde
+    // ela já estava — move direto se sobrou espaço lá, ou troca de lugar com quem estiver
+    // ocupando e também preferir voltar pro rack de origem dela (troca recíproca).
+    camadasPorBonus.forEach(camada => {
+      if (camada.length < 2) return;
+      const idsDaCamada = new Set(camada.map(r => r._id));
+      let mudou = true;
+      let voltas = 0;
+      while (mudou && voltas < 30) {
+        mudou = false;
+        voltas++;
+        for (const rackAtual of camada) {
+          const lista = rackAssignments[rackAtual._id];
+          for (let i = 0; i < lista.length; i++) {
+            const m = lista[i];
+            const original = m._rackIdOriginal;
+            if (!original || original === rackAtual._id || !idsDaCamada.has(original)) continue;
+
+            if (rackCapacity[original] >= this._cellsOf(m)) {
+              lista.splice(i, 1);
+              rackAssignments[original].push({ ...m, _rackId: original });
+              rackCapacity[original] -= this._cellsOf(m);
+              rackCapacity[rackAtual._id] += this._cellsOf(m);
+              mudou = true;
+              break;
+            }
+
+            const listaOriginal = rackAssignments[original];
+            const jIdx = listaOriginal.findIndex(m2 => m2._rackIdOriginal === rackAtual._id && this._cellsOf(m2) === this._cellsOf(m));
+            if (jIdx !== -1) {
+              const m2 = listaOriginal[jIdx];
+              listaOriginal[jIdx] = { ...m, _rackId: original };
+              lista[i] = { ...m2, _rackId: rackAtual._id };
+              mudou = true;
+              break;
+            }
+          }
+          if (mudou) break;
+        }
+      }
+    });
+
+    // Preenche buracos que sobraram por fragmentação: como a seleção lá em cima só olhava a
+    // capacidade AGREGADA da sala, uma miner (tipicamente de 1 célula) podia cair no banco
+    // mesmo havendo uma célula livre de verdade sobrando num rack específico — sem essa
+    // varredura final, o rack ficava com um buraco vazio na tela enquanto o banco tinha uma
+    // miner do tamanho certo esperando pra entrar exatamente ali. Não mexe em peças de set
+    // (elas só valem a pena no rack temático delas — ver bloco de incluidosComRackFixo acima).
+    racksOrdenados.forEach(rack => {
+      let indice;
+      while (rackCapacity[rack._id] > 0 && (indice = bancoInicial.findIndex(m => !setDaMiner(m) && m.cells <= rackCapacity[rack._id])) !== -1) {
+        const [miner] = bancoInicial.splice(indice, 1);
+        rackAssignments[rack._id].push({ ...miner, _rackId: rack._id });
+        rackCapacity[rack._id] -= miner.cells;
+      }
+    });
+
     const allPlaced = Object.values(rackAssignments).flat();
     const poderEstimado = this._calcularPoderEstimado(allPlaced, racks, userData);
-    const totalPool = pool.length + setMinerCount + orfasFixas.length;
+    const totalPool = pool.length;
 
-    SimState.rackAssignments = rackAssignments;
-    SimState.banco = bancoInicial;
-    SimState.poderEstimado = poderEstimado;
-    SimState.totalPlaced = allPlaced.length;
-    SimState.totalPool = totalPool;
-    SimState.ativo = true;
+    this.sim.rackAssignments = rackAssignments;
+    this.sim.banco = bancoInicial;
+    this.sim.poderEstimado = poderEstimado;
+    this.sim.totalPlaced = allPlaced.length;
+    this.sim.totalPool = totalPool;
+    this.sim.ativo = true;
 
     this._plannerMode = 'otimizado';
     this._selectedSlot = null;
@@ -650,7 +1142,7 @@ const UI_RoomPlanner = {
     const userData = State.getUserData();
     if (!userData) return;
     if (!confirm('Descartar remoções/adições/trocas e voltar pro estado real da sala?')) return;
-    SimState.resetar(userData);
+    this.sim.resetar(userData);
     this._selectedSlot = null;
     this._rerender();
   },
@@ -726,8 +1218,100 @@ const UI_RoomPlanner = {
     return grupos;
   },
 
+  // Compara o estado REAL (userData.roomData.miners, com _rackIdOriginal preservado pelo
+  // SimState) contra o resultado simulado (this.sim.rackAssignments/banco) e devolve só as
+  // diferenças de verdade — sem isso, pra montar a sala igual no jogo o usuário tinha que
+  // comparar visualmente os dois grids miner por miner, o que é lento e fácil de errar.
+  _gerarListaDeAcoes: function(userData) {
+    const racks = userData.roomData.racks || [];
+
+    // Vários racks podem ter o MESMO nome (ex: dois "Train Rack 8" — o nome parece ser
+    // tipo+nível do rack, não um identificador único). Sem incluir sala+posição no rótulo,
+    // uma troca entre dois racks "iguais" no nome fica ilegível ("tira do Train Rack 8,
+    // bota no Train Rack 8") — com sala+posição, o usuário acha o rack certo na tela.
+    const salaMap = this._agruparRacksPorSala(racks);
+    const labelPorRackId = {};
+    Object.keys(salaMap).forEach(salaKey => {
+      salaMap[salaKey].forEach((r, i) => {
+        labelPorRackId[r._id] = r.name + ' (Sala ' + salaKey + ', rack ' + (i + 1) + ')';
+      });
+    });
+    const nomeDoRack = (rackId) => labelPorRackId[rackId] || 'rack desconhecido';
+
+    const rackAssignments = this.sim.rackAssignments || {};
+    const destinoPorIndice = {};
+    Object.keys(rackAssignments).forEach(rackId => {
+      rackAssignments[rackId].forEach(item => {
+        if (item._minerIndexOriginal != null) destinoPorIndice[item._minerIndexOriginal] = rackId;
+      });
+    });
+
+    const acoes = [];
+    const roomMiners = userData.roomData.miners || [];
+    roomMiners.forEach((m, index) => {
+      const rackOrigemId = m.placement?.user_rack_id;
+      const rackDestinoId = destinoPorIndice[index];
+      const nivel = m.level_label || m.level;
+      if (rackDestinoId == null) {
+        acoes.push({ tipo: 'remover', nome: m.name, nivel, de: nomeDoRack(rackOrigemId) });
+      } else if (rackDestinoId !== rackOrigemId) {
+        acoes.push({ tipo: 'mover', nome: m.name, nivel, de: nomeDoRack(rackOrigemId), para: nomeDoRack(rackDestinoId) });
+      }
+    });
+
+    Object.keys(rackAssignments).forEach(rackId => {
+      rackAssignments[rackId].forEach(item => {
+        if (item._origemKey != null) {
+          acoes.push({ tipo: 'adicionar', nome: item.name, nivel: item.level || item.level_label, para: nomeDoRack(rackId) });
+        }
+      });
+    });
+
+    return acoes;
+  },
+
+  toggleListaDeAcoes: function() {
+    this._acoesExpandido = !this._acoesExpandido;
+    this._rerender();
+  },
+
+  // Accordion fechado por padrão — a lista pode ter mais de 200 itens (uma reorganização
+  // grande da sala inteira), então deixar tudo aberto sempre polui a tela. O estado de
+  // aberto/fechado fica em `_acoesExpandido` (não um <details> nativo) porque o painel
+  // inteiro é re-renderizado via innerHTML a cada ação (mover miner, etc.) — um <details>
+  // perderia o "open" nesse replace; guardando o estado à parte, ele sobrevive ao re-render.
+  _renderListaDeAcoes: function(userData) {
+    const acoes = this._gerarListaDeAcoes(userData);
+    const aberto = this._acoesExpandido;
+    let html = '<div class="room-planner-checklist">';
+    html += '<div class="checklist-title" onclick="UI_RoomPlanner.toggleListaDeAcoes()">';
+    html += '📋 Lista de ações pra montar isso no jogo <span class="checklist-count">' + acoes.length + '</span>';
+    html += '<span class="checklist-toggle-icon">' + (aberto ? '▲' : '▼') + '</span>';
+    html += '</div>';
+    if (aberto) {
+      if (acoes.length === 0) {
+        html += '<p class="checklist-empty">Nada mudou de lugar — o estado simulado é igual ao real.</p>';
+      } else {
+        html += '<div class="checklist-items">';
+        acoes.forEach((a, i) => {
+          let texto;
+          if (a.tipo === 'mover') texto = 'Tira <strong>' + a.nome + '</strong> (' + a.nivel + ') do <strong>' + a.de + '</strong> → bota no <strong>' + a.para + '</strong>';
+          else if (a.tipo === 'remover') texto = 'Tira <strong>' + a.nome + '</strong> (' + a.nivel + ') do <strong>' + a.de + '</strong> e guarda no armazém';
+          else texto = 'Instala <strong>' + a.nome + '</strong> (' + a.nivel + ') no <strong>' + a.para + '</strong>';
+          html += '<label class="checklist-item checklist-' + a.tipo + '">';
+          html += '<input type="checkbox" onchange="this.parentElement.classList.toggle(\'checklist-feito\', this.checked)">';
+          html += '<span>' + texto + '</span>';
+          html += '</label>';
+        });
+        html += '</div>';
+      }
+    }
+    html += '</div>';
+    return html;
+  },
+
   _renderBanco: function() {
-    const banco = SimState.banco || [];
+    const banco = this.sim.banco || [];
     let html = '<div class="room-planner-bench">';
     html += '<div class="bench-title">🗄️ Banco (miners disponíveis, ainda não alocadas) <span class="bench-count">' + banco.length + '</span></div>';
 
@@ -758,7 +1342,7 @@ const UI_RoomPlanner = {
   },
 
   _renderBenchChips: function() {
-    const banco = SimState.banco || [];
+    const banco = this.sim.banco || [];
     const grupos = this._agruparBanco(banco);
     if (grupos.length === 0) return '<p class="planner-bench-empty">Nenhuma miner encontrada pra "' + this._bancoFiltro + '".</p>';
 
@@ -791,7 +1375,7 @@ const UI_RoomPlanner = {
   },
 
   onBenchChipClick: function(el) {
-    if (!SimState.inicializado) return;
+    if (!this.sim.inicializado) return;
     const key = el.dataset.benchKey;
     if (this._selectedSlot && this._selectedSlot.type === 'bench' && this._selectedSlot.key === key) {
       this._selectedSlot = null;
@@ -802,7 +1386,7 @@ const UI_RoomPlanner = {
   },
 
   onRackCellClick: function(el) {
-    if (!SimState.inicializado) return;
+    if (!this.sim.inicializado) return;
     const rackId = el.dataset.rackId;
     const isEmpty = el.dataset.empty === '1';
     const index = isEmpty ? -1 : parseInt(el.dataset.slotIndex, 10);
@@ -833,14 +1417,24 @@ const UI_RoomPlanner = {
   },
 
   onRemoverDoRack: function(rackId, index) {
-    if (!SimState.inicializado) return;
-    const arr = SimState.rackAssignments[rackId];
+    if (!this.sim.inicializado) return;
+    const arr = this.sim.rackAssignments[rackId];
     const m = arr[index];
     if (!m) return;
+
+    if (m._minerIndexOriginal != null) {
+      const userData = State.getUserData();
+      const impacto = this._impactoDeRemoverPecaDeSet(userData, m._minerIndexOriginal);
+      if (impacto) {
+        const msg = 'Remover essa miner derruba a faixa do set "' + impacto.setTitle + '" de ' + impacto.faixaAntes + ' pra ' + impacto.faixaDepois + ', perdendo ' + Utils.formatPower(impacto.perda * 1e9) + '. Continuar?';
+        if (!confirm(msg)) return;
+      }
+    }
+
     arr.splice(index, 1);
     delete m._rackId;
-    if (!SimState.banco) SimState.banco = [];
-    SimState.banco.push(m);
+    if (!this.sim.banco) this.sim.banco = [];
+    this.sim.banco.push(m);
     this._selectedSlot = null;
     this._recalcularAutoResult();
   },
@@ -848,7 +1442,7 @@ const UI_RoomPlanner = {
   _colocarDoBanco: function(key, to) {
     const userData = State.getUserData();
     const racks = userData.roomData.racks || [];
-    const banco = SimState.banco || [];
+    const banco = this.sim.banco || [];
     const idx = banco.findIndex(m => (m.name + '|' + (m.level || m.level_label || '')) === key);
     if (idx === -1) return;
     const item = banco[idx];
@@ -858,7 +1452,7 @@ const UI_RoomPlanner = {
       return r ? (r.rack_info?.width || 2) * (r.rack_info?.height || 3) : 0;
     };
 
-    const ra = SimState.rackAssignments;
+    const ra = this.sim.rackAssignments;
 
     if (to.index === -1) {
       const usado = ra[to.rackId].reduce((s, m) => s + this._cellsOf(m), 0);
@@ -883,7 +1477,7 @@ const UI_RoomPlanner = {
       banco.push(antigo);
     }
 
-    SimState.banco = banco;
+    this.sim.banco = banco;
     this._recalcularAutoResult();
   },
 
@@ -895,7 +1489,7 @@ const UI_RoomPlanner = {
       return r ? (r.rack_info?.width || 2) * (r.rack_info?.height || 3) : 0;
     };
 
-    const ra = SimState.rackAssignments;
+    const ra = this.sim.rackAssignments;
     const fromArr = ra[from.rackId];
     const minerFrom = fromArr[from.index];
     if (!minerFrom) return;
@@ -934,8 +1528,8 @@ const UI_RoomPlanner = {
 
   _recalcularAutoResult: function() {
     const userData = State.getUserData();
-    SimState.recalcular(userData);
-    SimState.ativo = true;
+    this.sim.recalcular(userData);
+    this.sim.ativo = true;
     this._rerender();
   },
 };

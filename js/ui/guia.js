@@ -20,10 +20,24 @@ const UI_Guia = {
       <div class="guia-timeline">
 
         <div class="guia-tl-entry">
+          <div class="guia-tl-date">10 Jul 2026<br><span class="guia-tl-time">11:00</span></div>
+          <div class="guia-tl-content">
+            <span class="guia-tag tag-improved">MELHORIA</span>
+            <strong>SmartRoom</strong> — leva de ajustes:
+            <ul class="guia-tl-list">
+              <li><strong>Abas separadas</strong> — Inventário, MinerMerge e SmartRoom agora funcionam de forma independente, cada um com sua própria tela e simulação.</li>
+              <li><strong>Lista de ações</strong> — checklist retrátil comparando o estado real com o simulado, com passo a passo pra montar igual no jogo.</li>
+              <li><strong>Auto-Otimizar mais estável</strong> — menos trocas desnecessárias entre racks de bônus igual, sem buracos vazios por fragmentação.</li>
+              <li><strong>Correção</strong> — cálculo de poder do Inventário que estava inflado.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="guia-tl-entry">
           <div class="guia-tl-date">02 Jul 2026<br><span class="guia-tl-time">14:30</span></div>
           <div class="guia-tl-content">
             <span class="guia-tag tag-new">NOVO</span>
-            <strong>Planejador de Sala</strong> — visualize e edite suas racks igual ao jogo (carrossel de salas, imagens das miners, bônus por rack), com Auto-Otimizar sugerindo a melhor distribuição das miners considerando poder, bônus de coleção e bônus de rack. Miners de set ficam protegidas e nunca são movidas.
+            <strong>SmartRoom</strong> — visualize e edite suas racks igual ao jogo (carrossel de salas, imagens das miners, bônus por rack), com Auto-Otimizar sugerindo a melhor distribuição das miners considerando poder, bônus de coleção e bônus de rack. Miners de set ficam protegidas e nunca são movidas.
           </div>
         </div>
 
@@ -31,7 +45,7 @@ const UI_Guia = {
           <div class="guia-tl-date">02 Jul 2026<br><span class="guia-tl-time">14:20</span></div>
           <div class="guia-tl-content">
             <span class="guia-tag tag-improved">MELHORIA</span>
-            <strong>Simulação do Inventário integrada</strong> — remover/adicionar miners na tabela agora reflete direto no Planejador de Sala (e vice-versa), com cálculo de poder mais preciso, ancorado no valor real da API.
+            <strong>Simulação do Inventário integrada</strong> — remover/adicionar miners na tabela agora reflete direto no SmartRoom (e vice-versa), com cálculo de poder mais preciso, ancorado no valor real da API.
           </div>
         </div>
 

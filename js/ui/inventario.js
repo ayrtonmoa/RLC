@@ -5,8 +5,9 @@ const UI_Inventario = {
   currentFilter: 'all',
   instaladaSort: { column: 'impacto', direction: 'asc' },
 
-  // O estado de simulação (remover/adicionar miners) mora em SimState (js/ui/simState.js),
-  // compartilhado com o Planejador de Sala — mexer aqui reflete lá e vice-versa.
+  // Instância PRÓPRIA de simulação (js/ui/simState.js) — independente da do Planejador
+  // de Sala. Remover/adicionar miner aqui não mexe em nada da simulação de lá.
+  sim: criarSimState(),
 
   expandedMergeRows: {},
 
@@ -530,21 +531,24 @@ const UI_Inventario = {
       return;
     }
 
-    const miner = userData.roomData.miners[minerIndex];
-    if (miner && SimState._isSetMiner(miner.name)) {
-      Utils.mostrarNotificacao('🔒 Essa miner faz parte de um set e não pode ser removida por aqui.', 'warning');
-      return;
-    }
-
-    if (SimState.estaRemovida(minerIndex)) {
-      const resultado = SimState.desfazerRemocaoPorIndice(userData, minerIndex);
+    if (this.sim.estaRemovida(minerIndex)) {
+      const resultado = this.sim.desfazerRemocaoPorIndice(userData, minerIndex);
       if (resultado === 'sem_espaco') {
-        Utils.mostrarNotificacao('⚠️ O rack original está cheio agora — use o Planejador de Sala pra escolher outro lugar.', 'warning');
+        Utils.mostrarNotificacao('⚠️ O rack original está cheio agora — ela continua no banco desta simulação.', 'warning');
       } else {
         Utils.mostrarNotificacao('🔄 Remoção desfeita!', 'info');
       }
     } else {
-      const ok = SimState.removerInstaladaPorIndice(userData, minerIndex);
+      // Peça de set: em vez de bloquear, avisa o impacto real calculado (faixa que cairia
+      // e quanto poder isso custa) e deixa o usuário decidir.
+      if (typeof UI_RoomPlanner !== 'undefined') {
+        const impacto = UI_RoomPlanner._impactoDeRemoverPecaDeSet(userData, minerIndex);
+        if (impacto) {
+          const msg = 'Remover essa miner derruba a faixa do set "' + impacto.setTitle + '" de ' + impacto.faixaAntes + ' pra ' + impacto.faixaDepois + ', perdendo ' + Utils.formatPower(impacto.perda * 1e9) + '. Continuar?';
+          if (!confirm(msg)) return;
+        }
+      }
+      const ok = this.sim.removerInstaladaPorIndice(userData, minerIndex);
       if (ok) Utils.mostrarNotificacao('❌ Miner marcada para remoção!', 'warning');
     }
 
@@ -562,9 +566,9 @@ const UI_Inventario = {
     if (!miner) return;
 
     const origemKey = this.getMinerUniqueId(miner);
-    if (SimState.contarPorOrigem(origemKey) > 0) {
+    if (this.sim.contarPorOrigem(origemKey) > 0) {
       const userData = State.getUserData();
-      SimState.removerPorOrigem(userData, origemKey);
+      this.sim.removerPorOrigem(userData, origemKey);
       this.renderResultado();
       Utils.mostrarNotificacao('🔄 Adição desfeita!', 'info');
       return;
@@ -863,7 +867,7 @@ const UI_Inventario = {
     const userData = State.getUserData();
     if (userData) {
       this.minersCached.filter(m => m.isManual).forEach(m => {
-        SimState.removerPorOrigem(userData, this.getMinerUniqueId(m));
+        this.sim.removerPorOrigem(userData, this.getMinerUniqueId(m));
       });
     }
     this.minersCached = this.minersCached.filter(m => !m.isManual);
@@ -884,9 +888,9 @@ const UI_Inventario = {
     }
 
     const origemKey = this.getMinerUniqueId(miner);
-    SimState.adicionarAoBanco(userData, miner, quantidade, origemKey);
+    this.sim.adicionarAoBanco(userData, miner, quantidade, origemKey);
 
-    Utils.mostrarNotificacao('✅ ' + quantidade + ' unidade' + (quantidade > 1 ? 's' : '') + ' adicionada' + (quantidade > 1 ? 's' : '') + ' ao banco do Planejador de Sala! Vá lá pra escolher em qual rack encaixar.', 'success');
+    Utils.mostrarNotificacao('✅ ' + quantidade + ' unidade' + (quantidade > 1 ? 's' : '') + ' adicionada' + (quantidade > 1 ? 's' : '') + ' à simulação do Inventário!', 'success');
 
     this.renderResultado();
   },
@@ -903,7 +907,7 @@ const UI_Inventario = {
 
   limparSimulacao: function() {
     const userData = State.getUserData();
-    if (userData) SimState.resetar(userData);
+    if (userData) this.sim.resetar(userData);
     this.renderResultado();
     Utils.mostrarNotificacao('🔄 Simulação limpa!', 'info');
   },
@@ -912,8 +916,8 @@ const UI_Inventario = {
     this.limparSimulacao();
   },
   
-  // Delega pro SimState (compartilhado com o Planejador de Sala), que calcula o poder
-  // simulado de forma precisa por rack — não mais pela aproximação de bônus médio.
+  // Delega pra instância própria do SimState (this.sim), que calcula o poder simulado de
+  // forma precisa por rack — não mais pela aproximação de bônus médio.
   calcularPowerSimulado: function(userData) {
     if (!userData || !userData.roomData || !userData.roomData.miners || !userData.powerData || !userData.roomData.racks) {
       return {
@@ -927,13 +931,31 @@ const UI_Inventario = {
       };
     }
 
-    SimState.garantirInicializado(userData);
-    SimState.recalcular(userData);
+    this.sim.garantirInicializado(userData);
+    this.sim.recalcular(userData);
 
     const poderAtual = userData.powerData.current_power;
-    const novoPoderTotal = SimState.poderEstimado;
 
-    const celulasOcupadas = Object.values(SimState.rackAssignments).flat().reduce((s, m) => s + SimState._cellsOf(m), 0);
+    // this.sim.poderEstimado só soma quem está em rackAssignments (rack definido) — o que é
+    // certo pro SmartRoom, mas aqui no Inventário as miners adicionadas/removidas
+    // ficam sempre no banco (essa aba não tem grid pra escolher rack), então usar só
+    // poderEstimado sempre dava +0. Por isso o poder simulado do Inventário soma banco +
+    // rackAssignments direto: as do banco entram com poder base + bônus de coleção, mas
+    // SEM bônus de rack (não tem rack escolhido) — ver aviso na tela, isso é intencional,
+    // não um bug, e o número aqui é só uma estimativa conservadora, não a precisão que o
+    // SmartRoom dá quando você define o rack de verdade.
+    // this.sim.banco começa com TODO o inventário disponível por padrão (_disponivelPadrao),
+    // não só o que o usuário explicitamente adicionou — sem filtrar isso, o cálculo somava
+    // o poder do inventário inteiro toda vez que a simulação ficava ativa, inflando o
+    // "Mudança" absurdamente. Só entra aqui quem foi de fato adicionado (_origemKey) ou
+    // removida de um rack real (_minerIndexOriginal) — ambos mudanças reais da simulação.
+    const racks = userData.roomData.racks || [];
+    const alocadas = Object.values(this.sim.rackAssignments).flat();
+    const bancoRelevante = this.sim.banco.filter(m => !m._disponivelPadrao);
+    const comBanco = alocadas.concat(bancoRelevante);
+    const novoPoderTotal = UI_RoomPlanner._calcularPoderEstimado(comBanco, racks, userData);
+
+    const celulasOcupadas = alocadas.reduce((s, m) => s + this.sim._cellsOf(m), 0);
 
     let capacidadeTotal = 0;
     if (userData.roomData.room_levels && Array.isArray(userData.roomData.room_levels)) {
@@ -961,9 +983,9 @@ const UI_Inventario = {
 
   // Contagem de miners removidas/adicionadas na simulação atual, pros badges de resumo.
   _contarSimulacao: function() {
-    const removidas = SimState.banco.filter(m => m._minerIndexOriginal != null).length;
+    const removidas = this.sim.banco.filter(m => m._minerIndexOriginal != null).length;
     const origens = new Set();
-    SimState.banco.concat(Object.values(SimState.rackAssignments).flat()).forEach(m => {
+    this.sim.banco.concat(Object.values(this.sim.rackAssignments).flat()).forEach(m => {
       if (m._origemKey) origens.add(m._origemKey);
     });
     return { removidas, adicionadas: origens.size };
@@ -1122,7 +1144,9 @@ const UI_Inventario = {
     });
     
     let html = '<h3>Análise Completa</h3>';
-    html += '<div id="roomPlannerInline"></div>';
+    html += '<div class="inv-legacy-notice">🔀 O Plano de Merges agora tem aba própria: <button onclick="UI_Tabs.switchTo(\'minermerge\')" class="inv-legacy-notice-btn">Ir para MinerMerge</button></div>';
+    html += '<div class="inv-legacy-notice">🏠 O SmartRoom agora tem aba própria: <button onclick="UI_Tabs.switchTo(\'roomplanner\')" class="inv-legacy-notice-btn">Ir para SmartRoom</button></div>';
+    if (typeof UI_RoomPlanner !== 'undefined') html += UI_RoomPlanner._renderProgressoSets(userData);
 
     const totalUnidades = this.minersCached.reduce((sum, m) => sum + m.quantity, 0);
     const minersUnicas = this.minersCached.length;
@@ -1184,7 +1208,7 @@ const UI_Inventario = {
     let salaCheia = espacoLivre <= 0;
     
     // PAINEL DE SIMULAÇÃO
-    if (SimState.ativo) {
+    if (this.sim.ativo) {
       const simResult = this.calcularPowerSimulado(userData);
       const simCounts = this._contarSimulacao();
       espacoLivre = simResult.espacoLivre;
@@ -1212,10 +1236,10 @@ const UI_Inventario = {
 
       // Card 3: Mudança
       html += '<div style="background: ' + corDiferenca + '; border-radius: 6px; padding: 15px; color: white;">';
-      html += '<p style="margin: 0; font-size: 12px; opacity: 0.9;">Mudança</p>';
+      html += '<p style="margin: 0; font-size: 12px; opacity: 0.9;">Mudança <span title="Miners adicionadas/removidas aqui não têm rack definido, então esse número não conta bônus de rack — só poder base + bônus de coleção.">ⓘ</span></p>';
       html += '<p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold;">' + iconDiferenca + ' ' +
               (simResult.diferencaPower >= 0 ? '+' : '') + Utils.formatPower(simResult.diferencaPower * 1e9) + '</p>';
-      html += '<p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">(' + (simResult.diferencaPower >= 0 ? '+' : '') + simResult.percentualMudanca.toFixed(2) + '%)</p>';
+      html += '<p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">(' + (simResult.diferencaPower >= 0 ? '+' : '') + simResult.percentualMudanca.toFixed(2) + '%) <span style="opacity:.75;">sem bônus de rack</span></p>';
       html += '</div>';
 
       // Card 4: Espaço
@@ -1247,9 +1271,8 @@ const UI_Inventario = {
         html += '</div>';
       }
 
-      html += '<p style="margin: 15px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.85);">📍 Miners adicionadas ficam no banco do Planejador de Sala, esperando você escolher o rack.</p>';
+      html += '<p style="margin: 15px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.85);">📍 Essa é a simulação própria do Inventário — sem rack específico, o poder estimado aqui não conta bônus de rack (só bônus de coleção). Pra montar um layout de racks, use o SmartRoom, que tem a simulação dele à parte.</p>';
       html += '<div style="display: flex; gap: 10px; margin-top: 12px;">';
-      html += '<button onclick="document.getElementById(\'roomPlannerInline\').scrollIntoView({behavior:\'smooth\'})" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">🏠 Ver no Planejador de Sala</button>';
       html += '<button onclick="UI_Inventario.limparSimulacao()" style="flex: 1; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;">🔄 Limpar Simulação</button>';
       html += '</div>';
       html += '</div>';
@@ -1395,7 +1418,7 @@ if (minersFracas && minersFracas.length > 0) {
   for (let i = 0; i < minersFracas.length; i++) {
     const m = minersFracas[i];
     const cor = i < 10 ? 'low-impact' : (i < 30 ? 'medium-impact' : 'high-impact');
-    const isRemoved = SimState.estaRemovida(m.minerIndex);
+    const isRemoved = this.sim.estaRemovida(m.minerIndex);
     const trStyle = isRemoved ? 'opacity: 0.5; text-decoration: line-through;' : '';
     
     html += '<tr class="' + cor + '" style="' + trStyle + '">';
@@ -1480,7 +1503,7 @@ html += '</tr>';
       
       const vendeText = m.canBeSold === true ? '✅' : (m.canBeSold === false ? '❌' : '❓');
       
-      const qtyAdicionada = SimState.contarPorOrigem(this.getMinerUniqueId(m));
+      const qtyAdicionada = this.sim.contarPorOrigem(this.getMinerUniqueId(m));
       const isAdded = qtyAdicionada > 0;
       
       const trStyle = isAdded ? 'background: #e8f5e8;' : '';
@@ -1618,14 +1641,8 @@ html += '</tr>';
     html += '</div>';
     html += '</div>';
 
-    html += '<div class="inv-legacy-notice">🔀 O Plano de Merges agora tem aba própria: <button onclick="UI_Tabs.switchTo(\'minermerge\')" class="inv-legacy-notice-btn">Ir para MinerMerge</button></div>';
-
     div.innerHTML = html;
     ChipTooltip.init();
-
-    if (typeof UI_RoomPlanner !== 'undefined') {
-      UI_RoomPlanner.mostrar(State.getUserData(), 'roomPlannerInline');
-    }
 
     // Event listeners
     const inventoryButtons = div.querySelectorAll('button[data-minerid]');
