@@ -398,7 +398,8 @@ const UI_RoomPlanner = {
       if (ay !== by) return ay - by;
       const ax = a.placement?.x ?? a._placementX ?? Infinity;
       const bx = b.placement?.x ?? b._placementX ?? Infinity;
-      return ax - bx;
+      if (ax !== bx) return ax - bx;
+      return ia - ib;
     });
 
     ordemExibicao.forEach(idx => {
@@ -409,7 +410,7 @@ const UI_RoomPlanner = {
       const rc = this._getRarityClass(level);
       const img = this._getMinerImage(m.name);
       const podeEditar = editable && !m._fixo;
-      const isSelected = podeEditar && this._selectedSlot && this._selectedSlot.type === 'rack' && this._selectedSlot.rackId === rack._id && this._selectedSlot.index === idx;
+      const isSelected = podeEditar && this._selectedSlot && this._selectedSlot.type === 'rack' && String(this._selectedSlot.rackId) === String(rack._id) && this._selectedSlot.index === idx;
       const editAttrs = podeEditar ? ' onclick="UI_RoomPlanner.onRackCellClick(this)" data-rack-id="' + rack._id + '" data-slot-index="' + idx + '"' : '';
       const impactoAttr = m._impact != null ? ' data-tip-impact="' + (m._impact >= 0 ? '+' : '') + Utils.formatPower(m._impact * 1e9) + '"' : '';
       const primeiraTxt = m._primeira === true ? ' — 🥇 1ª do tipo (dá bônus de coleção)' : m._primeira === false ? ' — 🔁 duplicata (sem bônus de coleção extra)' : '';
@@ -997,14 +998,21 @@ const UI_RoomPlanner = {
       if (!alocada) bancoInicial.push(miner);
     });
 
-    // Racks com o MESMO % de bônus (empate) são agrupados em "camadas", preservando a ordem
-    // relativa que já vinha do sort acima. Sem isso, dois racks empatados eram preenchidos um
-    // até o talo antes de tocar no outro, numa ordem arbitrária vinda da API (que não bate com
-    // a numeração física que aparece na tela) — o poder total não muda (não importa qual rack
-    // empatado guarda a miner forte, a soma é igual), mas a distribuição ficava desequilibrada
-    // e imprevisível. O critério principal (maior bônus primeiro) continua intacto: só o
-    // desempate DENTRO da camada empatada passa a alternar entre os racks (round-robin) em vez
-    // de encher sempre o primeiro da lista.
+    // Racks com o MESMO % de bônus (empate) são agrupados em "camadas" — o poder total não
+    // muda dependendo de qual rack empatado guarda qual miner (a soma é igual), então dentro
+    // de uma camada a ordem de preenchimento é livre pra escolher pelo critério que ajuda a
+    // montar no jogo: cada camada é ordenada pela posição FÍSICA (sala, depois y, depois x —
+    // igual a _agruparRacksPorSala/_agruparRacksPorLinha), e o preenchimento é SEQUENCIAL —
+    // enche o primeiro rack físico da camada até a capacidade antes de tocar no próximo. Como
+    // as miners chegam aqui em ordem de poder decrescente, isso resulta em: primeiro rack da
+    // camada com as mais fortes, segundo rack com as próximas mais fracas, e assim por diante.
+    const comparaPosicaoFisica = (a, b) => {
+      const ra = a.placement?.room_level || 0, rb = b.placement?.room_level || 0;
+      if (ra !== rb) return ra - rb;
+      const ay = a.placement?.y || 0, by = b.placement?.y || 0;
+      if (ay !== by) return ay - by;
+      return (a.placement?.x || 0) - (b.placement?.x || 0);
+    };
     const camadasPorBonus = [];
     racksOrdenados.forEach(rack => {
       const ultima = camadasPorBonus[camadasPorBonus.length - 1];
@@ -1014,35 +1022,15 @@ const UI_RoomPlanner = {
         camadasPorBonus.push([rack]);
       }
     });
-    const cursorPorCamada = camadasPorBonus.map(() => 0);
+    camadasPorBonus.forEach(camada => camada.sort(comparaPosicaoFisica));
 
     const alocarNoMelhorRackDisponivel = (miner) => {
       for (let c = 0; c < camadasPorBonus.length; c++) {
         const camada = camadasPorBonus[c];
-        if (!camada.some(r => rackCapacity[r._id] >= miner.cells)) continue;
-
-        // Entre racks EMPATADOS em bônus, tanto faz pro poder total qual deles guarda a
-        // miner — mas fisicamente, no jogo, mexer ela de um rack pra outro idêntico é
-        // trabalho de graça pro usuário. Por isso, antes de girar a roda do round-robin,
-        // prioriza manter a miner no rack ONDE ELA JÁ ESTÁ, se ele pertencer a essa mesma
-        // camada empatada e ainda tiver espaço — o round-robin só decide pra quem NÃO tinha
-        // lugar certo ainda (miner nova do inventário, ou que precisou mesmo trocar de rack).
-        if (miner._rackIdOriginal) {
-          const original = camada.find(r => r._id === miner._rackIdOriginal);
-          if (original && rackCapacity[original._id] >= miner.cells) {
-            rackAssignments[original._id].push({ ...miner, _rackId: original._id });
-            rackCapacity[original._id] -= miner.cells;
-            return true;
-          }
-        }
-
-        for (let tentativa = 0; tentativa < camada.length; tentativa++) {
-          const idx = (cursorPorCamada[c] + tentativa) % camada.length;
-          const rack = camada[idx];
+        for (const rack of camada) {
           if (rackCapacity[rack._id] >= miner.cells) {
             rackAssignments[rack._id].push({ ...miner, _rackId: rack._id });
             rackCapacity[rack._id] -= miner.cells;
-            cursorPorCamada[c] = (idx + 1) % camada.length;
             return true;
           }
         }
@@ -1058,54 +1046,6 @@ const UI_RoomPlanner = {
       if (!alocarNoMelhorRackDisponivel(miner)) bancoInicial.push(miner);
     });
 
-    // Reconciliação: como a alocação acima processa por ordem de PODER (não por "quem já
-    // morava aqui"), uma miner nova do inventário com mais poder pode acabar roubando o
-    // lugar de uma miner antiga antes da vez dela — mesmo quando as duas estão numa camada
-    // de bônus empatada, onde isso não muda o poder total em NADA. Sem essa reconciliação,
-    // isso gerava centenas de "trocas" na lista de ações que na prática não mudavam nada
-    // pro resultado, só davam trabalho de graça pro usuário mexer fisicamente no jogo.
-    // Estratégia: dentro de cada camada empatada, tenta devolver cada miner pro rack onde
-    // ela já estava — move direto se sobrou espaço lá, ou troca de lugar com quem estiver
-    // ocupando e também preferir voltar pro rack de origem dela (troca recíproca).
-    camadasPorBonus.forEach(camada => {
-      if (camada.length < 2) return;
-      const idsDaCamada = new Set(camada.map(r => r._id));
-      let mudou = true;
-      let voltas = 0;
-      while (mudou && voltas < 30) {
-        mudou = false;
-        voltas++;
-        for (const rackAtual of camada) {
-          const lista = rackAssignments[rackAtual._id];
-          for (let i = 0; i < lista.length; i++) {
-            const m = lista[i];
-            const original = m._rackIdOriginal;
-            if (!original || original === rackAtual._id || !idsDaCamada.has(original)) continue;
-
-            if (rackCapacity[original] >= this._cellsOf(m)) {
-              lista.splice(i, 1);
-              rackAssignments[original].push({ ...m, _rackId: original });
-              rackCapacity[original] -= this._cellsOf(m);
-              rackCapacity[rackAtual._id] += this._cellsOf(m);
-              mudou = true;
-              break;
-            }
-
-            const listaOriginal = rackAssignments[original];
-            const jIdx = listaOriginal.findIndex(m2 => m2._rackIdOriginal === rackAtual._id && this._cellsOf(m2) === this._cellsOf(m));
-            if (jIdx !== -1) {
-              const m2 = listaOriginal[jIdx];
-              listaOriginal[jIdx] = { ...m, _rackId: original };
-              lista[i] = { ...m2, _rackId: rackAtual._id };
-              mudou = true;
-              break;
-            }
-          }
-          if (mudou) break;
-        }
-      }
-    });
-
     // Preenche buracos que sobraram por fragmentação: como a seleção lá em cima só olhava a
     // capacidade AGREGADA da sala, uma miner (tipicamente de 1 célula) podia cair no banco
     // mesmo havendo uma célula livre de verdade sobrando num rack específico — sem essa
@@ -1119,6 +1059,19 @@ const UI_RoomPlanner = {
         rackAssignments[rack._id].push({ ...miner, _rackId: rack._id });
         rackCapacity[rack._id] -= miner.cells;
       }
+    });
+
+    // Dentro de cada rack, ordena por poder decrescente (mais forte no primeiro slot, mais
+    // fraca no último) e apaga a posição física antiga (_placementY/_placementX) — sem isso
+    // o _renderRackCard ignoraria essa ordem e desenharia pela posição real de origem (ver
+    // comentário em ordemExibicao), que não tem relação nenhuma com o resultado novo do
+    // Auto-Otimizar.
+    Object.keys(rackAssignments).forEach(rackId => {
+      rackAssignments[rackId].sort((a, b) => b.power - a.power);
+      rackAssignments[rackId].forEach(m => {
+        delete m._placementY;
+        delete m._placementX;
+      });
     });
 
     const allPlaced = Object.values(rackAssignments).flat();
@@ -1254,14 +1207,20 @@ const UI_RoomPlanner = {
       const nivel = m.level_label || m.level;
       if (rackDestinoId == null) {
         acoes.push({ tipo: 'remover', nome: m.name, nivel, de: nomeDoRack(rackOrigemId) });
-      } else if (rackDestinoId !== rackOrigemId) {
+      } else if (String(rackDestinoId) !== String(rackOrigemId)) {
         acoes.push({ tipo: 'mover', nome: m.name, nivel, de: nomeDoRack(rackOrigemId), para: nomeDoRack(rackDestinoId) });
       }
     });
 
+    // Qualquer item alocado que NÃO seja uma miner já instalada de verdade (_minerIndexOriginal)
+    // precisa ser instalado — seja ela adicionada manualmente na tabela do Inventário
+    // (_origemKey) ou puxada direto do inventário pelo próprio Auto-Otimizar (sem nenhum dos
+    // dois campos). Checar só _origemKey aqui fazia essas últimas somem da lista: o
+    // Auto-Otimizar alocava a miner na simulação, mas a instrução de "instalar" nunca
+    // aparecia, e quem seguisse a lista à risca ficava com o rack vazio de verdade.
     Object.keys(rackAssignments).forEach(rackId => {
       rackAssignments[rackId].forEach(item => {
-        if (item._origemKey != null) {
+        if (item._minerIndexOriginal == null) {
           acoes.push({ tipo: 'adicionar', nome: item.name, nivel: item.level || item.level_label, para: nomeDoRack(rackId) });
         }
       });
@@ -1346,21 +1305,67 @@ const UI_RoomPlanner = {
     const grupos = this._agruparBanco(banco);
     if (grupos.length === 0) return '<p class="planner-bench-empty">Nenhuma miner encontrada pra "' + this._bancoFiltro + '".</p>';
 
+    const userData = State.getUserData();
+    const racks = userData?.roomData?.racks || [];
+    const poolInstalado = Object.values(this.sim.rackAssignments || {}).flat();
+    if (userData) this._anexarImpactoBanco(grupos, poolInstalado, racks, userData);
+
     let html = '';
     grupos.forEach(g => {
       const key = g.name + '|' + (g.level || g.level_label || '');
       const isSel = this._selectedSlot && this._selectedSlot.type === 'bench' && this._selectedSlot.key === key;
       const img = this._getMinerImage(g.name);
       const bonus = ((g.bonus_percent || 0) / 100);
+      const impactoAttr = g._impact != null ? ' data-tip-impact="' + (g._impact >= 0 ? '+' : '') + Utils.formatPower(g._impact * 1e9) + '"' : '';
       html += '<div class="bench-chip' + (isSel ? ' bench-chip-selected' : '') + '" onclick="UI_RoomPlanner.onBenchChipClick(this)" data-bench-key="' + key + '"'
         + ' data-tip-status="' + g.name + ' (' + (g.level || g.level_label || '') + ')"'
         + ' data-tip-power="' + Utils.formatPower(g.power * 1e9) + '"'
-        + ' data-tip-bonus="' + bonus.toFixed(2) + '%">';
+        + ' data-tip-bonus="' + bonus.toFixed(2) + '%"'
+        + impactoAttr + '>';
       html += img ? '<img class="bench-chip-img" src="' + img + '" alt="' + g.name + '">' : '';
       html += '<span class="bench-chip-name">' + g.name + '</span><span class="bench-chip-count">x' + g.count + '</span>';
+      if (g._impact != null) {
+        const cor = g._impact >= 0 ? '#4caf50' : '#f44336';
+        html += '<span class="bench-chip-impact" style="color:' + cor + '">' + (g._impact >= 0 ? '+' : '') + Utils.formatPower(g._impact * 1e9) + '</span>';
+      }
       html += '</div>';
     });
     return html;
+  },
+
+  // Impacto de cada grupo do banco = quanto o poder total subiria se UMA cópia daquela
+  // miner entrasse no pool instalado agora, sem rack específico (por isso não soma bônus de
+  // rack — só dá pra saber isso quando ela realmente for encaixada em algum). É o espelho de
+  // _anexarImpactosPool (que calcula o quanto se PERDE tirando uma miner já instalada): aqui
+  // calcula o quanto se GANHA colocando uma miner que ainda está fora.
+  _anexarImpactoBanco: function(grupos, poolInstalado, racks, userData) {
+    const base = poolInstalado.reduce((s, m) => s + m.power, 0);
+    const rackFactorMap = {};
+    racks.forEach(r => rackFactorMap[r._id] = (r.bonus || 0) / 10000);
+
+    const chavesInstaladas = new Set();
+    let bonusPercentualTotal = 0;
+    poolInstalado.forEach(m => {
+      const key = m.name.toLowerCase() + '|' + (m.level || m.level_label || '').toLowerCase();
+      if (!chavesInstaladas.has(key)) {
+        chavesInstaladas.add(key);
+        bonusPercentualTotal += (m.bonus_percent || 0) / 10000;
+      }
+    });
+
+    const rackBonusAtual = poolInstalado.reduce((s, m) => s + m.power * (rackFactorMap[m._rackId] || 0), 0);
+    const extras = (userData.powerData.games || 0) + (userData.powerData.temp || 0);
+    const poderAtual = base + base * bonusPercentualTotal + rackBonusAtual + extras;
+
+    grupos.forEach(g => {
+      const key = g.name.toLowerCase() + '|' + (g.level || g.level_label || '').toLowerCase();
+      const ehPrimeira = !chavesInstaladas.has(key);
+      const novaBase = base + g.power;
+      const novoBonusPercentual = bonusPercentualTotal + (ehPrimeira ? (g.bonus_percent || 0) / 10000 : 0);
+      const novoPoder = novaBase + novaBase * novoBonusPercentual + rackBonusAtual + extras;
+      g._impact = novoPoder - poderAtual;
+      g._primeira = ehPrimeira;
+    });
   },
 
   setBancoFiltro: function(valor) {
@@ -1448,7 +1453,7 @@ const UI_RoomPlanner = {
     const item = banco[idx];
 
     const capacidadeDoRack = (rackId) => {
-      const r = racks.find(r => r._id === rackId);
+      const r = racks.find(r => String(r._id) === String(rackId));
       return r ? (r.rack_info?.width || 2) * (r.rack_info?.height || 3) : 0;
     };
 
@@ -1485,7 +1490,7 @@ const UI_RoomPlanner = {
     const userData = State.getUserData();
     const racks = userData.roomData.racks || [];
     const capacidadeDoRack = (rackId) => {
-      const r = racks.find(r => r._id === rackId);
+      const r = racks.find(r => String(r._id) === String(rackId));
       return r ? (r.rack_info?.width || 2) * (r.rack_info?.height || 3) : 0;
     };
 

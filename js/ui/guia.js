@@ -20,6 +20,21 @@ const UI_Guia = {
       <div class="guia-timeline">
 
         <div class="guia-tl-entry">
+          <div class="guia-tl-date">12 Jul 2026<br><span class="guia-tl-time">15:01</span></div>
+          <div class="guia-tl-content">
+            <span class="guia-tag tag-improved">MELHORIA</span>
+            <strong>SmartRoom</strong> e <strong>MinerMerge</strong> — mais uma leva de ajustes:
+            <ul class="guia-tl-list">
+              <li><strong>Auto-Otimizar sequencial</strong> — dentro de cada rack, a miner mais forte fica no primeiro slot e a mais fraca no último; entre racks com o mesmo bônus, o preenchimento segue a ordem física da sala (rack 1 com as mais fortes, rack 2 com as próximas, etc).</li>
+              <li><strong>Impacto no Banco</strong> — cada miner disponível no banco do SmartRoom agora mostra o ganho de poder estimado se fosse instalada, facilitando comparar antes de decidir.</li>
+              <li><strong>Correção</strong> — três bugs de comparação (tipo string vs número) no SmartRoom que geravam lista de ações errada, bloqueio incorreto de "não cabe" e falta de destaque na célula selecionada.</li>
+              <li><strong>Plano de Merges em colunas</strong> — as seções Prontos/Falta peças/Falta miners viraram blocos recolhíveis lado a lado (empilham no mobile).</li>
+              <li><strong>Block rewards das ligas</strong> — valores de Gold II até Diamond III atualizados.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="guia-tl-entry">
           <div class="guia-tl-date">10 Jul 2026<br><span class="guia-tl-time">11:00</span></div>
           <div class="guia-tl-content">
             <span class="guia-tag tag-improved">MELHORIA</span>

@@ -47,15 +47,50 @@ body.dark-mode .merge-sort-btn.active {
 }
 .merge-planner-groups {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  align-items: start;
 }
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .merge-planner-groups { grid-template-columns: 1fr; }
 }
-.merge-planner-group h4 {
-  margin: 0 0 12px 0;
+.merge-planner-group {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.merge-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.merge-group-toggle h4 {
+  margin: 0;
   font-size: 15px;
+}
+.merge-group-caret {
+  display: inline-block;
+  font-size: 11px;
+  opacity: 0.6;
+  transition: transform 0.15s;
+}
+.merge-planner-group.collapsed .merge-group-caret {
+  transform: rotate(0deg);
+}
+.merge-planner-group:not(.collapsed) .merge-group-caret {
+  transform: rotate(90deg);
+}
+.merge-group-body {
+  padding: 14px;
+}
+.merge-planner-group.collapsed .merge-group-body {
+  display: none;
 }
 .merge-cards {
   display: flex;
@@ -70,7 +105,7 @@ body.dark-mode .merge-sort-btn.active {
   border-left: 4px solid #28a745;
 }
 .merge-card.parts-only {
-  border-left-color: #fd7e14;
+  border-left-color: #c2650a;
 }
 .merge-card.missing-miners {
   border-left-color: #6c757d;

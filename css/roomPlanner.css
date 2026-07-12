@@ -564,6 +564,13 @@
   font-weight: 600;
 }
 
+.bench-chip-impact {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
 body.dark-mode .room-planner-bench {
   background: var(--bg-secondary);
 }

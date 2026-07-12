@@ -196,9 +196,12 @@ const UI_Inventario = {
       }
     });
 
-    // Monta mapa de níveis que o usuário possui (inventário + sala)
+    // Monta mapa de níveis que o usuário possui (inventário + sala). Antes, achar uma cópia
+    // no inventário fazia `return` antes de olhar a sala (e vice-versa) — se você tivesse a
+    // MESMA miner/nível instalada E no inventário ao mesmo tempo, uma das duas contagens
+    // era descartada silenciosamente. Agora soma os dois lugares sempre.
     const rarityMap2 = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
-    const userHasLevel = {}; // key: db.id → { status: 'inv'|'room'|null, count: number }
+    const userHasLevel = {}; // key: db.id → { status: 'inv'|'room'|'both'|null, count: number }
 
     tiers.forEach(t => {
       const tLabel = t.type === 'merge' ? (rarityMap2[t.level] || 'Unknown') : (t.rarityGroup?.title || 'Common');
@@ -206,15 +209,19 @@ const UI_Inventario = {
       const invCount = (this.minersCached || [])
         .filter(mc => mc.name.toLowerCase() === t.name.toLowerCase() && mc.level === tLabel)
         .reduce((sum, mc) => sum + (mc.quantity || 1), 0);
-      if (invCount > 0) { userHasLevel[t.id] = { status: 'inv', count: invCount }; return; }
 
       const roomCount = (userData?.roomData?.miners || []).filter(rm => {
         const rmLabel = rm.level_label || CONFIG.MINER_LEVELS[rm.level] || 'Common';
         return rm.name.toLowerCase() === t.name.toLowerCase() && rmLabel === tLabel;
       }).length;
-      if (roomCount > 0) { userHasLevel[t.id] = { status: 'room', count: roomCount }; return; }
 
-      userHasLevel[t.id] = { status: null, count: 0 };
+      const total = invCount + roomCount;
+      if (total === 0) {
+        userHasLevel[t.id] = { status: null, count: 0 };
+      } else {
+        const status = invCount > 0 && roomCount > 0 ? 'both' : (invCount > 0 ? 'inv' : 'room');
+        userHasLevel[t.id] = { status, count: total };
+      }
     });
 
     const nextTierAlreadyOwned = userHasLevel[nextTier.id]?.status !== null;
@@ -1582,7 +1589,7 @@ html += '</tr>';
             const rarityLabelsLocal = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
             const nextLbl = nextTier.type === 'merge' ? (rarityLabelsLocal[nextTier.level] || 'Lv' + nextTier.level) : (nextTier.rarityGroup?.title || 'Common');
             const { status: dupStatus, count: dupCount } = userHasLevel[nextTier.id] || { status: null, count: 1 };
-            const onde = dupStatus === 'room' ? 'na sala' : 'no inventário';
+            const onde = dupStatus === 'both' ? 'no inventário e na sala' : dupStatus === 'room' ? 'na sala' : 'no inventário';
             const minerIngredient = ingredientes.find(i => i.tipo === 'miner');
             const consumeDesc = minerIngredient ? minerIngredient.precisa + '× ' + m.level : '2× ' + m.level;
             html += '<div class="merge-alert">'
@@ -1600,11 +1607,11 @@ html += '</tr>';
             const label = t.type === 'merge' ? (rarityLabels[t.level] || 'Lv' + t.level) : (t.rarityGroup?.title || 'Common');
             const { status, count } = userHasLevel[t.id] || { status: null, count: 0 };
             const isNext = t.id === nextTier.id;
-            const chipClass = status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
-            const statusIcon = status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
+            const chipClass = status === 'both' ? 'has-both' : status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
+            const statusIcon = status === 'both' ? '✅🏠' : status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
             const rarityDot = rarityEmojiSub[label] || '';
             const countBadge = count > 0 ? ' <span class="chip-count">×' + count + '</span>' : '';
-            const statusTip = status === 'inv' ? 'No inventário (' + count + '×)' : status === 'room' ? 'Instalada na sala (' + count + '×)' : 'Não possui';
+            const statusTip = status === 'both' ? 'No inventário e instalada na sala (' + count + '×)' : status === 'inv' ? 'No inventário (' + count + '×)' : status === 'room' ? 'Instalada na sala (' + count + '×)' : 'Não possui';
             const powerVal = Utils.formatPower(t.power * 1e9);
             const bonusVal = t.bonusPower ? (t.bonusPower / 100).toFixed(2) + '%' : '';
             const costVal = t.price ? (t.price / 1e6).toFixed(2) + ' RLT' : (t.level > 0 ? 'gratuito' : '');

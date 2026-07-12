@@ -81,11 +81,13 @@ body.dark-mode .merge-alert {
 .ctt-part { padding-left: 4px; opacity: .9; }
 .merge-level-chip.has-inv  { background: #d4edda; color: #155724; border-color: #28a745; }
 .merge-level-chip.has-room { background: #cce5ff; color: #004085; border-color: #007bff; }
+.merge-level-chip.has-both { background: linear-gradient(135deg, #d4edda 50%, #cce5ff 50%); color: #155724; border-color: #28a745; }
 .merge-level-chip.missing  { background: #f8d7da; color: #721c24; border-color: #dc3545; }
 .merge-level-chip.next-tier{ outline: 3px solid #007bff; }
 
 body.dark-mode .merge-level-chip.has-inv  { background: #0d2116; color: #75e096; border-color: #28a745; }
 body.dark-mode .merge-level-chip.has-room { background: #0a1e33; color: #7db8f7; border-color: #007bff; }
+body.dark-mode .merge-level-chip.has-both { background: linear-gradient(135deg, #0d2116 50%, #0a1e33 50%); color: #75e096; border-color: #28a745; }
 body.dark-mode .merge-level-chip.missing  { background: #2c0a0e; color: #f5a0a8; border-color: #dc3545; }
 
 .chip-count {

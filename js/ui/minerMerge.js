@@ -2,6 +2,7 @@
 
 const UI_MinerMerge = {
   mergeSortMode: 'efficiency',
+  collapsedGroups: { miners: true },
 
   mostrar: function(user) {
     const div = document.getElementById('minermerge');
@@ -141,7 +142,7 @@ const UI_MinerMerge = {
       // aviso de duplicado
       if (nextTierAlreadyOwned) {
         const { status: dupStatus, count: dupCount } = userHasLevel[nextTier.id] || { status: null, count: 1 };
-        const onde = dupStatus === 'room' ? 'na sala' : 'no inventário';
+        const onde = dupStatus === 'both' ? 'no inventário e na sala' : dupStatus === 'room' ? 'na sala' : 'no inventário';
         const minerIngredient = ingredientes.find(i => i.tipo === 'miner');
         const consumeDesc = minerIngredient ? minerIngredient.precisa + '× ' + m.level : '2× ' + m.level;
         html += `<div class="merge-alert">⚠️ Este merge consome <strong>${consumeDesc}</strong> e produz <strong>1 ${nextLabel}</strong>. Você já tem <strong>${dupCount} ${nextLabel}</strong> ${onde} — ficará com <strong>${dupCount + 1} ${nextLabel}s</strong>.</div>`;
@@ -155,11 +156,11 @@ const UI_MinerMerge = {
         const lbl = t.type === 'merge' ? (rarityMap[t.level] || 'Lv' + t.level) : (t.rarityGroup?.title || 'Common');
         const { status, count } = userHasLevel[t.id] || { status: null, count: 0 };
         const isNext = t.id === nextTier.id;
-        const chipClass = status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
-        const statusIcon = status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
+        const chipClass = status === 'both' ? 'has-both' : status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
+        const statusIcon = status === 'both' ? '✅🏠' : status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
         const rarityDot = rarityEmoji[lbl] || '';
         const countBadge = count > 0 ? ` <span class="chip-count">×${count}</span>` : '';
-        const statusTip = status === 'inv' ? `No inventário (${count}×)` : status === 'room' ? `Instalada na sala (${count}×)` : 'Não possui';
+        const statusTip = status === 'both' ? `No inventário e instalada na sala (${count}×)` : status === 'inv' ? `No inventário (${count}×)` : status === 'room' ? `Instalada na sala (${count}×)` : 'Não possui';
         const powerVal = Utils.formatPower(t.power * 1e9);
         const bonusVal = t.bonusPower ? `${(t.bonusPower / 100).toFixed(2)}%` : '';
         const costVal = t.price ? `${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? 'gratuito' : '');
@@ -211,29 +212,35 @@ const UI_MinerMerge = {
     html += '</div></div>';
     html += '<div class="merge-planner-groups">';
 
-    html += '<div class="merge-planner-group">';
-    html += `<h4 style="color:#28a745;">✅ Prontos para merge (${prontos.length})</h4>`;
-    if (prontos.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge disponível agora.</p>';
-    html += '<div class="merge-cards">';
-    prontos.forEach(e => { html += buildCard(e, 'ready'); });
-    html += '</div></div>';
+    const buildAccordionGroup = (key, color, icon, title, list, emptyMsg, category) => {
+      const collapsed = !!this.collapsedGroups[key];
+      let h = `<div class="merge-planner-group${collapsed ? ' collapsed' : ''}">`;
+      h += `<button type="button" class="merge-group-toggle" style="color:${color};" onclick="UI_MinerMerge.toggleGroup('${key}')">`;
+      h += `<span class="merge-group-caret">▸</span> <h4 style="color:${color};">${icon} ${title} (${list.length})</h4>`;
+      h += '</button>';
+      h += '<div class="merge-group-body">';
+      if (list.length === 0) {
+        h += `<p style="opacity:.5; font-size:13px;">${emptyMsg}</p>`;
+      } else {
+        h += '<div class="merge-cards">';
+        list.forEach(e => { h += buildCard(e, category); });
+        h += '</div>';
+      }
+      h += '</div></div>';
+      return h;
+    };
 
-    html += '<div class="merge-planner-group">';
-    html += `<h4 style="color:#fd7e14;">🔩 Falta só peças (${faltaPartes.length})</h4>`;
-    if (faltaPartes.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge nessa situação.</p>';
-    html += '<div class="merge-cards">';
-    faltaPartes.forEach(e => { html += buildCard(e, 'parts'); });
-    html += '</div></div>';
-
-    html += '<div class="merge-planner-group">';
-    html += `<h4 style="color:#6c757d;">⛏️ Falta miners (${faltaMiners.length})</h4>`;
-    if (faltaMiners.length === 0) html += '<p style="opacity:.5; font-size:13px;">Nenhum merge nessa situação.</p>';
-    html += '<div class="merge-cards">';
-    faltaMiners.forEach(e => { html += buildCard(e, 'miners'); });
-    html += '</div></div>';
+    html += buildAccordionGroup('ready', '#28a745', '✅', 'Prontos para merge', prontos, 'Nenhum merge disponível agora.', 'ready');
+    html += buildAccordionGroup('parts', '#c2650a', '🔩', 'Falta só peças', faltaPartes, 'Nenhum merge nessa situação.', 'parts');
+    html += buildAccordionGroup('miners', '#6c757d', '⛏️', 'Falta miners', faltaMiners, 'Nenhum merge nessa situação.', 'miners');
 
     html += '</div></div>';
     return html;
+  },
+
+  toggleGroup: function(key) {
+    this.collapsedGroups[key] = !this.collapsedGroups[key];
+    this.mostrar();
   },
 
   setMergeSort: function(mode) {
