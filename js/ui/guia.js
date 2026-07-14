@@ -20,6 +20,14 @@ const UI_Guia = {
       <div class="guia-timeline">
 
         <div class="guia-tl-entry">
+          <div class="guia-tl-date">14 Jul 2026<br><span class="guia-tl-time">03:23</span></div>
+          <div class="guia-tl-content">
+            <span class="guia-tag tag-improved">MELHORIA</span>
+            <strong>Base de miners atualizada</strong> — 8.220 entradas (era 8.032), com power, preço, receita de merge, descrição e bônus de coleção sincronizados direto com o jogo. <strong>33 miners novos</strong> adicionados (SuperStorm, GrandMaster, Hashbeard's Ship, Art of Deal, Chains of Freedom e outros que ainda não estavam mapeados).
+          </div>
+        </div>
+
+        <div class="guia-tl-entry">
           <div class="guia-tl-date">12 Jul 2026<br><span class="guia-tl-time">15:01</span></div>
           <div class="guia-tl-content">
             <span class="guia-tag tag-improved">MELHORIA</span>
