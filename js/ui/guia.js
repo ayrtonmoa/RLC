@@ -20,6 +20,14 @@ const UI_Guia = {
       <div class="guia-timeline">
 
         <div class="guia-tl-entry">
+          <div class="guia-tl-date">17 Jul 2026<br><span class="guia-tl-time">13:07</span></div>
+          <div class="guia-tl-content">
+            <span class="guia-tag tag-improved">MELHORIA</span>
+            <strong>Farm Calculator</strong> — block rewards das ligas Gold I até Diamond II atualizados (POL, DOGE, ETH e TRX).
+          </div>
+        </div>
+
+        <div class="guia-tl-entry">
           <div class="guia-tl-date">14 Jul 2026<br><span class="guia-tl-time">03:23</span></div>
           <div class="guia-tl-content">
             <span class="guia-tag tag-improved">MELHORIA</span>
