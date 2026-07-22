@@ -158,6 +158,15 @@ else if (targetTab === 'inventario') {
           }
         }
         
+        // Changelog
+        else if (targetTab === 'changelog') {
+          console.log('🎯 Aba: Changelog');
+          if (typeof UI_Changelog !== 'undefined' && typeof UI_Changelog.mostrar === 'function') {
+            console.log('✅ Chamando UI_Changelog.mostrar()');
+            UI_Changelog.mostrar();
+          }
+        }
+
         // Debug
         else if (targetTab === 'debug') {
           console.log('🎯 Aba: Debug');

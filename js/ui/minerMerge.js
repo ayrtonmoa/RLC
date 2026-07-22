@@ -39,8 +39,9 @@ const UI_MinerMerge = {
       const info = UI_Inventario.getMergeInfoForMiner(m);
       if (!info) return;
       const { currentPowerHz, resultPowerHz } = info;
-      const gain = resultPowerHz - currentPowerHz;
-      categorize({ m, info, gain }, info);
+      const isolatedGain = resultPowerHz - currentPowerHz;
+      const impactoReal = this._calcularImpactoReal(m, info, userData);
+      categorize({ m, info, gain: impactoReal != null ? impactoReal : isolatedGain, isolatedGain, impactoReal }, info);
     });
 
     // Miners apenas na sala (2+ instaladas, sem cópia no inventário)
@@ -75,8 +76,9 @@ const UI_MinerMerge = {
         const info = UI_Inventario.getMergeInfoForMiner(fakeM);
         if (!info) return;
         const { currentPowerHz, resultPowerHz } = info;
-        const gain = resultPowerHz - currentPowerHz;
-        categorize({ m: fakeM, info, gain }, info);
+        const isolatedGain = resultPowerHz - currentPowerHz;
+        const impactoReal = this._calcularImpactoReal(fakeM, info, userData);
+        categorize({ m: fakeM, info, gain: impactoReal != null ? impactoReal : isolatedGain, isolatedGain, impactoReal }, info);
       });
     }
 
@@ -113,7 +115,7 @@ const UI_MinerMerge = {
     sortEntries(faltaMiners);
 
     const buildCard = (entry, category) => {
-      const { m, info } = entry;
+      const { m, info, impactoReal } = entry;
       const { nextTier, ingredientes, tiers, userHasLevel, currentPowerHz, resultPowerHz, nextTierAlreadyOwned, currentDbEntry } = info;
 
       const cardClass = category === 'parts' ? ' parts-only' : category === 'miners' ? ' missing-miners' : '';
@@ -138,6 +140,13 @@ const UI_MinerMerge = {
         html += `<span style="opacity:.65; font-size:11px;">🎯 ${curBonus}% → ${nextBonus}% <strong style="color:#28a745;">+${diffBonus}%</strong> bônus</span>`;
       }
       html += '</div>';
+
+      // impacto real na sala (estimado a partir do último estado do SmartRoom)
+      if (impactoReal != null) {
+        const cor = impactoReal >= 0 ? '#28a745' : '#dc3545';
+        const sinal = impactoReal >= 0 ? '+' : '';
+        html += `<div class="merge-card-real-impact">🏠 Impacto real na sala: <strong style="color:${cor};">${sinal}${Utils.formatPower(impactoReal)}</strong> <span class="real-impact-note" title="Estimado com base no último estado que você deixou no SmartRoom (sala real ou simulação otimizada)">ⓘ estimado</span></div>`;
+      }
 
       // aviso de duplicado
       if (nextTierAlreadyOwned) {
@@ -165,7 +174,11 @@ const UI_MinerMerge = {
         const bonusVal = t.bonusPower ? `${(t.bonusPower / 100).toFixed(2)}%` : '';
         const costVal = t.price ? `${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? 'gratuito' : '');
         const partsEncoded = (t.craftRecipe || []).map(r => `${r.name}|${r.rarity || ''}|${r.count}`).join('~');
-        html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}" data-tip-status="${statusTip}" data-tip-power="${powerVal}" data-tip-bonus="${bonusVal}" data-tip-cost="${costVal}" data-tip-parts="${partsEncoded}">${statusIcon} ${rarityDot} ${lbl}${countBadge}</span>`;
+        const tierImpacto = isNext ? impactoReal : this._calcularImpactoTroca(m, lbl, t.power * 1e9, t.bonusPower, userData);
+        const impactAttr = tierImpacto != null
+          ? ` data-tip-impact="${tierImpacto >= 0 ? '+' : ''}${Utils.formatPower(tierImpacto)} (estimado, sala/SmartRoom)"`
+          : '';
+        html += `<span class="merge-level-chip ${chipClass}${isNext ? ' next-tier' : ''}" data-tip-status="${statusTip}" data-tip-power="${powerVal}" data-tip-bonus="${bonusVal}" data-tip-cost="${costVal}" data-tip-parts="${partsEncoded}"${impactAttr}>${statusIcon} ${rarityDot} ${lbl}${countBadge}</span>`;
       });
       html += '</div>';
 
@@ -203,13 +216,14 @@ const UI_MinerMerge = {
     html += '<span style="font-size:12px;opacity:.6;margin-right:6px;">Ordenar por:</span>';
     [
       { key: 'efficiency', label: '⚡ Custo-benefício' },
-      { key: 'gain',       label: '📈 Maior ganho'     },
+      { key: 'gain',       label: '📈 Maior impacto real' },
       { key: 'cost',       label: '💰 Menor custo'     },
     ].forEach(({ key, label }) => {
       const active = sortMode === key;
       html += `<button class="merge-sort-btn${active ? ' active' : ''}" onclick="UI_MinerMerge.setMergeSort('${key}')">${label}</button>`;
     });
     html += '</div></div>';
+    html += '<div class="merge-planner-warning">⚠️ O <strong>impacto real na sala</strong> exibido em cada card (e usado na ordenação por impacto/custo-benefício) é estimado com base no último estado que você deixou na aba <strong>SmartRoom</strong> — a sala real ou a simulação otimizada, o que estiver ativo lá. Para valores mais próximos do real, abra o SmartRoom e rode o Auto-Otimizar antes de decidir os merges.</div>';
     html += '<div class="merge-planner-groups">';
 
     const buildAccordionGroup = (key, color, icon, title, list, emptyMsg, category) => {
@@ -236,6 +250,75 @@ const UI_MinerMerge = {
 
     html += '</div></div>';
     return html;
+  },
+
+  // Impacto real de "trocar" a miner atual por outro nível/tier no poder total da sala:
+  // remove 1 unidade do nível atual do pool instalado (se houver) e adiciona 1 unidade
+  // do nível alvo, recalculando bônus de coleção (só a primeira cópia de cada nível
+  // conta) e bônus de rack — mesma fórmula usada no banco do SmartRoom (roomPlanner.js
+  // _anexarImpactoBanco), mas como troca em vez de soma pura, já que a miner atual
+  // normalmente é consumida no merge.
+  // O pool usado é sempre UI_RoomPlanner.sim (garantido inicializado aqui se ainda não
+  // estiver) — reflete o último estado que o usuário deixou no SmartRoom, seja a sala
+  // real (espelhada automaticamente) ou uma simulação/otimização que ele tenha feito lá.
+  _calcularImpactoTroca: function(m, targetLabel, targetPowerHz, targetBonusPower, userData) {
+    if (typeof UI_RoomPlanner === 'undefined' || !userData?.roomData?.racks) return null;
+    if (!UI_RoomPlanner.sim) return null;
+
+    UI_RoomPlanner.sim.garantirInicializado(userData);
+    const poolOriginal = Object.values(UI_RoomPlanner.sim.rackAssignments || {}).flat();
+
+    const racks = userData.roomData.racks || [];
+    const rackFactorMap = {};
+    racks.forEach(r => rackFactorMap[r._id] = (r.bonus || 0) / 10000);
+    const extras = (userData.powerData.games || 0) + (userData.powerData.temp || 0);
+
+    const calcPoder = (pool) => {
+      const base = pool.reduce((s, mm) => s + mm.power, 0);
+      const chaves = new Set();
+      let bonusPct = 0;
+      pool.forEach(mm => {
+        const key = mm.name.toLowerCase() + '|' + String(mm.level || '').toLowerCase();
+        if (!chaves.has(key)) { chaves.add(key); bonusPct += (mm.bonus_percent || 0) / 10000; }
+      });
+      const rackBonus = pool.reduce((s, mm) => s + mm.power * (rackFactorMap[mm._rackId] || 0), 0);
+      return base + base * bonusPct + rackBonus + extras;
+    };
+
+    const idxRemover = poolOriginal.findIndex(mm =>
+      mm.name.toLowerCase() === m.name.toLowerCase() && String(mm.level || '').toLowerCase() === String(m.level).toLowerCase());
+
+    const poolDepois = poolOriginal.slice();
+    // rackDaNova só recebe um rack se a miner atual JÁ estiver instalada em algum
+    // (idxRemover !== -1) — a nova unidade herda o rack de onde a antiga saiu, então o
+    // bônus de rack dela entra no cálculo. Se a miner só existe no inventário (nunca foi
+    // instalada), rackDaNova fica undefined: rackFactorMap[undefined] é undefined, o `||
+    // 0` em calcPoder zera esse termo, e o resultado usa só poder base + bônus de
+    // coleção — sem inventar bônus de rack pra uma miner sem rack definido.
+    let rackDaNova;
+    if (idxRemover !== -1) {
+      rackDaNova = poolOriginal[idxRemover]._rackId;
+      poolDepois.splice(idxRemover, 1);
+    }
+    poolDepois.push({
+      name: m.name,
+      level: targetLabel,
+      power: targetPowerHz / 1e9,
+      bonus_percent: targetBonusPower || 0,
+      _rackId: rackDaNova,
+    });
+
+    const poderAntes = calcPoder(poolOriginal);
+    const poderDepois = calcPoder(poolDepois);
+    return (poderDepois - poderAntes) * 1e9;
+  },
+
+  // Impacto real específico do merge (m → nextTier), usado no card e na ordenação.
+  _calcularImpactoReal: function(m, info, userData) {
+    const rarityMap = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
+    const { nextTier, resultPowerHz } = info;
+    const nextLabel = nextTier.type === 'merge' ? (rarityMap[nextTier.level] || 'Unknown') : (nextTier.rarityGroup?.title || 'Common');
+    return this._calcularImpactoTroca(m, nextLabel, resultPowerHz, nextTier.bonusPower, userData);
   },
 
   toggleGroup: function(key) {

@@ -45,6 +45,29 @@ body.dark-mode .merge-sort-btn.active {
   background: #667eea;
   color: #fff;
 }
+.merge-planner-warning {
+  background: rgba(194, 101, 10, 0.08);
+  border: 1px solid rgba(194, 101, 10, 0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+.merge-card-real-impact {
+  font-size: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.real-impact-note {
+  opacity: 0.55;
+  font-size: 11px;
+  cursor: help;
+}
 .merge-planner-groups {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

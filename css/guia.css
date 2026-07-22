@@ -64,10 +64,31 @@
 .guia-timeline {
   border-left: 2px solid var(--border-color);
   margin-left: 8px;
-  margin-bottom: 36px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+.guia-updates-more {
+  margin: 0 0 36px 8px;
+}
+
+.guia-updates-more-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: #667eea;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.guia-updates-more-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: #667eea;
 }
 
 .guia-tl-entry {
