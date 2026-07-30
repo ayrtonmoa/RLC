@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '30 Jul 2026', time: '13:48', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Farm Calculator</strong> — block rewards das ligas Gold I até Diamond II atualizados (BTC, LTC, BNB, POL, XRP, DOGE, ETH, TRX e SOL).`
+    },
+    {
       date: '22 Jul 2026', time: '00:14', tag: 'improved', label: 'MELHORIA',
       html: `<strong>MinerMerge</strong> — impacto real na sala:
       <ul class="guia-tl-list">

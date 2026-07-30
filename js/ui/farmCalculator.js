@@ -22,8 +22,72 @@ const UI_FarmCalculator = {
     currentUsername: null
   },
 
-  // Dados das ligas
-  leagueData: {},
+  // Block rewards por liga (fonte estática oficial).
+  // Não há API pública de ligas e a captura via rede exige login,
+  // portanto estes valores são mantidos manualmente.
+  // Última sincronização manual: 2026-07-30
+  leagueData: {
+    '68af01ce48490927df92d687': {
+      name: 'Bronze I',
+      rewards: { RLT: 0.76, RST: 48, BTC: 0.00000201, LTC: 0.0015 }
+  },
+    '68af01ce48490927df92d686': {
+      name: 'Bronze II',
+      rewards: { RLT: 1.4, RST: 86, BTC: 0.00000411, LTC: 0.00269, BNB: 0.0007 }
+    },
+    '68af01ce48490927df92d685': {
+      name: 'Bronze III',
+      rewards: { RLT: 1.55, RST: 117, BTC: 0.00000759, LTC: 0.0049, BNB: 0.00087, POL: 6.73 }
+    },
+    '68af01ce48490927df92d684': {
+      name: 'Silver I',
+      rewards: { RLT: 0.91, RST: 69, BTC: 0.00000456, LTC: 0.0027, BNB: 0.000436, POL: 3.27, XRP: 0.257, USDT: 0.14287 }
+    },
+    '68af01ce48490927df92d683': {
+      name: 'Silver II',
+      rewards: { RLT: 1.07, RST: 81, BTC: 0.00000492, LTC: 0.00279, BNB: 0.00042, POL: 2.99, XRP: 0.228, DOGE: 5.5616, USDT: 0.195529 }
+    },
+    '68af01ce48490927df92d682': {
+      name: 'Silver III',
+      rewards: { RLT: 0.88, RST: 66, BTC: 0.00000439, LTC: 0.00237, BNB: 0.000338, POL: 2.29, XRP: 0.167, DOGE: 3.8405, ETH: 0.0001958, USDT: 0.274038 }
+    },
+    '68af01ce48490927df92d681': {
+      name: 'Gold I',
+      rewards: { RLT: 0.66, RST: 50, BTC: 0.00000388, LTC: 0.001927, BNB: 0.000235, POL: 1.53, XRP: 0.11691, DOGE: 2.785, ETH: 0.000117, TRX: 1.9256, USDT: 0.151647 }
+    },
+    '68af01ce48490927df92d680': {
+      name: 'Gold II',
+      rewards: { RLT: 1.06, RST: 80, BTC: 0.00000644, LTC: 0.002642, BNB: 0.000295, POL: 1.736, XRP: 0.1342, DOGE: 3.418, ETH: 0.0001268, TRX: 2.1158, SOL: 0.00817, HMT: 625, USDT: 0.274038 }
+    },
+    '68af01ce48490927df92d67f': {
+      name: 'Gold III',
+      rewards: { RLT: 2.72, RST: 204, BTC: 0.00001795, LTC: 0.008242, BNB: 0.000935, POL: 5.851, XRP: 0.4684, DOGE: 12.139, ETH: 0.0004778, TRX: 7.9736, SOL: 0.02177, HMT: 1528, USDT: 1 }
+    },
+    '68af01ce48490927df92d67e': {
+      name: 'Platinum I',
+      rewards: { RLT: 5.575, RST: 420, BTC: 0.00004483, LTC: 0.021277, BNB: 0.002492, POL: 16.134, XRP: 1.3195, DOGE: 35.512, ETH: 0.001443, TRX: 24.6909, SOL: 0.03493, ALGO: 33.992, HMT: 3875, USDT: 2.902 }
+    },
+    '68af01ce48490927df92d67d': {
+      name: 'Platinum II',
+      rewards: { RLT: 2.481, RST: 187, BTC: 0.00002608, LTC: 0.012373, BNB: 0.001506, POL: 9.929, XRP: 0.8336, DOGE: 23.061, ETH: 0.0009555, TRX: 16.7807, SOL: 0.03647, ALGO: 13.508, HMT: 2863, USDT: 1.723 }
+    },
+    '68af01ce48490927df92d67c': {
+      name: 'Platinum III',
+      rewards: { RLT: 1.504, RST: 113.13, BTC: 0.00001856, LTC: 0.008884, BNB: 0.001141, POL: 7.747, XRP: 0.675, DOGE: 19.361, ETH: 0.0008288, TRX: 15.0101, SOL: 0.04093, ALGO: 9.168, HMT: 2588, USDT: 1.635 }
+    },
+    '68af01ce48490927df92d67b': {
+      name: 'Diamond I',
+      rewards: { RST: 113, BTC: 0.00002024, LTC: 0.021512, BNB: 0.001475, POL: 16.91, XRP: 1.257, DOGE: 22.904, ETH: 0.000858, TRX: 5.1919, SOL: 0.01276, ALGO: 23, USDT: 1.627 }
+    },
+    '68af01ce48490927df92d67a': {
+      name: 'Diamond II',
+      rewards: { RST: 45.59218, BTC: 0.00003097, LTC: 0.025398, BNB: 0.002578, POL: 14.044, XRP: 1.0396, DOGE: 35.054, ETH: 0.0007118, TRX: 4.3154, SOL: 0.01521, ALGO: 35.088, USDT: 2.7 }
+    },
+    '68af01ce48490927df92d679': {
+      name: 'Diamond III',
+      rewards: { RST: 352, BTC: 0.0000046, LTC: 0.00561, BNB: 0.000455, POL: 3.479, XRP: 0.28, DOGE: 5.164, ETH: 0.000215, TRX: 1.557, SOL: 0.00546, ALGO: 8.18484, USDT: 1.38888 }
+    }
+  },
 
   // Configurações
   CONFIG: {
@@ -68,142 +132,6 @@ const UI_FarmCalculator = {
     }
   },
 
-  // Converter payouts da API para valores corretos
-  convertLeaguePayouts(currencies) {
-    const conversions = {
-      'RLT': 1e6,
-      'RST': 1e6,
-      'SAT': 1e10,
-      'LTC_SMALL': 1e8,
-      'BNB_SMALL': 1e10,
-      'MATIC_SMALL': 1e10,
-      'XRP_SMALL': 1e6,
-      'DOGE_SMALL': 1e4,
-      'ETH_SMALL': 1e10,
-      'TRX_SMALL': 1e10,
-      'SOL_SMALL': 1e9,
-      'ALGO_SMALL': 1e6,
-      'HMT': 1e6,
-      'USDT_SMALL': 1e6,
-    };
-
-    const nameMap = {
-      'SAT': 'BTC',
-      'LTC_SMALL': 'LTC',
-      'BNB_SMALL': 'BNB',
-      'MATIC_SMALL': 'POL',
-      'XRP_SMALL': 'XRP',
-      'DOGE_SMALL': 'DOGE',
-      'ETH_SMALL': 'ETH',
-      'TRX_SMALL': 'TRX',
-      'SOL_SMALL': 'SOL',
-      'ALGO_SMALL': 'ALGO',
-      'USDT_SMALL': 'USDT'
-      
-    };
-
-    const rewards = {};
-    currencies.forEach(c => {
-      const coinName = nameMap[c.name] || c.name;
-      const divider = conversions[c.name] || 1;
-      rewards[coinName] = c.payout / divider;
-    });
-
-    return rewards;
-  },
-
-  // Carregar dados das ligas da API (com fallback hardcoded)
-  async loadLeagueData() {
-    // Fallback com dados das ligas
-    const leaguesFallback = {
-  '68af01ce48490927df92d687': {
-    name: 'Bronze I',
-    rewards: { RLT: 0.76, RST: 48, BTC: 0.00000201, LTC: 0.0015 }
-  },
-  '68af01ce48490927df92d686': {
-    name: 'Bronze II',
-    rewards: { RLT: 1.4, RST: 86, BTC: 0.00000411, LTC: 0.00269, BNB: 0.0007 }
-  },
-  '68af01ce48490927df92d685': {
-    name: 'Bronze III',
-    rewards: { RLT: 1.55, RST: 117, BTC: 0.00000759, LTC: 0.0049, BNB: 0.00087, POL: 6.73 }
-  },
-  '68af01ce48490927df92d684': {
-    name: 'Silver I',
-    rewards: { RLT: 0.91, RST: 69, BTC: 0.00000456, LTC: 0.0027, BNB: 0.000436, POL: 3.27, XRP: 0.257, USDT: 0.14287 }
-  },
-  '68af01ce48490927df92d683': {
-    name: 'Silver II',
-    rewards: { RLT: 1.07, RST: 81, BTC: 0.00000492, LTC: 0.00279, BNB: 0.00042, POL: 2.99, XRP: 0.228, DOGE: 5.5616, USDT: 0.195529 }
-  },
-  '68af01ce48490927df92d682': {
-    name: 'Silver III',
-    rewards: { RLT: 0.88, RST: 66, BTC: 0.00000439, LTC: 0.00237, BNB: 0.000338, POL: 2.29, XRP: 0.167, DOGE: 3.8405, ETH: 0.0001958, USDT: 0.274038 }
-  },
-  '68af01ce48490927df92d681': {
-    name: 'Gold I',
-    rewards: { RLT: 0.66, RST: 50, BTC: 0.00000373, LTC: 0.00189, BNB: 0.000244, POL: 1.585, XRP: 0.115, DOGE: 2.73, ETH: 0.00012, TRX: 1.975, USDT: 0.151647 }
-  },
-  '68af01ce48490927df92d680': {
-    name: 'Gold II',
-    rewards: { RLT: 1.06, RST: 80, BTC: 0.00000619, LTC: 0.00259, BNB: 0.000306, POL: 1.799, XRP: 0.132, DOGE: 3.351, ETH: 0.00013, TRX: 2.17, SOL: 0.00838, HMT: 625, USDT: 0.274038 }
-  },
-  '68af01ce48490927df92d67f': {
-    name: 'Gold III',
-    rewards: { RLT: 2.72, RST: 204, BTC: 0.00001725, LTC: 0.00808, BNB: 0.000969, POL: 6.063, XRP: 0.459, DOGE: 11.901, ETH: 0.00049, TRX: 8.178, SOL: 0.02233, HMT: 1528, USDT: 1 }
-  },
-  '68af01ce48490927df92d67e': {
-    name: 'Platinum I',
-    rewards: { RLT: 5.575, RST: 420, BTC: 0.00004309, LTC: 0.02086, BNB: 0.002582, POL: 16.719, XRP: 1.294, DOGE: 34.816, ETH: 0.00148, TRX: 25.324, SOL: 0.03583, ALGO: 33.992, HMT: 3875, USDT: 2.902 }
-  },
-  '68af01ce48490927df92d67d': {
-    name: 'Platinum II',
-    rewards: { RLT: 2.481, RST: 187, BTC: 0.00002507, LTC: 0.01213, BNB: 0.001561, POL: 10.289, XRP: 0.817, DOGE: 22.609, ETH: 0.00098, TRX: 17.211, SOL: 0.0374, ALGO: 13.508, HMT: 2863, USDT: 1.723 }
-  },
-  '68af01ce48490927df92d67c': {
-    name: 'Platinum III',
-    rewards: { RLT: 1.504, RST: 113.13, BTC: 0.00001784, LTC: 0.00871, BNB: 0.001182, POL: 8.028, XRP: 0.662, DOGE: 18.981, ETH: 0.00085, TRX: 15.395, SOL: 0.04198, ALGO: 9.168, HMT: 2588, USDT: 1.635 }
-  },
-  '68af01ce48490927df92d67b': {
-    name: 'Diamond I',
-    rewards: { RST: 113, BTC: 0.00001945, LTC: 0.02109, BNB: 0.001528, POL: 17.523, XRP: 1.232, DOGE: 22.455, ETH: 0.00088, TRX: 5.325, SOL: 0.01308, ALGO: 23, USDT: 1.627 }
-  },
-  '68af01ce48490927df92d67a': {
-    name: 'Diamond II',
-    rewards: { RST: 45.59218, BTC: 0.00002977, LTC: 0.0249, BNB: 0.002671, POL: 14.553, XRP: 1.019, DOGE: 34.367, ETH: 0.00073, TRX: 4.426, SOL: 0.0156, ALGO: 35.088, USDT: 2.7 }
-  },
-  '68af01ce48490927df92d679': {
-    name: 'Diamond III',
-    rewards: { RST: 352, BTC: 0.0000046, LTC: 0.00561, BNB: 0.000455, POL: 3.479, XRP: 0.28, DOGE: 5.164, ETH: 0.000215, TRX: 1.557, SOL: 0.00546, ALGO: 8.18484, USDT: 1.38888 }
-  }
-};
-    try {
-      const res = await fetch('https://rollercoin.com/api/game/league-list');
-      if (!res.ok) throw new Error('Erro ao carregar ligas');
-      
-      const data = await res.json();
-      if (!data.success) throw new Error('API retornou erro');
-      
-      // Processar ligas da API
-      this.leagueData = {};
-      data.data.forEach(league => {
-        this.leagueData[league._id] = {
-          name: league.title.en,
-          minPower: league.min_power,
-          rewards: this.convertLeaguePayouts(league.currencies)
-        };
-      });
-      
-      console.log('✅ Ligas carregadas da API:', Object.keys(this.leagueData).length);
-    } catch (error) {
-      console.warn('⚠️ Erro ao carregar ligas da API, usando fallback:', error.message);
-      
-      // Usar fallback
-      this.leagueData = leaguesFallback;
-      console.log('✅ Ligas carregadas do fallback:', Object.keys(this.leagueData).length);
-    }
-  },
-
   // Obter block rewards da liga do usuário
   getBlockRewards(userData) {
     if (!userData || !userData.league_id) {
@@ -224,7 +152,6 @@ const UI_FarmCalculator = {
   // Inicialização
   async init() {
     this.loadFromStorage();
-    await this.loadLeagueData();
     this.fetchPrices();
     setInterval(() => this.fetchPrices(), 5 * 60 * 1000);
   },
