@@ -45,6 +45,13 @@ body {
   padding: 0;
 }
 
+/* Freio de segurança: nenhum elemento interno deve conseguir criar rolagem horizontal
+   na página inteira — se algo estourar a largura, ele fica cortado ali, não empurra o body. */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* ========== Typography ========== */
 h1, h2 { 
   text-align: center; 

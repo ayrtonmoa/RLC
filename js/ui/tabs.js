@@ -5,9 +5,25 @@ const UI_Tabs = {
     const navItems = document.querySelectorAll('.nav-item');
     const tabContents = document.querySelectorAll('.tab-content');
 
+    // Menu hambúrguer (mobile): sidebar vira off-canvas, escondida por padrão via CSS
+    // (transform: translateX(-100%) abaixo de 768px). Abre/fecha com a classe .open.
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const closeSidebar = () => {
+      sidebar?.classList.remove('open');
+      sidebarOverlay?.classList.remove('open');
+    };
+    sidebarToggle?.addEventListener('click', () => {
+      sidebar?.classList.toggle('open');
+      sidebarOverlay?.classList.toggle('open');
+    });
+    sidebarOverlay?.addEventListener('click', closeSidebar);
+
     navItems.forEach(item => {
       item.addEventListener('click', function() {
         const targetTab = this.dataset.tab;
+        closeSidebar();
 
         // Remove active de todos
         navItems.forEach(n => n.classList.remove('active'));

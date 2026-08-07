@@ -4,6 +4,19 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '07 Ago 2026', time: '15:11', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>MinerMerge</strong> reformulado e <strong>correções de layout mobile</strong>:
+      <ul class="guia-tl-list">
+        <li><strong>Layout em linhas com abas</strong> — os merges saem do formato de card denso (3 colunas com 8+ blocos de informação cada) e viram uma lista de linhas compactas, uma categoria (Prontos/Falta peças/Falta miners) por vez via abas. Os níveis que você já possui ficam sempre visíveis na linha; o resto (ingredientes, power detalhado, projeções) expande com um clique.</li>
+        <li><strong>% do seu poder atual</strong> — o impacto real de cada merge agora também mostra quanto isso representa em percentual do poder total da sala, pra ficar claro quando um ganho é insignificante mesmo parecendo bom isoladamente.</li>
+        <li><strong>Potencial da cadeia completa</strong> — além do próximo tier, cada merge mostra o custo e o impacto real projetado de seguir fundindo até o tier máximo; novo modo de ordenação "🔗 Cadeia completa" usa esse número.</li>
+        <li><strong>Alcance real com o que você tem</strong> — com base na quantidade real de cópias no inventário/sala, mostra até onde dá pra subir só fundindo (somando duplicatas que você já possui em níveis intermediários no caminho) e quanto custa em RLT.</li>
+        <li><strong>Correção</strong> — o impacto real negativo aparecia sem o sinal de "−" (parecia positivo); e um merge com impacto negativo podia ganhar a badge "🟢 Ótimo" por ser só "menos ruim" que os outros do grupo — agora tem piso absoluto (⛔ Prejudica a sala).</li>
+        <li><strong>Menu recolhível no mobile</strong> — a barra lateral, antes sempre fixa, virou um menu off-canvas com botão ☰ abaixo de 768px, liberando a largura da tela.</li>
+        <li><strong>Correção de rolagem horizontal</strong> — <code>.main-content</code> não encolhia abaixo do conteúdo mais largo (ex: grade de racks do SmartRoom), forçando a página inteira a alargar em vez de rolar só internamente; grids fixos de N colunas (stepper do Inventário, filtros, cards de simulação) agora empilham em telas estreitas.</li>
+      </ul>`
+    },
+    {
       date: '30 Jul 2026', time: '13:48', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Farm Calculator</strong> — block rewards das ligas Gold I até Diamond II atualizados (BTC, LTC, BNB, POL, XRP, DOGE, ETH, TRX e SOL).`
     },

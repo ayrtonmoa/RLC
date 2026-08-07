@@ -537,10 +537,30 @@ body.dark-mode #inventario [style*="color: #dc3545"] {
     font-size: 13px;
     padding: 6px 12px;
   }
-  
+
   .inv-modal-content,
   .simulation-panel {
     padding: 20px;
+  }
+
+  .inv-stepper {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .inv-textarea-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .inv-filter-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .inv-sim-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .inv-sim-summary-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 

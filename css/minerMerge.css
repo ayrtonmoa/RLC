@@ -10,7 +10,13 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+.merge-header-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
 }
 .merge-sort-controls {
   display: flex;
@@ -45,6 +51,54 @@ body.dark-mode .merge-sort-btn.active {
   background: #667eea;
   color: #fff;
 }
+
+.merge-planner-intro {
+  font-size: 13px;
+  opacity: 0.85;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+.merge-planner-explainer {
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.merge-planner-explainer summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.75;
+  list-style: none;
+}
+.merge-planner-explainer summary::-webkit-details-marker {
+  display: none;
+}
+.merge-planner-explainer[open] summary {
+  margin-bottom: 8px;
+  opacity: 1;
+  color: #667eea;
+}
+.merge-planner-explainer li {
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.merge-sort-desc {
+  font-size: 11px;
+  opacity: 0.7;
+  line-height: 1.4;
+  text-align: right;
+  max-width: 420px;
+  margin-left: auto;
+}
+@media (max-width: 768px) {
+  .merge-sort-desc {
+    text-align: left;
+    max-width: 100%;
+  }
+}
+
 .merge-planner-warning {
   background: rgba(194, 101, 10, 0.08);
   border: 1px solid rgba(194, 101, 10, 0.35);
@@ -55,98 +109,143 @@ body.dark-mode .merge-sort-btn.active {
   color: var(--text-primary);
   margin-bottom: 16px;
 }
-.merge-card-real-impact {
-  font-size: 12px;
-  margin-bottom: 8px;
+
+/* ===== Abas de categoria (Prontos / Falta peças / Falta miners) ===== */
+.merge-tabs {
   display: flex;
-  align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0;
 }
-.real-impact-note {
-  opacity: 0.55;
-  font-size: 11px;
-  cursor: help;
+.merge-tab {
+  padding: 8px 14px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s, border-color 0.15s;
 }
-.merge-planner-groups {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  align-items: start;
+.merge-tab:hover {
+  opacity: 0.9;
 }
-@media (max-width: 900px) {
-  .merge-planner-groups { grid-template-columns: 1fr; }
+.merge-tab.active {
+  opacity: 1;
+  border-bottom-color: var(--tab-color, #667eea);
+  color: var(--tab-color, #667eea);
 }
-.merge-planner-group {
+.merge-tab-count {
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+/* ===== Linhas de merge (uma por miner, com <details> nativo) ===== */
+.merge-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.merge-row {
+  background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
 }
-.merge-group-toggle {
+body.dark-mode .merge-row {
+  background: var(--bg-secondary);
+}
+.merge-row-summary {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
+  gap: 10px;
   padding: 10px 14px;
-  background: var(--bg-secondary);
-  border: none;
   cursor: pointer;
-  text-align: left;
+  list-style: none;
+  flex-wrap: wrap;
 }
-.merge-group-toggle h4 {
-  margin: 0;
-  font-size: 15px;
-}
-.merge-group-caret {
-  display: inline-block;
-  font-size: 11px;
-  opacity: 0.6;
-  transition: transform 0.15s;
-}
-.merge-planner-group.collapsed .merge-group-caret {
-  transform: rotate(0deg);
-}
-.merge-planner-group:not(.collapsed) .merge-group-caret {
-  transform: rotate(90deg);
-}
-.merge-group-body {
-  padding: 14px;
-}
-.merge-planner-group.collapsed .merge-group-body {
+.merge-row-summary::-webkit-details-marker {
   display: none;
 }
-.merge-cards {
+.merge-row-summary:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+.merge-row-caret {
+  font-size: 11px;
+  opacity: 0.5;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+.merge-row[open] .merge-row-caret {
+  transform: rotate(90deg);
+}
+.merge-row-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.merge-row-title {
+  font-weight: 600;
+  font-size: 13px;
+  min-width: 0;
+}
+.merge-row-levels {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 3px;
+  flex-wrap: wrap;
 }
-.merge-card {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 14px;
-  border-left: 4px solid #28a745;
+.merge-row-metrics {
+  display: flex;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+  margin-left: auto;
+  font-size: 12px;
 }
-.merge-card.parts-only {
-  border-left-color: #c2650a;
+.merge-row-body {
+  padding: 4px 14px 14px 46px;
+  border-top: 1px solid var(--border-color);
 }
-.merge-card.missing-miners {
-  border-left-color: #6c757d;
+
+/* ===== Telas estreitas: empilha a linha em vez de espremer tudo numa fileira só ===== */
+@media (max-width: 600px) {
+  .merge-row-summary {
+    flex-wrap: wrap;
+  }
+  .merge-row-title {
+    flex-basis: 100%;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .merge-row-metrics {
+    margin-left: 0;
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+  .merge-row-body {
+    padding-left: 14px;
+  }
 }
-body.dark-mode .merge-card {
-  background: var(--bg-secondary);
+
+.dim {
+  opacity: 0.6;
+  font-size: 11px;
 }
-.merge-card-title {
-  font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 6px;
+.summary-chip {
+  white-space: nowrap;
 }
+
 .merge-card-power {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  margin-bottom: 10px;
+  margin: 10px 0;
   flex-wrap: wrap;
 }
 .merge-card-power .gain {
@@ -159,16 +258,66 @@ body.dark-mode .merge-card {
   text-transform: uppercase;
   opacity: 0.6;
   margin-bottom: 4px;
-}
-.merge-card-levels {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
+  margin-top: 10px;
 }
 .merge-card-ingredients {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
+.merge-card-real-impact {
+  font-size: 12px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.real-impact-note {
+  opacity: 0.55;
+  font-size: 11px;
+  cursor: help;
+}
 
+/* ===== Badge de qualidade ===== */
+.merge-quality-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+.merge-quality-badge.tier-good {
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.4);
+}
+.merge-quality-badge.tier-ok {
+  background: rgba(255, 193, 7, 0.15);
+  color: #a07800;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+}
+.merge-quality-badge.tier-low {
+  background: rgba(220, 53, 69, 0.10);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+body.dark-mode .merge-quality-badge.tier-ok { color: #ffc107; }
+
+/* ===== Chip de nível mini (usado na linha sempre visível) ===== */
+.merge-level-chip.mini {
+  font-size: 10px;
+  padding: 1px 4px;
+}
+
+/* ===== Total de peças na label de ingredientes ===== */
+.merge-parts-total {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.75;
+  margin-left: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+}

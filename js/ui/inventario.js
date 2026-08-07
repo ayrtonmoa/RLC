@@ -20,7 +20,7 @@ const UI_Inventario = {
       <h2 style="margin-bottom: 30px; text-align: center; font-size: 28px;">📊 Análise de Inventário</h2>
 
       <!-- Stepper com 5 passos -->
-      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 40px;">
+      <div class="inv-stepper" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 40px;">
         <!-- Passo 1 -->
         <div style="text-align: center;">
           <div style="width: 50px; height: 50px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 24px; font-weight: bold;">1</div>
@@ -58,7 +58,7 @@ const UI_Inventario = {
       </div>
 
       <!-- Textarea e Botões -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; align-items: stretch;">
+      <div class="inv-textarea-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; align-items: stretch;">
         <div style="background: var(--bg-secondary); border-radius: 8px; padding: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column;">
           <label style="display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-primary);">📦 Miners do inventário:</label>
           <small style="display:block; margin-bottom:8px; color: var(--text-secondary);">Acesse <a href="https://rollercoin.com/storage/inventory/miners" target="_blank" style="color:#667eea;">Storage › Miners</a>, selecione tudo e cole aqui.</small>
@@ -1177,7 +1177,7 @@ const UI_Inventario = {
     html += '</div>';
 
     // Linha 1: Filtros principais
-    html += '<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px;">';
+    html += '<div class="inv-filter-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px;">';
     html += '<button onclick="UI_Inventario.filtrar(\'all\')" style="padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; ' + (this.currentFilter === 'all' ? 'background: #007bff; color: white; font-weight: bold;' : 'background: white; color: #333;') + '">Todas</button>';
     html += '<button onclick="UI_Inventario.filtrar(\'nao_possui\')" style="padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; ' + (this.currentFilter === 'nao_possui' ? 'background: #28a745; color: white; font-weight: bold;' : 'background: white; color: #333;') + '">🆕 Não Possuo</button>';
     html += '<button onclick="UI_Inventario.filtrar(\'possui_outra\')" style="padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.2s; ' + (this.currentFilter === 'possui_outra' ? 'background: #ff9800; color: white; font-weight: bold;' : 'background: white; color: #333;') + '">⚠️ Diferente</button>';
@@ -1227,7 +1227,7 @@ const UI_Inventario = {
       const corDiferenca = simResult.diferencaPower >= 0 ? '#28a745' : '#dc3545';
       const iconDiferenca = simResult.diferencaPower >= 0 ? '📈' : '📉';
 
-      html += '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">';
+      html += '<div class="inv-sim-cards-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">';
 
       // Card 1: Power Atual
       html += '<div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 15px; border: 1px solid rgba(255,255,255,0.2);">';
@@ -1261,7 +1261,7 @@ const UI_Inventario = {
       
       // Sumário de mudanças (se houver)
       if (simCounts.removidas > 0 || simCounts.adicionadas > 0) {
-        html += '<div style="margin-top: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">';
+        html += '<div class="inv-sim-summary-grid" style="margin-top: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">';
 
         if (simCounts.removidas > 0) {
           html += '<div style="background: rgba(220,53,69,0.1); border-left: 4px solid #dc3545; padding: 12px; border-radius: 4px;">';
