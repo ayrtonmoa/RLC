@@ -4,6 +4,86 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '08 Ago 2026', time: '11:12', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Farm Calculator</strong> — block rewards das ligas Gold I até Diamond II atualizados. Cada mini-tabela abaixo lista <strong>todas</strong> as moedas da liga; as que mudaram aparecem em destaque com antes/depois, as que ficaram iguais aparecem esmaecidas.
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+      ${(() => {
+        // [moeda, antes, depois] — quando antes === depois, a moeda não mudou.
+        const ligas = [
+          ['Gold I', [
+            ['RLT','0.66','0.66'], ['RST','50','50'],
+            ['BTC','0.00000388','0.00000395'], ['LTC','0.001927','0.002'], ['BNB','0.000235','0.000227'],
+            ['POL','1.53','1.53'], ['XRP','0.11691','0.11691'], ['DOGE','2.785','2.84'], ['ETH','0.000117','0.000117'],
+            ['TRX','1.9256','1.8582'], ['USDT','0.151647','0.151647'],
+          ]],
+          ['Gold II', [
+            ['RLT','1.06','1.06'], ['RST','80','80'],
+            ['BTC','0.00000644','0.00000657'], ['LTC','0.002642','0.0027'], ['BNB','0.000295','0.000285'],
+            ['POL','1.736','1.736'], ['XRP','0.1342','0.1342'], ['DOGE','3.418','3.486'], ['ETH','0.0001268','0.0001268'],
+            ['TRX','2.1158','2.042'], ['SOL','0.00817','0.00788'], ['HMT','625','625'], ['USDT','0.274038','0.274038'],
+          ]],
+          ['Gold III', [
+            ['RLT','2.72','2.72'], ['RST','204','204'],
+            ['BTC','0.00001795','0.00001831'], ['LTC','0.008242','0.0084'], ['BNB','0.000935','0.000902'],
+            ['POL','5.851','5.851'], ['XRP','0.4684','0.4684'], ['DOGE','12.139','12.382'], ['ETH','0.0004778','0.0004778'],
+            ['TRX','7.9736','7.695'], ['SOL','0.02177','0.02101'], ['HMT','1528','1528'], ['USDT','1','1'],
+          ]],
+          ['Platinum I', [
+            ['RLT','5.575','5.575'], ['RST','420','420'],
+            ['BTC','0.00004483','0.00004573'], ['LTC','0.021277','0.0217'], ['BNB','0.002492','0.002404'],
+            ['POL','16.134','16.134'], ['XRP','1.3195','1.3195'], ['DOGE','35.512','36.223'], ['ETH','0.001443','0.001443'],
+            ['TRX','24.6909','23.827'], ['SOL','0.03493','0.03371'], ['ALGO','33.992','33.992'], ['HMT','3875','3875'], ['USDT','2.902','2.902'],
+          ]],
+          ['Platinum II', [
+            ['RLT','2.481','2.481'], ['RST','187','187'],
+            ['BTC','0.00002608','0.0000266'], ['LTC','0.012373','0.0126'], ['BNB','0.001506','0.001454'],
+            ['POL','9.929','9.929'], ['XRP','0.8336','0.8336'], ['DOGE','23.061','23.522'], ['ETH','0.0009555','0.0009555'],
+            ['TRX','16.7807','16.193'], ['SOL','0.03647','0.03519'], ['ALGO','13.508','13.508'], ['HMT','2863','2863'], ['USDT','1.723','1.723'],
+          ]],
+          ['Platinum III', [
+            ['RLT','1.504','1.504'], ['RST','113.13','113.13'],
+            ['BTC','0.00001856','0.00001893'], ['LTC','0.008884','0.0091'], ['BNB','0.001141','0.001101'],
+            ['POL','7.747','7.747'], ['XRP','0.675','0.675'], ['DOGE','19.361','19.748'], ['ETH','0.0008288','0.0008288'],
+            ['TRX','15.0101','14.485'], ['SOL','0.04093','0.0395'], ['ALGO','9.168','9.168'], ['HMT','2588','2588'], ['USDT','1.635','1.635'],
+          ]],
+          ['Diamond I', [
+            ['RST','113','113'],
+            ['BTC','0.00002024','0.00002064'], ['LTC','0.021512','0.0219'], ['BNB','0.001475','0.001423'],
+            ['POL','16.91','16.91'], ['XRP','1.257','1.257'], ['DOGE','22.904','23.362'], ['ETH','0.000858','0.000858'],
+            ['TRX','5.1919','5.01'], ['SOL','0.01276','0.01231'], ['ALGO','23','23'], ['USDT','1.627','1.627'],
+          ]],
+          ['Diamond II', [
+            ['RST','45.59218','45.59218'],
+            ['BTC','0.00003097','0.00003159'], ['LTC','0.025398','0.0259'], ['BNB','0.002578','0.002487'],
+            ['POL','14.044','14.044'], ['XRP','1.0396','1.0396'], ['DOGE','35.054','35.755'], ['ETH','0.0007118','0.0007118'],
+            ['TRX','4.3154','4.164'], ['SOL','0.01521','0.01468'], ['ALGO','35.088','35.088'], ['USDT','2.7','2.7'],
+          ]],
+        ];
+        return ligas.map(([liga, moedas]) => `
+          <table style="table-layout:fixed; border-collapse:collapse; font-size:10.5px; border:1px solid var(--border-color); border-radius:6px; overflow:hidden; flex:0 0 230px; width:230px;">
+            <colgroup><col style="width:38px;"><col style="width:96px;"><col style="width:96px;"></colgroup>
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-color); background:rgba(102,126,234,0.08);">
+                <th colspan="3" style="text-align:left; padding:5px 8px; font-size:11px;">${liga}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${moedas.map(([moeda, antes, depois]) => {
+                const mudou = antes !== depois;
+                const subiu = mudou && parseFloat(depois) > parseFloat(antes);
+                const cor = subiu ? '#28a745' : '#dc3545';
+                return `<tr style="border-bottom:1px solid var(--border-color); ${mudou ? '' : 'opacity:.45;'}">
+                  <td style="padding:3px 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${moeda}</td>
+                  <td style="padding:3px 4px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${mudou ? antes : '—'}</td>
+                  <td style="padding:3px 6px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${mudou ? `font-weight:600; color:${cor};` : ''}">${mudou ? '→ ' + depois : 'sem mudança'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>`).join('');
+      })()}
+      </div>`
+    },
+    {
       date: '07 Ago 2026', time: '15:11', tag: 'improved', label: 'MELHORIA',
       html: `<strong>MinerMerge</strong> reformulado e <strong>correções de layout mobile</strong>:
       <ul class="guia-tl-list">

@@ -25,7 +25,7 @@ const UI_FarmCalculator = {
   // Block rewards por liga (fonte estática oficial).
   // Não há API pública de ligas e a captura via rede exige login,
   // portanto estes valores são mantidos manualmente.
-  // Última sincronização manual: 2026-07-30
+  // Última sincronização manual: 2026-08-08
   leagueData: {
     '68af01ce48490927df92d687': {
       name: 'Bronze I',
@@ -53,35 +53,35 @@ const UI_FarmCalculator = {
     },
     '68af01ce48490927df92d681': {
       name: 'Gold I',
-      rewards: { RLT: 0.66, RST: 50, BTC: 0.00000388, LTC: 0.001927, BNB: 0.000235, POL: 1.53, XRP: 0.11691, DOGE: 2.785, ETH: 0.000117, TRX: 1.9256, USDT: 0.151647 }
+      rewards: { RLT: 0.66, RST: 50, BTC: 0.00000395, LTC: 0.002, BNB: 0.000227, POL: 1.53, XRP: 0.11691, DOGE: 2.84, ETH: 0.000117, TRX: 1.8582, USDT: 0.151647 }
     },
     '68af01ce48490927df92d680': {
       name: 'Gold II',
-      rewards: { RLT: 1.06, RST: 80, BTC: 0.00000644, LTC: 0.002642, BNB: 0.000295, POL: 1.736, XRP: 0.1342, DOGE: 3.418, ETH: 0.0001268, TRX: 2.1158, SOL: 0.00817, HMT: 625, USDT: 0.274038 }
+      rewards: { RLT: 1.06, RST: 80, BTC: 0.00000657, LTC: 0.0027, BNB: 0.000285, POL: 1.736, XRP: 0.1342, DOGE: 3.486, ETH: 0.0001268, TRX: 2.042, SOL: 0.00788, HMT: 625, USDT: 0.274038 }
     },
     '68af01ce48490927df92d67f': {
       name: 'Gold III',
-      rewards: { RLT: 2.72, RST: 204, BTC: 0.00001795, LTC: 0.008242, BNB: 0.000935, POL: 5.851, XRP: 0.4684, DOGE: 12.139, ETH: 0.0004778, TRX: 7.9736, SOL: 0.02177, HMT: 1528, USDT: 1 }
+      rewards: { RLT: 2.72, RST: 204, BTC: 0.00001831, LTC: 0.0084, BNB: 0.000902, POL: 5.851, XRP: 0.4684, DOGE: 12.382, ETH: 0.0004778, TRX: 7.695, SOL: 0.02101, HMT: 1528, USDT: 1 }
     },
     '68af01ce48490927df92d67e': {
       name: 'Platinum I',
-      rewards: { RLT: 5.575, RST: 420, BTC: 0.00004483, LTC: 0.021277, BNB: 0.002492, POL: 16.134, XRP: 1.3195, DOGE: 35.512, ETH: 0.001443, TRX: 24.6909, SOL: 0.03493, ALGO: 33.992, HMT: 3875, USDT: 2.902 }
+      rewards: { RLT: 5.575, RST: 420, BTC: 0.00004573, LTC: 0.0217, BNB: 0.002404, POL: 16.134, XRP: 1.3195, DOGE: 36.223, ETH: 0.001443, TRX: 23.827, SOL: 0.03371, ALGO: 33.992, HMT: 3875, USDT: 2.902 }
     },
     '68af01ce48490927df92d67d': {
       name: 'Platinum II',
-      rewards: { RLT: 2.481, RST: 187, BTC: 0.00002608, LTC: 0.012373, BNB: 0.001506, POL: 9.929, XRP: 0.8336, DOGE: 23.061, ETH: 0.0009555, TRX: 16.7807, SOL: 0.03647, ALGO: 13.508, HMT: 2863, USDT: 1.723 }
+      rewards: { RLT: 2.481, RST: 187, BTC: 0.0000266, LTC: 0.0126, BNB: 0.001454, POL: 9.929, XRP: 0.8336, DOGE: 23.522, ETH: 0.0009555, TRX: 16.193, SOL: 0.03519, ALGO: 13.508, HMT: 2863, USDT: 1.723 }
     },
     '68af01ce48490927df92d67c': {
       name: 'Platinum III',
-      rewards: { RLT: 1.504, RST: 113.13, BTC: 0.00001856, LTC: 0.008884, BNB: 0.001141, POL: 7.747, XRP: 0.675, DOGE: 19.361, ETH: 0.0008288, TRX: 15.0101, SOL: 0.04093, ALGO: 9.168, HMT: 2588, USDT: 1.635 }
+      rewards: { RLT: 1.504, RST: 113.13, BTC: 0.00001893, LTC: 0.0091, BNB: 0.001101, POL: 7.747, XRP: 0.675, DOGE: 19.748, ETH: 0.0008288, TRX: 14.485, SOL: 0.0395, ALGO: 9.168, HMT: 2588, USDT: 1.635 }
     },
     '68af01ce48490927df92d67b': {
       name: 'Diamond I',
-      rewards: { RST: 113, BTC: 0.00002024, LTC: 0.021512, BNB: 0.001475, POL: 16.91, XRP: 1.257, DOGE: 22.904, ETH: 0.000858, TRX: 5.1919, SOL: 0.01276, ALGO: 23, USDT: 1.627 }
+      rewards: { RST: 113, BTC: 0.00002064, LTC: 0.0219, BNB: 0.001423, POL: 16.91, XRP: 1.257, DOGE: 23.362, ETH: 0.000858, TRX: 5.01, SOL: 0.01231, ALGO: 23, USDT: 1.627 }
     },
     '68af01ce48490927df92d67a': {
       name: 'Diamond II',
-      rewards: { RST: 45.59218, BTC: 0.00003097, LTC: 0.025398, BNB: 0.002578, POL: 14.044, XRP: 1.0396, DOGE: 35.054, ETH: 0.0007118, TRX: 4.3154, SOL: 0.01521, ALGO: 35.088, USDT: 2.7 }
+      rewards: { RST: 45.59218, BTC: 0.00003159, LTC: 0.0259, BNB: 0.002487, POL: 14.044, XRP: 1.0396, DOGE: 35.755, ETH: 0.0007118, TRX: 4.164, SOL: 0.01468, ALGO: 35.088, USDT: 2.7 }
     },
     '68af01ce48490927df92d679': {
       name: 'Diamond III',
