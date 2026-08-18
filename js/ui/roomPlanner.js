@@ -8,6 +8,116 @@ const UI_RoomPlanner = {
   _selectedSlot: null,
   _acoesExpandido: false,
 
+  // Teto de poder da sala: o Auto-Otimizar não monta uma sala que passe desse total
+  // (serve pra segurar a liga — cada liga tem um power goal, ver leagueData em
+  // farmCalculator.js). Internamente tudo é GH/s, que é a unidade de miner.power e de
+  // powerData.current_power em toda a base (por isso o *1e9 na hora de exibir).
+  _UNIDADES_POWER: { GH: 1, TH: 1e3, PH: 1e6, EH: 1e9, ZH: 1e12, YH: 1e15 },
+  _limitePower: null,
+  _limiteInfo: null,
+
+  // Unidade inicial na escala do poder de quem está usando: com 635 EH/s na conta, abrir o
+  // seletor em "PH/s" é convite pra digitar 300 pensando em EH e capar a sala em 0.3 EH.
+  // Só vale como palpite inicial — assim que o usuário salva qualquer limite, a escolha dele manda.
+  _unidadePadrao: function() {
+    const user = (typeof State !== 'undefined' && State.getUserData) ? State.getUserData() : null;
+    const poder = user && user.powerData ? (user.powerData.current_power || 0) : 0;
+    const escalas = Object.entries(this._UNIDADES_POWER).sort((a, b) => b[1] - a[1]);
+    for (const [nome, fator] of escalas) {
+      if (poder >= fator) return nome;
+    }
+    return 'PH';
+  },
+
+  _carregarLimite: function() {
+    if (this._limitePower) return this._limitePower;
+    try {
+      const raw = localStorage.getItem('smartroom_power_limit');
+      this._limitePower = raw ? JSON.parse(raw) : { valor: '', unidade: this._unidadePadrao() };
+    } catch {
+      this._limitePower = { valor: '', unidade: this._unidadePadrao() };
+    }
+    return this._limitePower;
+  },
+
+  _limiteEmGH: function() {
+    const lim = this._carregarLimite();
+    const v = parseFloat(lim.valor);
+    if (!isFinite(v) || v <= 0) return null;
+    return v * (this._UNIDADES_POWER[lim.unidade] || 1);
+  },
+
+  // Salva sem re-renderizar de propósito: o onchange do input dispara no blur, e blur
+  // acontece justamente quando o usuário clica no "Auto-Otimizar" — re-renderizar aqui
+  // destruiria o botão antes do clique chegar nele.
+  setLimitePower: function(valor, unidade) {
+    const lim = this._carregarLimite();
+    if (valor !== undefined) lim.valor = valor;
+    if (unidade !== undefined) lim.unidade = unidade;
+    // Mexeu no número na mão, o teto deixa de ser "o da liga X" — quem escolhe pela liga
+    // remarca isso logo depois de chamar este método.
+    this._limiteLigaEscolhida = null;
+    try { localStorage.setItem('smartroom_power_limit', JSON.stringify(lim)); } catch {}
+  },
+
+  limparLimitePower: function() {
+    this.setLimitePower('', undefined);
+    this._limiteInfo = null;
+    this._rerender();
+  },
+
+  // Lê o que está na tela antes de otimizar — cobre o caso de o usuário digitar o valor e
+  // clicar direto no botão sem que o onchange tenha rodado.
+  _sincronizarLimiteDoDOM: function() {
+    const inputValor = document.getElementById('smartRoomLimiteValor');
+    const inputUnidade = document.getElementById('smartRoomLimiteUnidade');
+    if (!inputValor) return;
+
+    // setLimitePower zera a marcação de "teto veio da liga X" por assumir edição manual —
+    // mas aqui é só releitura da tela. Se os valores não mudaram, a marcação continua válida
+    // (senão o rótulo da liga sumia do painel a cada Auto-Otimizar).
+    const anterior = this._limiteLigaEscolhida;
+    const lim = this._carregarLimite();
+    const igual = String(lim.valor) === String(inputValor.value)
+      && (!inputUnidade || lim.unidade === inputUnidade.value);
+
+    this.setLimitePower(inputValor.value, inputUnidade ? inputUnidade.value : undefined);
+    if (igual) this._limiteLigaEscolhida = anterior;
+  },
+
+  // Atalho "ficar na liga X" usando os power goals que o Farm Calculator já mantém.
+  // O teto de uma liga NÃO é a meta dela — é a meta da liga SEGUINTE: quem quer continuar
+  // em Diamond III precisa ficar abaixo do que promove pra Titan I. Por isso cada opção
+  // aponta pra meta da próxima, com 0.001 a menos pra não parar exatamente em cima do
+  // degrau (o otimizador chega a encostar no teto: nos testes parou em 500.000 EH/s cravado).
+  _ligasComTeto: function() {
+    if (typeof UI_FarmCalculator === 'undefined' || !UI_FarmCalculator.leagueData) return [];
+    const ligas = Object.values(UI_FarmCalculator.leagueData);
+    return ligas.map((liga, i) => {
+      const proxima = ligas[i + 1];
+      if (!proxima || !proxima.powerGoal) return null;
+      const m = String(proxima.powerGoal).match(/([\d.]+)\s*(GH|TH|PH|EH|ZH|YH)\/s/i);
+      if (!m) return null;
+      const valor = Math.max(0, parseFloat(m[1]) - 0.001);
+      return {
+        nome: liga.name,
+        proxima: proxima.name,
+        metaProxima: proxima.powerGoal,
+        valor: String(Number(valor.toFixed(3))),
+        unidade: m[2].toUpperCase(),
+      };
+    }).filter(Boolean);
+  },
+
+  usarMetaDaLiga: function(nomeLiga) {
+    const alvo = this._ligasComTeto().find(l => l.nome === nomeLiga);
+    if (!alvo) return;
+    this.setLimitePower(alvo.valor, alvo.unidade);
+    this._limiteLigaEscolhida = nomeLiga;
+    this._limiteInfo = null;
+    this._rerender();
+  },
+
   mostrar: function(user, containerId) {
     const div = document.getElementById(containerId || 'roomplanner');
     if (!div) return;
@@ -98,6 +208,7 @@ const UI_RoomPlanner = {
     html += '<button onclick="UI_RoomPlanner.executarAutoOtimizacao()" class="room-planner-auto-btn">⚡ Auto-Otimizar <span class="planner-pool-count">' + poolSize + ' miners disponíveis</span></button>';
     if (this.sim.ativo) html += '<button onclick="UI_RoomPlanner.resetarSimulacao()" class="room-planner-reset-btn" title="Descarta remoções/adições/trocas e volta pro estado real">🔄 Resetar simulação</button>';
     html += '</div>';
+    html += this._renderLimiteControle();
     html += '</div>';
 
     html += '<div class="room-planner-tabs">';
@@ -120,6 +231,47 @@ const UI_RoomPlanner = {
     const container = document.getElementById('roomPlannerContainer');
     if (container) container.outerHTML = this.render(userData);
     this._restaurarScrollSala();
+  },
+
+  _renderLimiteControle: function() {
+    const lim = this._carregarLimite();
+    const limiteGH = this._limiteEmGH();
+
+    let html = '<div class="room-planner-limite">';
+    html += '<span class="room-planner-limite-label" title="Teto de poder TOTAL da sala (base + bônus de coleção, sets e racks) — o mesmo número que o jogo mostra e que define a liga.">🎯 Limite de poder</span>';
+    html += '<input type="number" id="smartRoomLimiteValor" class="room-planner-limite-input" min="0" step="any" placeholder="sem limite"'
+      + ' value="' + (lim.valor === null || lim.valor === undefined ? '' : lim.valor) + '"'
+      + ' onchange="UI_RoomPlanner.setLimitePower(this.value, undefined)">';
+    html += '<select id="smartRoomLimiteUnidade" class="room-planner-limite-select" onchange="UI_RoomPlanner.setLimitePower(undefined, this.value)">';
+    Object.keys(this._UNIDADES_POWER).forEach(u => {
+      html += '<option value="' + u + '"' + (lim.unidade === u ? ' selected' : '') + '>' + u + '/s</option>';
+    });
+    html += '</select>';
+
+    if (limiteGH) {
+      html += '<button class="room-planner-limite-clear" onclick="UI_RoomPlanner.limparLimitePower()" title="Remover o limite">✕</button>';
+    }
+
+    const ligas = this._ligasComTeto();
+    if (ligas.length) {
+      html += '<select class="room-planner-limite-select room-planner-limite-liga" onchange="UI_RoomPlanner.usarMetaDaLiga(this.value); this.selectedIndex=0;">';
+      html += '<option value="">🏆 quer ficar no topo de qual liga?</option>';
+      ligas.forEach(l => {
+        html += '<option value="' + l.nome + '">Topo de ' + l.nome + ' — até ' + l.valor + ' ' + l.unidade + '/s</option>';
+      });
+      html += '</select>';
+    }
+
+    if (limiteGH) {
+      const escolhida = this._limiteLigaEscolhida ? ligas.find(l => l.nome === this._limiteLigaEscolhida) : null;
+      html += '<span class="room-planner-limite-hint">O Auto-Otimizar não vai passar de ' + Utils.formatPower(limiteGH * 1e9) + '.'
+        + (escolhida ? ' Você fica no <strong>topo de ' + escolhida.nome + '</strong>, logo abaixo dos ' + escolhida.metaProxima + ' que promovem pra ' + escolhida.proxima + '.' : '')
+        + '</span>';
+    } else {
+      html += '<span class="room-planner-limite-hint">Sem limite: o Auto-Otimizar usa o máximo de poder possível.</span>';
+    }
+    html += '</div>';
+    return html;
   },
 
   _agruparRacksPorSala: function(racks) {
@@ -238,6 +390,7 @@ const UI_RoomPlanner = {
     html += '<div class="comparison-item"><span class="comparison-label">Bônus estimado</span><span class="comparison-value">+' + bonusEstimado.percentual.toFixed(2) + '% <small>(' + Utils.formatPower(bonusEstimado.valor * 1e9) + ')</small></span></div>';
     html += '<div class="comparison-delta" style="color:' + bonusDeltaColor + '">' + (bonusDeltaPercent >= 0 ? '+' : '') + bonusDeltaPercent.toFixed(2) + '%</div>';
     html += '</div>';
+    html += this._renderLimiteStatus(result.poderEstimado);
     html += '<p class="planner-pool-info">' + result.totalPlaced + ' miners alocadas de ' + result.totalPool + ' disponíveis</p>';
     html += '<p class="planner-edit-hint">✏️ Clique numa miner e depois em outra célula pra trocar, ou pegue uma miner do banco abaixo e clique num rack pra encaixar.</p>';
 
@@ -262,6 +415,42 @@ const UI_RoomPlanner = {
 
     html += this._renderBanco();
     html += this._renderListaDeAcoes(userData);
+    return html;
+  },
+
+  // Fica logo abaixo da comparação de poder pra deixar claro o quanto sobrou de folga até o
+  // teto — e, quando o plano estoura mesmo assim, explicar por quê (edição manual depois do
+  // Auto-Otimizar, ou poder fixo de games/temp maior que o próprio limite).
+  _renderLimiteStatus: function(poderEstimado) {
+    const limiteGH = this._limiteEmGH();
+    if (!limiteGH) return '';
+
+    const dentro = poderEstimado <= limiteGH;
+    const folga = limiteGH - poderEstimado;
+    const info = this._limiteInfo;
+
+    // A estimativa é ancorada no current_power da API (ver _calcularPoderEstimado): se esse
+    // dado estiver defasado em relação às miners da sala, o número pode sair negativo e a
+    // porcentagem viraria lixo ("-20000000%") — nesse caso mostra só o estado, sem o %.
+    const percentualConfiavel = poderEstimado > 0;
+    const uso = (poderEstimado / limiteGH) * 100;
+
+    let html = '<div class="room-planner-limite-status ' + (dentro ? 'dentro' : 'estourado') + '">';
+    html += '<span class="room-planner-limite-status-main">' + (dentro ? '🎯' : '⚠️') + ' Limite ' + Utils.formatPower(limiteGH * 1e9)
+      + (percentualConfiavel ? ' — usando <strong>' + uso.toFixed(1) + '%</strong>' : '')
+      + '</span>';
+    if (percentualConfiavel) {
+      html += '<span class="room-planner-limite-status-sub">'
+        + (dentro ? 'folga de ' + Utils.formatPower(folga * 1e9) : 'passou ' + Utils.formatPower(-folga * 1e9) + ' do teto')
+        + '</span>';
+    }
+
+    if (info && info.inalcancavel) {
+      html += '<span class="room-planner-limite-status-sub">O limite é menor que o poder fixo da conta (games/temp), então não dá pra respeitar só tirando miners.</span>';
+    } else if (info && info.removidas > 0) {
+      html += '<span class="room-planner-limite-status-sub">' + info.removidas + ' miner(s) ficaram no banco pra caber no limite.</span>';
+    }
+    html += '</div>';
     return html;
   },
 
@@ -655,6 +844,98 @@ const UI_RoomPlanner = {
   // só a DIFERENÇA entre o pool simulado e o pool real (calculados com a mesma fórmula
   // aproximada dos dois lados) — assim, sem nenhuma mudança simulada, o resultado bate
   // exatamente com o poder real, e só muda pelo que o usuário de fato alterou.
+  _setDaMiner: function(m) {
+    if (typeof SetsData === 'undefined') return null;
+    return SetsData.sets.find(set => set.miners.some(sm => this._matchSetPiece(sm, m))) || null;
+  },
+
+  // Encaixa o plano dentro do teto de poder, em duas fases.
+  //
+  // 1) TIRA sempre a miner de MENOR impacto, uma por vez, até caber. Parece ingênuo perto de
+  //    "tira logo uma grande que resolve o excesso de uma vez", mas é justamente o contrário:
+  //    ir de pouco em pouco é o que chega mais perto do teto, e ainda protege as peças de set
+  //    sem precisar de regra especial — elas têm impacto altíssimo, então ficam naturalmente
+  //    por último. (A versão anterior preferia "quem cobre o excesso sozinha" e, num teste com
+  //    o Radio Set, sacrificava uma peça de +90% quando bastava tirar algumas miners comuns.)
+  //
+  // 2) RECOMPÕE: depois que o corte para, sobra folga até o teto — e às vezes MUITA folga,
+  //    porque a última remoção pode ter derrubado uma faixa de set inteira. Essa fase tenta
+  //    devolver miners do banco (das maiores pras menores) enquanto couberem no teto e no
+  //    rack, recuperando poder que senão ficaria jogado fora.
+  //
+  // O poder é recalculado a cada passo porque tirar//pôr uma miner mexe nos bônus de coleção
+  // e de set — ou seja, muda o impacto de todas as outras.
+  _aplicarLimiteDePoder: function(rackAssignments, banco, racks, userData, limiteGH, rackCapacity) {
+    const poderAtual = () => {
+      const placed = Object.values(rackAssignments).flat();
+      return placed.length ? this._calcularPoderEstimado(placed, racks, userData) : this._calcularPoderEstimado([], racks, userData);
+    };
+
+    let removidas = 0;
+    let restantes = Object.values(rackAssignments).flat().length + 1;
+    while (restantes-- > 0) {
+      const placed = Object.values(rackAssignments).flat();
+      if (!placed.length) break;
+      if (this._calcularPoderEstimado(placed, racks, userData) <= limiteGH) break;
+
+      this._anexarImpactosPool(placed, racks, userData);
+      const alvo = placed.reduce((a, b) => (a._impact <= b._impact ? a : b));
+
+      const lista = rackAssignments[alvo._rackId] || [];
+      const i = lista.indexOf(alvo);
+      if (i === -1) break;
+      lista.splice(i, 1);
+      if (rackCapacity) rackCapacity[alvo._rackId] = (rackCapacity[alvo._rackId] || 0) + (alvo.cells || 2);
+      delete alvo._rackId;
+      banco.push(alvo);
+      removidas++;
+    }
+
+    // Fase 2 — só faz sentido com o controle de capacidade em mãos; peças de set ficam de
+    // fora porque só valem no rack temático delas (mesma razão do preenchimento por
+    // fragmentação no executarAutoOtimizacao).
+    let recolocadas = 0;
+    if (rackCapacity && banco.length) {
+      const candidatos = banco
+        .map((m, idx) => ({ m, idx }))
+        .filter(({ m }) => !this._setDaMiner(m))
+        .sort((a, b) => b.m.power - a.m.power);
+
+      const jaUsados = new Set();
+      candidatos.forEach(({ m, idx }) => {
+        if (jaUsados.has(idx)) return;
+        const cells = m.cells || 2;
+        const rack = racks.find(r => (rackCapacity[r._id] || 0) >= cells);
+        if (!rack) return;
+
+        rackAssignments[rack._id].push({ ...m, _rackId: rack._id });
+        const tentativa = Object.values(rackAssignments).flat();
+        if (this._calcularPoderEstimado(tentativa, racks, userData) > limiteGH) {
+          rackAssignments[rack._id].pop();
+          return;
+        }
+        rackCapacity[rack._id] -= cells;
+        jaUsados.add(idx);
+        recolocadas++;
+      });
+
+      if (jaUsados.size) {
+        const restantesNoBanco = banco.filter((_, idx) => !jaUsados.has(idx));
+        banco.length = 0;
+        banco.push(...restantesNoBanco);
+      }
+    }
+
+    const placedFinal = Object.values(rackAssignments).flat();
+    const poderFinal = poderAtual();
+    return {
+      removidas,
+      recolocadas,
+      // Poder fixo (games/temp) pode sozinho estourar o teto: aí nem esvaziar a sala resolve.
+      inalcancavel: !placedFinal.length || poderFinal > limiteGH,
+    };
+  },
+
   _calcularPoderEstimado: function(pool, racks, userData) {
     const poolAtualReal = (userData.roomData.miners || []).map(m => ({
       name: m.name,
@@ -768,6 +1049,7 @@ const UI_RoomPlanner = {
     if (this.sim.ativo && !confirm('Isso vai descartar as remoções/adições/trocas feitas até agora e recalcular a sala do zero. Continuar?')) {
       return;
     }
+    this._sincronizarLimiteDoDOM();
     this.sim.resetar(userData);
 
     const racks = userData.roomData.racks || [];
@@ -1060,6 +1342,13 @@ const UI_RoomPlanner = {
         rackCapacity[rack._id] -= miner.cells;
       }
     });
+
+    // Teto de poder: aplicado DEPOIS do preenchimento por fragmentação, senão aquele passo
+    // encheria de volta os buracos que a limitação acabou de abrir.
+    const limiteGH = this._limiteEmGH();
+    this._limiteInfo = limiteGH
+      ? { limiteGH, ...this._aplicarLimiteDePoder(rackAssignments, bancoInicial, racks, userData, limiteGH, rackCapacity) }
+      : null;
 
     // Dentro de cada rack, ordena por poder decrescente (mais forte no primeiro slot, mais
     // fraca no último) e apaga a posição física antiga (_placementY/_placementX) — sem isso

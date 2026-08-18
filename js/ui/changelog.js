@@ -4,6 +4,20 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '18 Ago 2026', time: '20:30', tag: 'new', label: 'NOVO',
+      html: `<strong>SmartRoom</strong> — <strong>limite de poder da sala</strong>. Dá pra definir um teto (ex: <code>300 PH/s</code>) com seletor de unidade — GH/s, TH/s, PH/s, EH/s, ZH/s ou YH/s — e o <strong>Auto-Otimizar</strong> passa a montar a melhor sala possível <em>sem ultrapassar esse valor</em>, útil pra segurar a liga em vez de sempre buscar o poder máximo.
+      <ul class="guia-tl-list">
+        <li>O teto vale pro poder <strong>total</strong> (base + bônus de coleção, sets e racks) — o mesmo número que o jogo mostra e que decide a liga.</li>
+        <li>Atalho <strong>"🏆 quer ficar no topo de qual liga?"</strong>: escolhe a liga e o teto se preenche sozinho, usando os power goals que o Farm Calculator já mantém. Ficar no <em>topo</em> de uma liga significa parar logo abaixo da meta da liga seguinte — escolher Diamond II preenche 649.999 EH/s, porque a Diamond III começa em 650 EH/s.</li>
+        <li>Quando precisa cortar, sai sempre a miner de <strong>menor impacto</strong>, uma por vez — assim para o mais perto possível do teto e, de quebra, protege as <strong>peças de set</strong> (que têm impacto altíssimo e só saem em último caso, evitando derrubar uma faixa de bônus inteira por engano).</li>
+        <li>Depois do corte, uma passada de <strong>recomposição</strong> devolve miners do banco enquanto couberem na folga que sobrou — nos testes com inventário real, o resultado fica a menos de <em>0,01%</em> do limite.</li>
+        <li>A simulação mostra quanto do limite está sendo usado e a folga que sobrou (ex: <em>usando 99.2%, folga de 2.500 Ph/s</em>).</li>
+        <li>Se o limite for menor que o poder fixo da conta (games/temp), o aviso explica que não dá pra respeitar só tirando miners.</li>
+        <li>A unidade já abre na escala do seu poder atual (com 635 EH/s na conta, o seletor abre em EH/s em vez de PH/s) — evita digitar <code>300</code> pensando em EH, capar a sala em 0.3 EH e não entender por que ela esvaziou. É só sugestão inicial: o que você salvar prevalece.</li>
+        <li>Ao abrir a aba <strong>não vem limite nenhum</strong> — sem teto, o Auto-Otimizar funciona exatamente como antes. O valor fica salvo entre sessões e pode ser removido no ✕.</li>
+      </ul>`
+    },
+    {
       date: '18 Ago 2026', time: '15:58', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Farm Calculator</strong> — RollerCoin trocou os IDs de todas as ligas, reajustou os block rewards de <strong>todas as moedas</strong> das 15 ligas existentes e criou <strong>7 ligas novas</strong>: Titan I-III, Emerald I-III e Legend. Cada célula mostra o valor <span style="color:#999;">antigo</span> em cima e o <strong>novo</strong> embaixo, com <span style="color:#28a745; font-weight:600;">▲ verde</span> pra aumento e <span style="color:#dc3545; font-weight:600;">▼ vermelho</span> pra queda. As ligas novas aparecem em <span style="color:#667eea; font-weight:600;">roxo</span> (não têm valor anterior) e <strong>—</strong> significa que a moeda não existe naquela liga.
       <div style="overflow-x:auto; margin-top:10px;">
