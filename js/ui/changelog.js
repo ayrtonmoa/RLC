@@ -4,6 +4,14 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '18 Ago 2026', time: '21:00', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Sets atualizados</strong> — a base de sets estava em 14 e o jogo já tem <strong>17</strong>. Entraram <strong>The Lost Treasure</strong> (rack The Lost Treasure Rack 8; peças Manners &amp; Mayhem, Gilded Greed, Wrongway Atlas e Drama Chest), <strong>Roadside Stars</strong> (Roadside Rack 8; Taco Turn, Burger Boulevard, Hot Dog Highway e Sushi Stop) e <strong>Beach</strong> (Beach Rack 8; Mine-a Colada, Tai One On, Bartender e Salt &amp; Vault). Sem esses dados o SmartRoom era cego pra eles: não somava o bônus e, no corte por limite de poder, podia descartar uma peça sem perceber que derrubava a faixa inteira do set.
+      <ul class="guia-tl-list">
+        <li>As faixas dos 14 sets que já existiam foram conferidas uma a uma contra a página do jogo — <strong>todas batiam</strong>, nenhuma tinha ficado desatualizada.</li>
+        <li>Lembrete de como o bônus funciona: só a faixa <strong>máxima</strong> do set conta, e é tudo-ou-nada — com uma peça faltando o bônus vai a zero, sem faixa intermediária de consolação. Nos sets de 3 faixas (Lost Treasure, Roadside Stars, Beach, Radio) isso significa que valem as 4 peças completas.</li>
+      </ul>`
+    },
+    {
       date: '18 Ago 2026', time: '20:30', tag: 'new', label: 'NOVO',
       html: `<strong>SmartRoom</strong> — <strong>limite de poder da sala</strong>. Dá pra definir um teto (ex: <code>300 PH/s</code>) com seletor de unidade — GH/s, TH/s, PH/s, EH/s, ZH/s ou YH/s — e o <strong>Auto-Otimizar</strong> passa a montar a melhor sala possível <em>sem ultrapassar esse valor</em>, útil pra segurar a liga em vez de sempre buscar o poder máximo.
       <ul class="guia-tl-list">

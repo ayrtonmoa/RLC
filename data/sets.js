@@ -1,7 +1,276 @@
 // data/sets.js - Dados de Sets
+//
+// Transcrito da página Storage > Sets do jogo (não há API pública: a página exige login).
+// O que o código realmente consome de cada peça é só `title` + `power` (ver
+// UI_RoomPlanner._matchSetPiece) e, do rack, só `title` — `item_id`, `set_id`, `level` e
+// `type` são informativos.
+//
+// Peças com o mesmo nome em raridades diferentes entram como linhas separadas (mesma
+// convenção do Royal Set / IMPERIAL Set, que repetem nome com poder e level diferentes).
+//
+// Última sincronização manual: 2026-08-18 — 17 sets, conferidos um a um contra a página do
+// jogo (as faixas dos 14 antigos batiam todas; entraram The Lost Treasure, Roadside Stars e
+// Beach). Nos 3 novos, `level` guarda o índice de RARIDADE que o jogo mostra no badge
+// (4 = Legendary, 5 = Unreal), e não o nível de merge usado nas entradas antigas — como o
+// campo não é lido por nenhum código, a diferença é só de documentação. O Lost Treasure ficou
+// sem `item_id` porque veio de uma captura de tela, sem os links de marketplace que trazem
+// esse id.
 
 const SetsData = {
   "sets": [
+    {
+      "set_id": "6a4d363f5e87cb5f62a0c135",
+      "title": "The Lost Treasure Set",
+      "rack": {
+        "id": "",
+        "power_percent": 2300,
+        "title": "The Lost Treasure Rack 8"
+      },
+      "levels": [
+        {
+          "level": 1,
+          "bonus_power": 0,
+          "percent_power": 2000,
+          "condition_amount": 2
+        },
+        {
+          "level": 2,
+          "bonus_power": 0,
+          "percent_power": 5000,
+          "condition_amount": 3
+        },
+        {
+          "level": 3,
+          "bonus_power": 0,
+          "percent_power": 8000,
+          "condition_amount": 4
+        }
+      ],
+      "miners": [
+        {
+          "item_id": "",
+          "title": "Manners & Mayhem",
+          "level": 4,
+          "bonus_percent": 3100,
+          "power": 50000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "",
+          "title": "Manners & Mayhem",
+          "level": 5,
+          "bonus_percent": 5000,
+          "power": 150000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "",
+          "title": "Gilded Greed",
+          "level": 4,
+          "bonus_percent": 3500,
+          "power": 120000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "",
+          "title": "Gilded Greed",
+          "level": 5,
+          "bonus_percent": 5500,
+          "power": 350000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "",
+          "title": "Wrongway Atlas",
+          "level": 4,
+          "bonus_percent": 4400,
+          "power": 300000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "",
+          "title": "Wrongway Atlas",
+          "level": 5,
+          "bonus_percent": 6500,
+          "power": 800000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "",
+          "title": "Drama Chest",
+          "level": 4,
+          "bonus_percent": 5000,
+          "power": 600000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "",
+          "title": "Drama Chest",
+          "level": 5,
+          "bonus_percent": 8000,
+          "power": 2000000000,
+          "type": "basic"
+        }
+      ]
+    },
+    {
+      "set_id": "6a8469ff3d87755b24bac904",
+      "title": "Roadside Stars Set",
+      "rack": {
+        "id": "6a7b40a8f188bab31b1c2196",
+        "power_percent": 1000,
+        "title": "Roadside Rack 8"
+      },
+      "levels": [
+        {
+          "level": 1,
+          "bonus_power": 0,
+          "percent_power": 2000,
+          "condition_amount": 2
+        },
+        {
+          "level": 2,
+          "bonus_power": 0,
+          "percent_power": 5000,
+          "condition_amount": 3
+        },
+        {
+          "level": 3,
+          "bonus_power": 0,
+          "percent_power": 8000,
+          "condition_amount": 4
+        }
+      ],
+      "miners": [
+        {
+          "item_id": "6a6b37f8fb30ddde603e6832",
+          "title": "Taco Turn",
+          "level": 4,
+          "bonus_percent": 3100,
+          "power": 100000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6b37f8fb30ddde603e6839",
+          "title": "Taco Turn",
+          "level": 5,
+          "bonus_percent": 5000,
+          "power": 250000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6b3831fb30ddde603e6a81",
+          "title": "Burger Boulevard",
+          "level": 4,
+          "bonus_percent": 3500,
+          "power": 250000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6b3831fb30ddde603e6a88",
+          "title": "Burger Boulevard",
+          "level": 5,
+          "bonus_percent": 5500,
+          "power": 650000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6b3869fb30ddde603e6d8e",
+          "title": "Hot Dog Highway",
+          "level": 4,
+          "bonus_percent": 4400,
+          "power": 500000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6b3869fb30ddde603e6d95",
+          "title": "Hot Dog Highway",
+          "level": 5,
+          "bonus_percent": 6500,
+          "power": 1250000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6b38effb30ddde603e7062",
+          "title": "Sushi Stop",
+          "level": 4,
+          "bonus_percent": 5000,
+          "power": 1200000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6b38effb30ddde603e7069",
+          "title": "Sushi Stop",
+          "level": 5,
+          "bonus_percent": 8000,
+          "power": 3500000000,
+          "type": "basic"
+        }
+      ]
+    },
+    {
+      "set_id": "6a68a715b8a464cf5de85840",
+      "title": "Beach Set",
+      "rack": {
+        "id": "6a675eaa00b27e15643511be",
+        "power_percent": 2000,
+        "title": "Beach Rack 8"
+      },
+      "levels": [
+        {
+          "level": 1,
+          "bonus_power": 0,
+          "percent_power": 5000,
+          "condition_amount": 2
+        },
+        {
+          "level": 2,
+          "bonus_power": 0,
+          "percent_power": 10000,
+          "condition_amount": 3
+        },
+        {
+          "level": 3,
+          "bonus_power": 0,
+          "percent_power": 25000,
+          "condition_amount": 4
+        }
+      ],
+      "miners": [
+        {
+          "item_id": "6a67228ae95dfedc67ce47e4",
+          "title": "Mine-a Colada",
+          "level": 0,
+          "bonus_percent": 7000,
+          "power": 4000000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6722abe95dfedc67ce4882",
+          "title": "Tai One On",
+          "level": 0,
+          "bonus_percent": 6000,
+          "power": 3500000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a6722e0e95dfedc67ce4965",
+          "title": "Bartender",
+          "level": 0,
+          "bonus_percent": 4000,
+          "power": 1500000000,
+          "type": "basic"
+        },
+        {
+          "item_id": "6a67233ee95dfedc67ce4d20",
+          "title": "Salt & Vault",
+          "level": 0,
+          "bonus_percent": 3000,
+          "power": 1000000000,
+          "type": "basic"
+        }
+      ]
+    },
     {
       "set_id": "690ccd9d95296a1a2ce73887",
       "title": "Royal Set",
