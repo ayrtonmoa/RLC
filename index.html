@@ -284,6 +284,9 @@ darkModeToggle.addEventListener('click', () => {
     localStorage.setItem('themeMode', 'dark');
     if (typeof Analytics !== 'undefined') Analytics.darkModeAlternado('dark');
   }
+  // O Chart.js grava as cores do tema na instância; sem redesenhar, o gráfico do Farm
+  // fica com as cores do tema anterior (texto claro em fundo branco, ilegível).
+  if (typeof UI_FarmCalculator !== 'undefined') UI_FarmCalculator.renderChart();
 });
 Utils.showProgress = function() {
   document.getElementById('progress').style.display = 'block';

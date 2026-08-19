@@ -4,6 +4,25 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '19 Ago 2026', time: '19:21', tag: 'new', label: 'NOVO',
+      html: `<strong>Farm Calculator</strong> — três recursos novos e a página reorganizada.
+      <ul class="guia-tl-list">
+        <li><strong>Seletor de unidade no Mining Power.</strong> O campo era fixo em Eh/s, então testar um poder em outra escala exigia conversão de cabeça. Agora dá pra escolher entre Gh/s, Th/s, Ph/s, Eh/s, Zh/s e Yh/s e digitar direto na unidade em que você pensa. Trocar a unidade <em>converte</em> o número em vez de reinterpretá-lo — 585 Eh/s vira 0.585 Zh/s, o mesmo poder, e o resultado do cálculo não muda ao alternar. O histórico e o gráfico passam a exibir na unidade escolhida, mas continuam guardados numa unidade só por baixo, então pesquisas antigas seguem comparáveis com as novas.</li>
+        <li><strong>Simulador de liga.</strong> Dá pra escolher qualquer liga no seletor ao lado do nome da sua e ver quanto renderia lá, em vez de ficar preso à liga do perfil pesquisado — é só pegar o power da rede que alguém daquela liga compartilhou, colar no campo da rede e escolher a liga. Enquanto a simulação está ativa a barra fica âmbar com o selo <strong>🔬 SIMULAÇÃO</strong>, e ela <strong>não entra no histórico</strong>, que continua guardando só as suas pesquisas de verdade.</li>
+        <li><strong>Evento DOGE 3x.</strong> O RollerCoin triplicou as recompensas de DOGE em todas as ligas por 7 dias (anunciado em 19/08, vale até por volta de <strong>26/08</strong>), então a tabela ganhou uma linha extra logo abaixo do DOGE normal, com o selo <span style="background:#ffc107; color:#000; font-weight:700; font-size:11px; padding:1px 5px; border-radius:3px;">🐕 3x EVENTO</span> e os valores já multiplicados, pra comparar lado a lado. É só exibição: não mexe no CSV nem no tempo de saque, e sai quando o evento acabar.</li>
+        <li><strong>Página reorganizada.</strong> A mesma moeda aparecia três vezes seguidas antes de surgir qualquer informação nova: o card "Melhor Crypto", o pódio "Top 3 Cryptos" (cujo 1º lugar era exatamente a Melhor Crypto) e a tabela. Os dois blocos viraram um só — vencedora em destaque, 2º e 3º logo abaixo — e o gráfico desceu pra junto do Histórico, de onde vêm os dados dele. Ordem agora: entrada → liga → comparação → recomendação → tabela → saque → histórico e gráfico → cotações.</li>
+      </ul>`
+    },
+    {
+      date: '19 Ago 2026', time: '19:21', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Cores do modo escuro no Farm Calculator e dois bugs do Auto-Otimizar.</strong>
+      <ul class="guia-tl-list">
+        <li><strong>Farm Calculator sem cor no modo escuro.</strong> Uma regra de CSS forçava <em>todo</em> elemento da aba pro mesmo cinza. Ela apagava o selo <strong>🏆 TOP</strong> (a queixa visível), mas junto levava os selos Game/Crypto/Não sacável, os dias de saque em verde/laranja/vermelho e os valores das cotações. Tudo voltou a ter cor. O <strong>gráfico</strong> também não acompanhava a troca de tema — as cores ficavam gravadas no momento em que ele era desenhado, então quem calculava no escuro e mudava pro claro via texto claro em fundo branco. Agora ele é redesenhado junto, e ganhou título nos dois eixos, já que as duas linhas têm escalas independentes.</li>
+        <li><strong>SmartRoom, sets duplicados em mais de um rack.</strong> Quem tem 2 ou mais racks do mesmo Set (ex: duas Lost Treasure Rack) podia ver o Auto-Otimizar confundir os racks entre si — uma peça a mais em um rack expulsava uma peça diferente e necessária no outro, quebrando um bônus que já estava completo, ou o segundo rack nunca era considerado prioridade pra fechar o set. Agora cada rack físico é tratado de forma independente, então os dois (ou mais) fecham corretamente.</li>
+        <li><strong>SmartRoom, miners espalhadas ao usar limite de poder.</strong> Ao definir um teto de poder pra sala (ex: pra não passar de liga), o corte das miners excedentes deixava as sobreviventes espalhadas por dezenas de racks pela sala inteira — sobra de um preenchimento que originalmente ocupava tudo — em vez de juntar tudo nos racks de maior bônus. Agora o Auto-Otimizar recompacta a sala depois do corte, ocupando bem menos racks e sempre respeitando o limite definido.</li>
+      </ul>`
+    },
+    {
       date: '19 Ago 2026', time: '10:13', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado</strong> — a base saiu de 8.220 para <strong>8.594</strong> registros, com <strong>374 miners novas</strong> que o jogo lançou e o app ainda não conhecia. Entre elas <em>Mystic Void</em>, <em>Corsair's Oath</em>, <em>Coin's Seal</em>, <em>Crewmark</em>, <em>Diamondfall</em>, <em>Sushi Stop</em> e as demais da linha pirata — miners que apareciam no seu inventário sem poder, receita ou imagem.
       <ul class="guia-tl-list">
@@ -11,7 +30,7 @@ const UI_Changelog = {
         <li>As <strong>receitas não mudaram</strong>: das 6.885 conferidas, nenhuma teve alteração real de ingrediente. As diferenças eram só ordem de listagem e apóstrofo tipográfico.</li>
         <li>43 merges antigos (RollerArc, Milly, Santa Sleigh…) tiveram o <strong>poder rebalanceado pelo jogo</strong> — em média +14% — e agora batem com o valor real.</li>
         <li>Corrigidos 18 nomes que estavam com apóstrofo diferente do que o jogo usa hoje (<em>King's Legacy</em>, <em>Devil's Ember</em>, <em>Hashbeard's Ship</em>), o que atrapalhava o reconhecimento ao colar o inventário.</li>
-        <li>Dados extraídos direto da API do jogo, combinando o catálogo (atributos e imagens) com o forge (receitas e preços).</li>
+        <li>Dados obtidos por extração direta do jogo, combinando o catálogo (atributos e imagens) com o forge (receitas e preços).</li>
       </ul>`
     },
     {
@@ -253,7 +272,7 @@ const UI_Changelog = {
     },
     {
       date: '14 Jul 2026', time: '03:23', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Base de miners atualizada</strong> — 8.220 entradas (era 8.032): power, preço, receita de merge, descrição e bônus de coleção ressincronizados direto da API do jogo pra todos os miners existentes. <strong>33 miners novos</strong> mapeados pela primeira vez (SuperStorm, GrandMaster, Hashbeard's Ship, Art of Deal, Chains of Freedom e outros).`
+      html: `<strong>Base de miners atualizada</strong> — 8.220 entradas (era 8.032): power, preço, receita de merge, descrição e bônus de coleção ressincronizados por extração direta do jogo pra todos os miners existentes. <strong>33 miners novos</strong> mapeados pela primeira vez (SuperStorm, GrandMaster, Hashbeard's Ship, Art of Deal, Chains of Freedom e outros).`
     },
     {
       date: '12 Jul 2026', time: '15:01', tag: 'improved', label: 'MELHORIA',
@@ -284,7 +303,7 @@ const UI_Changelog = {
     },
     {
       date: '02 Jul 2026', time: '14:20', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Simulação do Inventário integrada ao SmartRoom</strong> — o estado de simulação passa a ser único e compartilhado entre a tabela do Inventário e o SmartRoom: remover/adicionar uma miner em qualquer um dos dois reflete direto no outro, e o cálculo de poder simulado fica ancorado no valor real da API (em vez de uma aproximação).`
+      html: `<strong>Simulação do Inventário integrada ao SmartRoom</strong> — o estado de simulação passa a ser único e compartilhado entre a tabela do Inventário e o SmartRoom: remover/adicionar uma miner em qualquer um dos dois reflete direto no outro, e o cálculo de poder simulado fica ancorado no valor real (em vez de uma aproximação).`
     },
     {
       date: '02 Jul 2026', time: '14:10', tag: 'new', label: 'NOVO',

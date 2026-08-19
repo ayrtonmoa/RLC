@@ -1,8 +1,11 @@
 /* ========== Farm Calculator ========== */
 
-/* Force text color in dark mode */
-body.dark-mode #farmcalculator * {
-  color: var(--text-primary) !important;
+/* Cor de texto padrão no dark mode.
+   Era `#farmcalculator * { color: ... !important }`, que atropelava TODA cor semântica
+   da aba (badges, valores, destaques) e deixava tudo cinza. Como `color` é herdado,
+   declarar no container dá o mesmo padrão sem anular quem define a própria cor. */
+body.dark-mode #farmcalculator {
+  color: var(--text-primary);
 }
 
 body.dark-mode #farmcalculator button {
@@ -234,21 +237,11 @@ body.dark-mode .farm-stat-box {
 }
 
 /* Top 3 Cryptos */
-.farm-top3-section {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-body.dark-mode .farm-top3-section {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-}
-
+/* Hoje recebe os 2 vice-campeões (o 1o lugar tem card próprio), mas o auto-fit evita
+   deixar uma coluna vazia caso o número de cards mude. */
 .farm-top3-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 15px;
 }
 
@@ -262,10 +255,6 @@ body.dark-mode .farm-top3-section {
 body.dark-mode .farm-top3-card {
   background: var(--bg-secondary);
   border-color: var(--border-color);
-}
-
-.farm-top3-card.gold {
-  border: 2px solid #ffc107;
 }
 
 /* Prices Panel */
@@ -427,8 +416,12 @@ body.dark-mode .farm-row-highlight {
   margin-left: 8px;
 }
 
-body.dark-mode .farm-badge-game {
+/* Os badges vivem dentro de <td>, e a regra `body.dark-mode #farmcalculator table td`
+   carrega um ID — vence qualquer seletor de classe. Por isso as variantes dark abaixo
+   precisam do #farmcalculator: sem ele a cor do badge é engolida e todos saem cinza. */
+body.dark-mode #farmcalculator .farm-badge-game {
   background: #2a2a3a;
+  color: #6ea8fe;
 }
 
 .farm-badge-crypto {
@@ -440,17 +433,24 @@ body.dark-mode .farm-badge-game {
   margin-left: 8px;
 }
 
-body.dark-mode .farm-badge-crypto {
+body.dark-mode #farmcalculator .farm-badge-crypto {
   background: #3a2a3a;
+  color: #c9a3f5;
 }
 
 .farm-badge-top {
   background: #fff3cd;
-  color: #ff9800;
+  color: #8a5200;
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 11px;
+  font-weight: 600;
   margin-left: 8px;
+}
+
+body.dark-mode #farmcalculator .farm-badge-top {
+  background: #4a3a15;
+  color: #ffc107;
 }
 
 .farm-badge-no-withdraw {
@@ -462,7 +462,7 @@ body.dark-mode .farm-badge-crypto {
   margin-left: 8px;
 }
 
-body.dark-mode .farm-badge-no-withdraw {
+body.dark-mode #farmcalculator .farm-badge-no-withdraw {
   background: #3a2a2a;
   color: #ff6b6b;
 }

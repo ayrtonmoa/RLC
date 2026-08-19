@@ -19,8 +19,17 @@ const UI_FarmCalculator = {
     showHistory: false,
     priceStatus: 'loading',
     chartInstance: null,
-    currentUsername: null
+    currentUsername: null,
+    // Liga escolhida à mão pra simular ("e se eu estivesse na liga de cima?").
+    // null = usa a liga real do perfil analisado.
+    leagueOverride: null,
+    // Unidade em que o usuário digita/lê o poder. O cálculo é sempre em Eh/s.
+    powerUnit: 'EH'
   },
+
+  // Fatores relativos a Eh/s — a unidade interna desta aba (o SmartRoom usa GH/s
+  // porque lá a base é miner.power; aqui a base é o power da rede, que vem em Eh/Zh).
+  _UNIDADES_POWER: { GH: 1e-9, TH: 1e-6, PH: 1e-3, EH: 1, ZH: 1e3, YH: 1e6 },
 
   // Block rewards por liga (fonte estática oficial).
   // Não há API pública de ligas e a captura via rede exige login,
@@ -184,6 +193,12 @@ const UI_FarmCalculator = {
 
   // Obter block rewards da liga do usuário
   getBlockRewards(userData) {
+    // Simulação de outra liga tem prioridade sobre a liga real do perfil.
+    const simulada = this.state.leagueOverride;
+    if (simulada && this.leagueData[simulada]) {
+      return this.leagueData[simulada].rewards;
+    }
+
     if (!userData || !userData.league_id) {
       console.warn('⚠️ Liga não encontrada, usando valores padrão');
       return this.CONFIG.DEFAULT_BLOCK_REWARDS;
@@ -210,8 +225,11 @@ const UI_FarmCalculator = {
   loadFromStorage(username) {
     try {
       const savedNetwork = localStorage.getItem('farm_network_data');
-      
+
       if (savedNetwork) this.state.networkData = savedNetwork;
+
+      const savedUnit = localStorage.getItem('farm_power_unit');
+      if (savedUnit && this._UNIDADES_POWER[savedUnit]) this.state.powerUnit = savedUnit;
       
       // Carregar histórico do usuário específico
       if (username) {
@@ -235,13 +253,13 @@ const UI_FarmCalculator = {
   },
 
   // Salvar dados no localStorage - COM USERNAME
-  saveToStorage(power, network, result, username) {
+  saveToStorage(powerEh, network, result, username) {
     try {
       localStorage.setItem('farm_network_data', network);
-      
+
       const newEntry = {
         timestamp: new Date().toISOString(),
-        power: parseFloat(power),
+        power: parseFloat(powerEh),
         networkTotal: Object.values(this.parseNetworkData(network)).reduce((sum, v) => sum + v, 0),
         results: result,
         username: username
@@ -362,9 +380,11 @@ const UI_FarmCalculator = {
   },
 
   // Cálculo principal
-  calculate() {
+  // salvar=false ao apenas re-simular (troca de liga/moeda): o histórico registra
+  // pesquisas de verdade, não cada ajuste de simulação.
+  calculate(salvar = true) {
     const { miningPower, networkData } = this.state;
-    
+
     if (!miningPower || !networkData) {
       alert('Preencha todos os campos!');
       return;
@@ -373,7 +393,7 @@ const UI_FarmCalculator = {
     this.state.loading = true;
     this.render();
     
-    const myPowerEh = parseFloat(miningPower);
+    const myPowerEh = this._poderEmEh();
     const network = this.parseNetworkData(networkData);
     
     const userData = State.getUserData();
@@ -420,7 +440,9 @@ const UI_FarmCalculator = {
     this.state.results = calculations;
 
     const username = userData?.name || 'unknown';
-    this.saveToStorage(miningPower, networkData, calculations, username);
+    // Grava em Eh/s, não o número digitado: o histórico é comparado entre pesquisas e
+    // plotado no gráfico, então precisa de uma unidade só, independente do seletor.
+    if (salvar) this.saveToStorage(myPowerEh, networkData, calculations, username);
 
     if (typeof Analytics !== 'undefined') {
       const best = calculations.find(c => !c.nonWithdrawable);
@@ -458,6 +480,76 @@ const UI_FarmCalculator = {
     
     const decimals = period === 'block' ? 6 : 2;
     return `${valueQty.toFixed(decimals)} ${coin}`;
+  },
+
+  // Poder digitado convertido pra Eh/s, que é a unidade usada no cálculo.
+  _poderEmEh() {
+    const v = parseFloat(this.state.miningPower);
+    if (!isFinite(v)) return NaN;
+    return v * (this._UNIDADES_POWER[this.state.powerUnit] || 1);
+  },
+
+  // Formata um valor em Eh/s na unidade escolhida pelo usuário.
+  _formatarPoder(valorEh, casas = 3) {
+    const fator = this._UNIDADES_POWER[this.state.powerUnit] || 1;
+    return `${(valorEh / fator).toFixed(casas)} ${this._rotuloUnidade()}`;
+  },
+
+  _rotuloUnidade() {
+    // "EH" -> "Eh/s", pra bater com a grafia que o jogo usa.
+    const u = this.state.powerUnit || 'EH';
+    return u.charAt(0) + u.charAt(1).toLowerCase() + '/s';
+  },
+
+  // Troca a unidade convertendo o valor digitado, pra que o poder real não mude:
+  // 585 Eh/s vira 0.585 Zh/s. É justamente a conversão mental que o seletor evita.
+  mudarUnidade(novaUnidade) {
+    if (!this._UNIDADES_POWER[novaUnidade]) return;
+    const atualEh = this._poderEmEh();
+    this.state.powerUnit = novaUnidade;
+    try { localStorage.setItem('farm_power_unit', novaUnidade); } catch {}
+
+    if (isFinite(atualEh)) {
+      const convertido = atualEh / this._UNIDADES_POWER[novaUnidade];
+      // Mantém precisão sem virar notação científica em unidades muito acima do valor.
+      this.state.miningPower = convertido >= 1
+        ? convertido.toFixed(3).replace(/\.?0+$/, '')
+        : convertido.toPrecision(4).replace(/\.?0+$/, '');
+    }
+
+    if (this.state.results) this.calculate(false); else this.render();
+  },
+
+  // Troca a liga usada no cálculo. Vazio volta pra liga real do perfil.
+  // Recalcula na hora (sem gravar histórico) pra tabela e ranking refletirem a liga nova.
+  mudarLiga(leagueId) {
+    this.state.leagueOverride = leagueId || null;
+    if (this.state.results) {
+      this.calculate(false);
+    } else {
+      this.render();
+    }
+  },
+
+  // Liga real do perfil analisado, ignorando qualquer simulação.
+  _ligaDoPerfil() {
+    const userData = State.getUserData();
+    return userData && userData.league_id ? userData.league_id : null;
+  },
+
+  // Valor em USD na moeda escolhida pelo usuário (o mesmo ternário aparecia repetido
+  // em cada card; centralizar evita que um deles fique pra trás numa mudança).
+  _moeda(valorUSD) {
+    if (this.state.useEUR) return `€${(valorUSD * this.state.usdToEur).toFixed(2)}`;
+    if (this.state.useBRL) return `R$ ${(valorUSD * this.state.usdToBrl).toFixed(2)}`;
+    return `$${valorUSD.toFixed(2)}`;
+  },
+
+  // Ganho de uma crypto no período, respeitando o toggle Valor/Quantidade.
+  _ganho(r, campoValor, campoQtd) {
+    return this.state.showQuantity
+      ? `${r[campoQtd].toFixed(4)} ${r.coin}`
+      : this._moeda(r[campoValor]);
   },
 
   // Obter linha de total
@@ -569,13 +661,20 @@ const UI_FarmCalculator = {
       this.state.chartInstance.destroy();
     }
 
-    // Detectar dark mode
+    // Detectar dark mode. Atenção: as cores são "assadas" na instância do Chart,
+    // então trocar de tema exige chamar renderChart() de novo (ver toggle no index.html).
     const isDarkMode = document.body.classList.contains('dark-mode');
     const textColor = isDarkMode ? '#e2e8f0' : '#333';
     const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    // Azul/roxo puros somem no fundo claro; no escuro precisam clarear pra manter contraste.
+    const corPower = isDarkMode ? '#4dabf7' : '#0b5ed7';
+    const corRede = isDarkMode ? '#b197fc' : '#5a32a3';
 
     const labels = this.state.history.slice(0, 10).reverse().map(h => this.formatDate(h.timestamp));
-    const powerData = this.state.history.slice(0, 10).reverse().map(h => h.power);
+    // O histórico guarda Eh/s; o eixo mostra na unidade escolhida pelo usuário.
+    const fatorUnidade = this._UNIDADES_POWER[this.state.powerUnit] || 1;
+    const rotuloPower = `Meu Power (${this._rotuloUnidade()})`;
+    const powerData = this.state.history.slice(0, 10).reverse().map(h => h.power / fatorUnidade);
     const networkData = this.state.history.slice(0, 10).reverse().map(h => h.networkTotal / 1000);
 
     this.state.chartInstance = new Chart(ctx, {
@@ -584,19 +683,24 @@ const UI_FarmCalculator = {
         labels,
         datasets: [
           {
-            label: 'Meu Power (Eh/s)',
+            label: rotuloPower,
             data: powerData,
-            borderColor: '#007bff',
+            borderColor: corPower,
             backgroundColor: 'rgba(0, 123, 255, 0.1)',
             tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: corPower,
             yAxisID: 'y'
           },
           {
             label: 'Rede Total (Zh/s)',
             data: networkData,
-            borderColor: '#6f42c1',
+            borderColor: corRede,
             backgroundColor: 'rgba(111, 66, 193, 0.1)',
             tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: corRede,
+            borderDash: [6, 4],
             yAxisID: 'y1'
           }
         ]
@@ -624,14 +728,16 @@ const UI_FarmCalculator = {
             type: 'linear',
             display: true,
             position: 'left',
-            ticks: { color: '#007bff' },
-            grid: { color: 'rgba(0, 123, 255, 0.1)' }
+            title: { display: true, text: rotuloPower, color: corPower },
+            ticks: { color: corPower },
+            grid: { color: gridColor }
           },
           y1: {
             type: 'linear',
             display: true,
             position: 'right',
-            ticks: { color: '#6f42c1' },
+            title: { display: true, text: 'Rede Total (Zh/s)', color: corRede },
+            ticks: { color: corRede },
             grid: { drawOnChartArea: false }
           },
           x: {
@@ -696,8 +802,18 @@ const UI_FarmCalculator = {
     html += '<div class="farm-input-grid">';
     
     html += '<div>';
-    html += '<label class="farm-input-label">Mining Power (Eh):</label>';
-    html += `<input type="text" id="farmMiningPower" value="${this.state.miningPower}" placeholder="100.106">`;
+    html += '<label class="farm-input-label">Mining Power:</label>';
+    html += '<div style="display:flex; gap:8px;">';
+    html += `<input type="text" id="farmMiningPower" value="${this.state.miningPower}" placeholder="100.106" style="flex:1; min-width:0;">`;
+    // Trocar a unidade converte o número, então o poder real não muda ao alternar —
+    // é exatamente a conta de cabeça que o seletor existe pra evitar.
+    html += '<select onchange="UI_FarmCalculator.mudarUnidade(this.value)" id="farmPowerUnit" style="flex:0 0 auto;">';
+    Object.keys(this._UNIDADES_POWER).forEach(u => {
+      const sel = u === this.state.powerUnit ? ' selected' : '';
+      html += `<option value="${u}"${sel}>${u.charAt(0)}${u.charAt(1).toLowerCase()}/s</option>`;
+    });
+    html += '</select>';
+    html += '</div>';
     html += '</div>';
     
     html += '<div>';
@@ -726,19 +842,49 @@ const UI_FarmCalculator = {
     
     html += '</div>';
 
-    // Seção da Liga (compacta)
+    // Seção da Liga (compacta) — com seletor pra simular outra liga
     if (this.state.results) {
       const userData = State.getUserData();
-      const leagueInfo = userData && userData.league_id ? this.leagueData[userData.league_id] : null;
+      const ligaPerfil = this._ligaDoPerfil();
+      const simulando = !!this.state.leagueOverride && this.state.leagueOverride !== ligaPerfil;
+      const idEmUso = this.state.leagueOverride || ligaPerfil;
+      const leagueInfo = idEmUso ? this.leagueData[idEmUso] : null;
       const blockRewards = this.getBlockRewards(userData);
       const leagueName = leagueInfo ? leagueInfo.name : 'Liga não detectada';
-      const leagueImg = userData && userData.league && userData.league.main_img_url
+      // A imagem vem do perfil, então só faz sentido enquanto mostramos a liga real.
+      const leagueImg = !simulando && userData?.league?.main_img_url
         ? `<img src="${userData.league.main_img_url}" alt="Liga" style="height: 28px; vertical-align: middle; margin-right: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">`
         : '';
 
-      html += `<div style="display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:8px; padding:10px 16px; margin-bottom:12px; flex-wrap:wrap;">`;
+      const fundo = simulando
+        ? 'linear-gradient(135deg,#4a2c00,#6b3f00)'
+        : 'linear-gradient(135deg,#1a1a2e,#16213e)';
+
+      html += `<div style="background:${fundo}; border-radius:8px; padding:10px 16px; margin-bottom:12px;">`;
+
+      html += '<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">';
       html += `<div style="display:flex; align-items:center; color:white; font-weight:bold; font-size:14px; white-space:nowrap;">${leagueImg}🏆 ${leagueName}${leagueInfo?.powerGoal ? `<span style="margin-left:8px; font-weight:normal; font-size:12px; color:rgba(255,255,255,0.7);">⚡ ${leagueInfo.powerGoal}</span>` : ''}</div>`;
-      html += `<div style="display:flex; gap:8px; flex-wrap:wrap; overflow-x:auto;">`;
+
+      // Seletor: permite calcular com os rewards de qualquer liga, útil pra simular
+      // com o power da rede que alguém de uma liga acima compartilhou.
+      html += '<select onchange="UI_FarmCalculator.mudarLiga(this.value)" style="padding:4px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.12); color:white; font-size:12px; cursor:pointer;">';
+      html += `<option value="" style="color:#000;">${ligaPerfil ? '📍 Minha liga (' + (this.leagueData[ligaPerfil]?.name || '?') + ')' : '📍 Liga do perfil'}</option>`;
+      Object.entries(this.leagueData).forEach(([id, liga]) => {
+        const sel = id === this.state.leagueOverride ? ' selected' : '';
+        html += `<option value="${id}"${sel} style="color:#000;">${liga.name} — ${liga.powerGoal}</option>`;
+      });
+      html += '</select>';
+
+      if (simulando) {
+        html += '<span style="background:#ffc107; color:#000; font-weight:700; font-size:11px; padding:3px 8px; border-radius:4px; white-space:nowrap;">🔬 SIMULAÇÃO</span>';
+      }
+      html += '</div>';
+
+      if (simulando) {
+        html += `<div style="color:rgba(255,255,255,0.8); font-size:11px; margin-top:6px;">Usando os block rewards da <strong>${leagueName}</strong>, não os da sua liga. Cole o power da rede daquela liga pra o resultado fazer sentido. Simulações não entram no histórico.</div>`;
+      }
+
+      html += '<div style="display:flex; gap:8px; flex-wrap:wrap; overflow-x:auto; margin-top:8px;">';
       Object.entries(blockRewards).forEach(([coin, reward]) => {
         const isGameCoin = this.CONFIG.GAME_COINS.includes(coin);
         const val = isGameCoin ? reward.toFixed(4) : reward.toFixed(8);
@@ -749,7 +895,10 @@ const UI_FarmCalculator = {
     }
 
     // Comparação com histórico
-    const comparison = this.getComparison();
+    // Durante uma simulação de liga a comparação sairia do histórico real, ao lado de
+    // resultados simulados — dois contextos diferentes lado a lado. Melhor esconder.
+    const simulandoLiga = !!this.state.leagueOverride && this.state.leagueOverride !== this._ligaDoPerfil();
+    const comparison = simulandoLiga ? null : this.getComparison();
     if (comparison) {
       html += '<div class="farm-comparison-box">';
       html += '<h4 style="margin: 0 0 10px 0;">📊 Comparado com última pesquisa:</h4>';
@@ -767,8 +916,8 @@ const UI_FarmCalculator = {
       const currentPower = this.state.history[0].power;
       html += '<div>';
       html += '<div style="font-size: 12px; color: #666;">Meu Power</div>';
-      html += `<div class="farm-comparison-value" style="color: #007bff;">${currentPower.toFixed(3)} Eh/s</div>`;
-      html += `<div class="farm-comparison-change" style="color: ${comparison.powerChange > 0 ? 'green' : comparison.powerChange < 0 ? 'red' : '#666'};">${comparison.powerDiff > 0 ? '+' : ''}${comparison.powerDiff.toFixed(3)} Eh/s (${comparison.powerChange > 0 ? '↑' : comparison.powerChange < 0 ? '↓' : '→'} ${Math.abs(comparison.powerChange).toFixed(2)}%)</div>`;
+      html += `<div class="farm-comparison-value" style="color: #007bff;">${this._formatarPoder(currentPower)}</div>`;
+      html += `<div class="farm-comparison-change" style="color: ${comparison.powerChange > 0 ? 'green' : comparison.powerChange < 0 ? 'red' : '#666'};">${comparison.powerDiff > 0 ? '+' : ''}${this._formatarPoder(comparison.powerDiff)} (${comparison.powerChange > 0 ? '↑' : comparison.powerChange < 0 ? '↓' : '→'} ${Math.abs(comparison.powerChange).toFixed(2)}%)</div>`;
       html += '</div>';
       
       // Melhor Crypto
@@ -791,72 +940,61 @@ const UI_FarmCalculator = {
       html += '</div>';
     }
 
-    // Melhor Crypto
+    // Ranking das cryptos sacáveis. Antes eram dois blocos ("Melhor Crypto" e "Top 3"),
+    // e o 1o lugar do Top 3 era exatamente a Melhor Crypto — a mesma moeda aparecia duas
+    // vezes seguidas antes da tabela. Aqui o vencedor fica em destaque e o 2o/3o entram
+    // como vice-campeões logo abaixo, no mesmo bloco.
     if (this.state.results) {
-      const withdrawableCryptos = this.state.results
+      const sacaveis = this.state.results
         .filter(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
         .sort((a, b) => b.monthly - a.monthly);
-      
-      const bestCrypto = withdrawableCryptos[0];
-      
-      if (bestCrypto) {
+
+      const vencedora = sacaveis[0];
+      const vices = sacaveis.slice(1, 3);
+
+      if (vencedora) {
         html += '<div class="farm-best-crypto">';
         html += '<h3 style="margin: 0 0 15px 0;">🏆 Melhor Crypto para Farmar</h3>';
         html += '<div class="farm-best-card">';
-        html += '<div style="font-size: 14px; color: #666; margin-bottom: 4px;">🎯 Recomendação</div>';
-        html += `<div class="farm-best-name">${bestCrypto.coin} <span class="farm-badge-crypto">Crypto</span></div>`;
-        html += `<div style="font-size: 13px; color: #666; margin-top: 8px;">💡 Esta é a crypto mais lucrativa e sacável com sua contribuição de <strong>${bestCrypto.contribution}%</strong></div>`;
+        html += '<div style="font-size: 14px; color: #666; margin-bottom: 4px;">🥇 Recomendação</div>';
+        html += `<div class="farm-best-name">${vencedora.coin} <span class="farm-badge-crypto">Crypto</span></div>`;
+        html += `<div style="font-size: 13px; color: #666; margin-top: 8px;">💡 Esta é a crypto mais lucrativa e sacável com sua contribuição de <strong>${vencedora.contribution}%</strong></div>`;
         html += '</div>';
-        
-        html += '<div class="farm-stats-grid-3">';
-        html += '<div class="farm-stat-box">';
-        html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Diário</div>';
-        html += `<div class="farm-stat-value">${this.state.showQuantity ? `${bestCrypto.dailyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.daily * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.daily * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.daily.toFixed(2)}`)}</div>`;
-        html += '</div>';
-        html += '<div class="farm-stat-box">';
-        html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Mensal (30D)</div>';
-        html += `<div class="farm-stat-value">${this.state.showQuantity ? `${bestCrypto.monthlyQty.toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * this.state.usdToBrl).toFixed(2)}` : `$${bestCrypto.monthly.toFixed(2)}`)}</div>`;
-        html += '</div>';
-        html += '<div class="farm-stat-box">';
-        html += '<div style="font-size: 14px; color: #666; margin-bottom: 8px;">Anual (365D)</div>';
-        html += `<div class="farm-stat-value">${this.state.showQuantity ? `${(bestCrypto.monthlyQty * 12).toFixed(4)} ${bestCrypto.coin}` : (this.state.useEUR ? `€${(bestCrypto.monthly * 12 * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(bestCrypto.monthly * 12 * this.state.usdToBrl).toFixed(2)}` : `$${(bestCrypto.monthly * 12).toFixed(2)}`)}</div>`;
-        html += '</div>';
-        html += '</div>';
-        html += '</div>';
-      }
-    }
 
-    // Top 3 Cryptos
-    if (this.state.results) {
-      const topCryptos = this.state.results
-        .filter(r => !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin))
-        .slice(0, 3);
-      if (topCryptos.length >= 3) {
-        html += '<div class="farm-top3-section">';
-        html += '<h3 style="margin: 0 0 15px 0;">🥇🥈🥉 Top 3 Cryptos (Sacáveis)</h3>';
-        html += '<div class="farm-top3-grid">';
-        
-        topCryptos.forEach((coin, idx) => {
-          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-          html += `<div class="farm-top3-card ${idx === 0 ? 'gold' : ''}">`;
-          html += `<div style="font-size: 28px; margin-bottom: 8px;">${medal}</div>`;
-          html += `<div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">${coin.coin}</div>`;
-          html += `<div style="font-size: 12px; color: #666; margin-bottom: 12px;">Contrib: ${coin.contribution}%</div>`;
-          html += '<div style="font-size: 14px; color: #666;">Mensal:</div>';
-          html += `<div style="font-size: 16px; color: ${idx === 0 ? '#ff9800' : '#007bff'}; font-weight: bold;">${this.state.showQuantity ? `${coin.monthlyQty.toFixed(4)} ${coin.coin}` : (this.state.useEUR ? `€${(coin.monthly * this.state.usdToEur).toFixed(2)}` : this.state.useBRL ? `R$ ${(coin.monthly * this.state.usdToBrl).toFixed(2)}` : `$${coin.monthly.toFixed(2)}`)}</div>`;
+        html += '<div class="farm-stats-grid-3">';
+        [
+          ['Diário', 'daily', 'dailyQty', 1],
+          ['Mensal (30D)', 'monthly', 'monthlyQty', 1],
+          ['Anual (365D)', 'monthly', 'monthlyQty', 12]
+        ].forEach(([rotulo, campoValor, campoQtd, fator]) => {
+          const valor = this.state.showQuantity
+            ? `${(vencedora[campoQtd] * fator).toFixed(4)} ${vencedora.coin}`
+            : this._moeda(vencedora[campoValor] * fator);
+          html += '<div class="farm-stat-box">';
+          html += `<div style="font-size: 14px; color: #666; margin-bottom: 8px;">${rotulo}</div>`;
+          html += `<div class="farm-stat-value">${valor}</div>`;
           html += '</div>';
         });
-        
         html += '</div>';
+
+        if (vices.length) {
+          html += '<div style="margin-top: 16px;">';
+          html += '<div style="font-size: 13px; color: #666; margin-bottom: 8px;">Se preferir outra moeda:</div>';
+          html += '<div class="farm-top3-grid">';
+          vices.forEach((c, idx) => {
+            html += '<div class="farm-top3-card">';
+            html += `<div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">${idx === 0 ? '🥈' : '🥉'} ${c.coin}</div>`;
+            html += `<div style="font-size: 12px; color: #666; margin-bottom: 8px;">Contrib: ${c.contribution}%</div>`;
+            html += '<div style="font-size: 13px; color: #666;">Mensal:</div>';
+            html += `<div style="font-size: 16px; color: #007bff; font-weight: bold;">${this._ganho(c, 'monthly', 'monthlyQty')}</div>`;
+            html += '</div>';
+          });
+          html += '</div>';
+          html += '</div>';
+        }
+
         html += '</div>';
       }
-    }
-
-    // Gráfico
-    if (this.state.history.length >= 2) {
-      html += '<div class="farm-chart-container">';
-      html += '<canvas id="farmChart"></canvas>';
-      html += '</div>';
     }
 
     // Tabela de Resultados
@@ -896,7 +1034,7 @@ const UI_FarmCalculator = {
         const withdrawableCryptos = this.state.results.filter(coin => !coin.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(coin.coin));
         const isTopCrypto = !r.isGameCoin && !this.CONFIG.NON_WITHDRAWABLE.includes(r.coin) && withdrawableCryptos.indexOf(r) === 0;
         const isNonWithdrawable = this.CONFIG.NON_WITHDRAWABLE.includes(r.coin);
-        
+
         html += `<tr${isTopCrypto ? ' class="farm-row-highlight"' : ''}>`;
         html += `<td><strong>${r.coin}</strong> <span class="${r.isGameCoin ? 'farm-badge-game' : 'farm-badge-crypto'}">${r.isGameCoin ? 'Game' : 'Crypto'}</span>${isTopCrypto ? ' <span class="farm-badge-top">🏆 TOP</span>' : ''}${isNonWithdrawable ? ' <span class="farm-badge-no-withdraw">🚫 Não sacável</span>' : ''}</td>`;
         html += `<td style="text-align: right; font-size: 13px;">${r.contribution}%</td>`;
@@ -905,8 +1043,23 @@ const UI_FarmCalculator = {
         html += `<td style="text-align: right;">${this.formatValue(r.weekly, r.weeklyQty, !r.isGameCoin, r.coin, 'weekly')}</td>`;
         html += `<td style="text-align: right;">${this.formatValue(r.monthly, r.monthlyQty, !r.isGameCoin, r.coin, 'monthly')}</td>`;
         html += '</tr>';
+
+        // EVENTO TEMPORÁRIO — boost DOGE x3. Anunciado por e-mail em 19/08/2026 16:35 como
+        // "próximos 7 dias", ou seja, acaba por volta de 26/08/2026: REMOVER este bloco então.
+        // (Não confundir com 20 e 21/08, que são os fins dos eventos No Reservations e
+        // Road to Five Stars — esses são outra coisa e não afetam o multiplicador do DOGE.)
+        if (r.coin === 'DOGE') {
+          html += '<tr style="background: rgba(255, 193, 7, 0.12);">';
+          html += `<td><strong>DOGE</strong> <span class="farm-badge-crypto">Crypto</span> <span style="background:#ffc107; color:#000; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:4px; white-space:nowrap; display:inline-block;">🐕 3x EVENTO</span></td>`;
+          html += `<td style="text-align: right; font-size: 13px;">${r.contribution}%</td>`;
+          html += `<td style="text-align: right;">${this.formatValue(r.block * 3, r.blockQty * 3, true, 'DOGE', 'block')}</td>`;
+          html += `<td style="text-align: right;">${this.formatValue(r.daily * 3, r.dailyQty * 3, true, 'DOGE', 'daily')}</td>`;
+          html += `<td style="text-align: right;">${this.formatValue(r.weekly * 3, r.weeklyQty * 3, true, 'DOGE', 'weekly')}</td>`;
+          html += `<td style="text-align: right;">${this.formatValue(r.monthly * 3, r.monthlyQty * 3, true, 'DOGE', 'monthly')}</td>`;
+          html += '</tr>';
+        }
       });
-      
+
       html += '</tbody></table>';
       html += '</div>';
 
@@ -958,6 +1111,14 @@ const UI_FarmCalculator = {
       html += '</div>';
     }
 
+    // Gráfico. Fica junto do Histórico porque é justamente a série histórica desenhada —
+    // no meio dos cards de recomendação ele cortava o fluxo "o que farmar → quanto rende".
+    if (this.state.history.length >= 2) {
+      html += '<div class="farm-chart-container">';
+      html += '<canvas id="farmChart"></canvas>';
+      html += '</div>';
+    }
+
     // Histórico
     if (this.state.history.length > 0) {
       html += '<div class="farm-history-section">';
@@ -982,7 +1143,7 @@ const UI_FarmCalculator = {
           html += '<div class="farm-history-stats">';
           html += '<div class="farm-history-stat">';
           html += '<span class="farm-history-stat-label">Power</span>';
-          html += `<span class="farm-history-stat-value power">${entry.power.toFixed(3)} Eh/s</span>`;
+          html += `<span class="farm-history-stat-value power">${this._formatarPoder(entry.power)}</span>`;
           html += '</div>';
           html += '<div class="farm-history-stat">';
           html += '<span class="farm-history-stat-label">Rede</span>';
@@ -1062,14 +1223,23 @@ const UI_FarmCalculator = {
     
     if (user && user.powerData && user.powerData.current_power) {
       const powerEh = user.powerData.current_power / 1000000000;
-      const powerInt = Math.floor(powerEh * 1000);
-      const powerStr = powerInt.toString();
-      
-      if (powerStr.length > 3) {
-        this.state.miningPower = powerStr.slice(0, -3) + '.' + powerStr.slice(-3);
-      } else {
-        this.state.miningPower = '0.' + powerStr.padStart(3, '0');
+
+      // Sem preferência salva, abre na escala do poder da conta — com 673 Eh/s, abrir em
+      // Zh/s mostraria "0.673", e em Ph/s mostraria "673000". Depois o que ele escolher manda.
+      if (!localStorage.getItem('farm_power_unit')) {
+        const escalas = Object.entries(this._UNIDADES_POWER).sort((a, b) => b[1] - a[1]);
+        for (const [nome, fator] of escalas) {
+          if (powerEh >= fator) { this.state.powerUnit = nome; break; }
+        }
       }
+
+      const valor = powerEh / (this._UNIDADES_POWER[this.state.powerUnit] || 1);
+      // Trunca em vez de arredondar: o poder exibido nunca deve passar do real, senão
+      // dá pra concluir que se está numa liga acima da verdadeira por causa do arredondamento.
+      const milesimos = Math.floor(valor * 1000).toString();
+      this.state.miningPower = milesimos.length > 3
+        ? milesimos.slice(0, -3) + '.' + milesimos.slice(-3)
+        : '0.' + milesimos.padStart(3, '0');
     }
 
     this.init();
