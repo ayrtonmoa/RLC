@@ -684,6 +684,24 @@ const UI_RoomPlanner = {
     return ids;
   },
 
+  // Cada rack físico do tipo do set dá o bônus da faixa máxima DE FORMA INDEPENDENTE —
+  // dois "Radio Rack 8" completos valem 2x o bônus, não 1x (confirmado: usuário tem 2
+  // "The Lost Treasure Rack 8" completos e ganha +80% de CADA um, não um só +80%
+  // compartilhado). _racksDoSet junta todos os racks do tipo num Set só, o que é certo
+  // pra perguntas tipo "essa peça está em ALGUM rack do set?", mas errado pra montar o
+  // Auto-Otimizar: usado do jeito errado, ele deixava uma peça duplicada (ex: 2ª Drama
+  // Chest do inventário) entrar no MESMO rack que já tinha uma, expulsando uma peça
+  // realmente diferente que faltava — e derrubando a faixa de +80% pra 0% por uma troca
+  // que não trazia ganho nenhum. Esta função devolve os racks como instâncias
+  // SEPARADAS, pra cada uma ser tratada (proteção, empurrão de valor, alocação) como o
+  // "seu próprio set" que é.
+  _instanciasDoSet: function(set, racksInstalados) {
+    if (!set.rack || !set.rack.title) return [];
+    return (racksInstalados || [])
+      .filter(r => r.name && r.name.toLowerCase() === set.rack.title.toLowerCase())
+      .map(r => r._id);
+  },
+
   // Status de UM set dado um conjunto de miners "instaladas" (ou candidatas a instalar):
   // quantas peças distintas do set batem, e se a faixa MÁXIMA do set está ativa.
   //
@@ -936,6 +954,45 @@ const UI_RoomPlanner = {
     };
   },
 
+  // Reagrupa as miners GENÉRICAS (não peça de set) que sobreviveram ao corte por limite de
+  // poder, nos racks de maior bônus disponíveis — em vez de deixá-las onde sobraram por
+  // acaso do preenchimento original (que ocupa a sala inteira achando que vai usar toda a
+  // capacidade, e sob um limite apertado sobra picado por dezenas de racks distintos com 1-3
+  // miners cada). Não mexe em `_pecaDeSetFixa` (essas só valem alguma coisa no rack temático
+  // delas, sair de lá anularia o bônus de set) nem no poder total (mesmo conjunto de miners,
+  // só reorganizado — o valor de coleção/rack não muda dependendo de qual rack guarda qual).
+  _compactarRacksGenericos: function(rackAssignments, rackCapacity, camadasPorBonus) {
+    const soltas = [];
+    Object.keys(rackAssignments).forEach(rackId => {
+      const ficam = [];
+      rackAssignments[rackId].forEach(m => {
+        if (m._pecaDeSetFixa) { ficam.push(m); return; }
+        soltas.push(m);
+        rackCapacity[rackId] += m.cells;
+      });
+      rackAssignments[rackId] = ficam;
+    });
+    if (!soltas.length) return;
+
+    // mesma ordem/algoritmo do preenchimento original: maior poder primeiro, encaixa no
+    // rack de maior bônus com espaço, esgotando cada rack antes de passar pro próximo.
+    soltas.sort((a, b) => b.power - a.power);
+    soltas.forEach(m => {
+      for (const camada of camadasPorBonus) {
+        let encaixou = false;
+        for (const rack of camada) {
+          if (rackCapacity[rack._id] >= m.cells) {
+            rackAssignments[rack._id].push({ ...m, _rackId: rack._id });
+            rackCapacity[rack._id] -= m.cells;
+            encaixou = true;
+            break;
+          }
+        }
+        if (encaixou) break;
+      }
+    });
+  },
+
   _calcularPoderEstimado: function(pool, racks, userData) {
     const poolAtualReal = (userData.roomData.miners || []).map(m => ({
       name: m.name,
@@ -1075,19 +1132,25 @@ const UI_RoomPlanner = {
     if (typeof SetsData !== 'undefined') {
       const instaladasComIndex = roomMiners.map((m, index) => ({ name: m.name, power: m.power, index, _rackId: m.placement?.user_rack_id }));
       SetsData.sets.forEach(set => {
-        const racksDoSet = this._racksDoSet(set, racks);
-        const status = this._statusDoSet(set, instaladasComIndex, racksDoSet);
-        if (!status.protegidoMinimo || !status.tierAtivo) return;
-        const valorDaFaixaAtual = status.tierAtivo.percent_power
-          ? basePowerRealAtual * (status.tierAtivo.percent_power / 10000)
-          : status.tierAtivo.bonus_power;
-        const valorPorPeca = valorDaFaixaAtual / status.protegidoMinimo;
-        const instaladas = instaladasComIndex
-          .filter(m => racksDoSet.has(m._rackId))
-          .filter(m => status.pecasInstaladas.some(sm => this._matchSetPiece(sm, m)))
-          .sort((a, b) => a.power - b.power);
-        instaladas.slice(0, status.protegidoMinimo).forEach(m => {
-          valorProtecaoPorIndice[m.index] = (valorProtecaoPorIndice[m.index] || 0) + valorPorPeca;
+        // POR INSTÂNCIA: cada rack físico do tipo do set dá seu próprio bônus, então cada
+        // um precisa da sua própria proteção — juntar os racks aqui faria um rack completo
+        // "cobrir" a exigência de mínimo do outro, e nenhum dos dois ficaria protegido de
+        // verdade (ver comentário em _instanciasDoSet).
+        this._instanciasDoSet(set, racks).forEach(rackId => {
+          const racksDoSet = new Set([rackId]);
+          const status = this._statusDoSet(set, instaladasComIndex, racksDoSet);
+          if (!status.protegidoMinimo || !status.tierAtivo) return;
+          const valorDaFaixaAtual = status.tierAtivo.percent_power
+            ? basePowerRealAtual * (status.tierAtivo.percent_power / 10000)
+            : status.tierAtivo.bonus_power;
+          const valorPorPeca = valorDaFaixaAtual / status.protegidoMinimo;
+          const instaladas = instaladasComIndex
+            .filter(m => m._rackId === rackId)
+            .filter(m => status.pecasInstaladas.some(sm => this._matchSetPiece(sm, m)))
+            .sort((a, b) => a.power - b.power);
+          instaladas.slice(0, status.protegidoMinimo).forEach(m => {
+            valorProtecaoPorIndice[m.index] = (valorProtecaoPorIndice[m.index] || 0) + valorPorPeca;
+          });
         });
       });
     }
@@ -1169,41 +1232,44 @@ const UI_RoomPlanner = {
     if (typeof SetsData !== 'undefined') {
       const instaladasAgora = roomMiners.map(m => ({ name: m.name, power: m.power, _rackId: m.placement?.user_rack_id }));
       SetsData.sets.forEach(set => {
-        const racksDoSet = this._racksDoSet(set, racks);
-        // sem o rack temático do set instalado, nenhuma peça vai contar de qualquer jeito —
-        // não faz sentido dar empurrão de valor pra elas.
-        if (!racksDoSet || !racksDoSet.size) return;
+        // POR INSTÂNCIA: com o cálculo antigo (racks mesclados), um rack já completo
+        // "escondia" a necessidade do outro — o status via qtd=4 combinado e concluía que
+        // a faixa máxima já tinha sido atingida em algum lugar, sem empurrar valor nenhum
+        // pras peças que completariam um SEGUNDO rack vazio/parcial. Isso é o que fazia o
+        // Auto-Otimizar encher o segundo rack com miners genéricas em vez das peças certas.
+        this._instanciasDoSet(set, racks).forEach(rackId => {
+          const racksDoSet = new Set([rackId]);
+          const status = this._statusDoSet(set, instaladasAgora, racksDoSet);
+          const jaTem = new Set(status.pecasInstaladas.map(sm => sm.title.toLowerCase() + '|' + sm.power));
+          const faltantes = set.miners.filter(sm => !jaTem.has(sm.title.toLowerCase() + '|' + sm.power));
+          if (!faltantes.length) return;
 
-        const status = this._statusDoSet(set, instaladasAgora, racksDoSet);
-        const jaTem = new Set(status.pecasInstaladas.map(sm => sm.title.toLowerCase() + '|' + sm.power));
-        const faltantes = set.miners.filter(sm => !jaTem.has(sm.title.toLowerCase() + '|' + sm.power));
-        if (!faltantes.length) return;
+          const proximaFaixa = set.levels
+            .filter(lvl => lvl.condition_amount > status.qtd)
+            .sort((a, b) => a.condition_amount - b.condition_amount)[0];
+          if (!proximaFaixa) return;
 
-        const proximaFaixa = set.levels
-          .filter(lvl => lvl.condition_amount > status.qtd)
-          .sort((a, b) => a.condition_amount - b.condition_amount)[0];
-        if (!proximaFaixa) return;
+          const faltamPraProxima = proximaFaixa.condition_amount - status.qtd;
+          const disponiveisNoPool = faltantes.filter(sm => pool.some(m => this._matchSetPiece(sm, m)));
+          if (disponiveisNoPool.length < faltamPraProxima) return;
 
-        const faltamPraProxima = proximaFaixa.condition_amount - status.qtd;
-        const disponiveisNoPool = faltantes.filter(sm => pool.some(m => this._matchSetPiece(sm, m)));
-        if (disponiveisNoPool.length < faltamPraProxima) return;
+          // só vale a pena se ESSE rack ainda tiver célula livre suficiente pras peças que
+          // faltam (elas só contam se ficarem especificamente nele).
+          const celulasLivresNoRack = rackCapacity[rackId] || 0;
+          const celulasNecessarias = disponiveisNoPool.slice(0, faltamPraProxima).reduce((s, sm) => {
+            const m = pool.find(mm => this._matchSetPiece(sm, mm));
+            return s + (m ? m.cells : 2);
+          }, 0);
+          if (celulasNecessarias > celulasLivresNoRack) return;
 
-        // só vale a pena se o rack temático do set ainda tiver célula livre suficiente pras
-        // peças que faltam (elas só contam se ficarem especificamente lá dentro).
-        const celulasLivresNoRackDoSet = [...racksDoSet].reduce((s, rid) => s + (rackCapacity[rid] || 0), 0);
-        const celulasNecessarias = disponiveisNoPool.slice(0, faltamPraProxima).reduce((s, sm) => {
-          const m = pool.find(mm => this._matchSetPiece(sm, mm));
-          return s + (m ? m.cells : 2);
-        }, 0);
-        if (celulasNecessarias > celulasLivresNoRackDoSet) return;
-
-        const ganhoDaFaixa = proximaFaixa.percent_power
-          ? baseEstimadaFinal * (proximaFaixa.percent_power / 10000)
-          : proximaFaixa.bonus_power;
-        const valorPorPeca = ganhoDaFaixa / faltamPraProxima;
-        disponiveisNoPool.forEach(sm => {
-          const key = sm.title.toLowerCase() + '|' + sm.power;
-          valorExtraSetPorChave[key] = Math.max(valorExtraSetPorChave[key] || 0, valorPorPeca);
+          const ganhoDaFaixa = proximaFaixa.percent_power
+            ? baseEstimadaFinal * (proximaFaixa.percent_power / 10000)
+            : proximaFaixa.bonus_power;
+          const valorPorPeca = ganhoDaFaixa / faltamPraProxima;
+          disponiveisNoPool.forEach(sm => {
+            const key = sm.title.toLowerCase() + '|' + sm.power;
+            valorExtraSetPorChave[key] = Math.max(valorExtraSetPorChave[key] || 0, valorPorPeca);
+          });
         });
       });
     }
@@ -1242,7 +1308,7 @@ const UI_RoomPlanner = {
     // rack temático dele (ex: Royal Set exige o rack "Royal Rack 8" especificamente) — por
     // isso não passam pelo preenchimento genérico por bônus (que poderia mandá-las pra
     // qualquer rack "melhor"), vão primeiro, direto pro(s) rack(s) certo(s) do próprio set.
-    const racksDoSetPorSet = new Map();
+    const instanciasPorSet = new Map();
     const setDaMiner = m => {
       if (typeof SetsData === 'undefined') return null;
       return SetsData.sets.find(set => set.miners.some(sm => this._matchSetPiece(sm, m))) || null;
@@ -1253,26 +1319,46 @@ const UI_RoomPlanner = {
     incluidos.forEach(m => {
       const set = setDaMiner(m);
       if (!set) { incluidosGerais.push(m); return; }
-      if (!racksDoSetPorSet.has(set)) racksDoSetPorSet.set(set, this._racksDoSet(set, racks));
-      const racksDoSet = racksDoSetPorSet.get(set);
-      if (racksDoSet && racksDoSet.size) {
-        incluidosComRackFixo.push({ miner: m, racksDoSet });
+      if (!instanciasPorSet.has(set)) instanciasPorSet.set(set, this._instanciasDoSet(set, racks));
+      const instancias = instanciasPorSet.get(set);
+      if (instancias.length) {
+        incluidosComRackFixo.push({ miner: m, set, instancias });
       } else {
         incluidosGerais.push(m);
       }
     });
 
-    incluidosComRackFixo.forEach(({ miner, racksDoSet }) => {
+    // Cada rack físico é seu PRÓPRIO set — não pode ganhar 2 cópias da mesma peça (isso não
+    // soma pra faixa nenhuma) nem deixar essa 2ª cópia expulsar uma peça diferente que
+    // faltava. `ocupadosPorRack` rastreia, por rack, quais peças do set (nome+poder, já que
+    // as duas raridades de uma miner de set contam como entradas separadas) já estão lá.
+    const ocupadosPorRack = {};
+    incluidosComRackFixo.forEach(({ miner, set, instancias }) => {
+      const slot = set.miners.find(sm => this._matchSetPiece(sm, miner));
+      const slotKey = slot ? (slot.title.toLowerCase() + '|' + slot.power) : (miner.name.toLowerCase() + '|' + miner.power);
+
+      // ordena: 1) volta pro rack original dela, se ainda não tiver essa peça; 2) prefere
+      // um rack que AINDA não tem essa peça (fecha os que faltam antes de duplicar); 3) o
+      // resto na ordem natural.
+      const candidatos = [...instancias].sort((a, b) => {
+        const aOrig = miner._rackIdOriginal === a, bOrig = miner._rackIdOriginal === b;
+        if (aOrig !== bOrig) return aOrig ? -1 : 1;
+        const aTem = (ocupadosPorRack[a] || (ocupadosPorRack[a] = new Set())).has(slotKey);
+        const bTem = (ocupadosPorRack[b] || (ocupadosPorRack[b] = new Set())).has(slotKey);
+        if (aTem !== bTem) return aTem ? 1 : -1;
+        return 0;
+      });
+
       let alocada = false;
-      const candidatos = [...racksDoSet];
-      // prioriza voltar pro rack original dela, se ele for um dos racks válidos do set
-      if (miner._rackIdOriginal && racksDoSet.has(miner._rackIdOriginal)) {
-        candidatos.sort((a, b) => (a === miner._rackIdOriginal ? -1 : b === miner._rackIdOriginal ? 1 : 0));
-      }
       for (const rackId of candidatos) {
+        if ((ocupadosPorRack[rackId] || (ocupadosPorRack[rackId] = new Set())).has(slotKey)) continue;
         if (rackCapacity[rackId] >= miner.cells) {
-          rackAssignments[rackId].push({ ...miner, _rackId: rackId });
+          // _pecaDeSetFixa marca quem tem destino de rack obrigatório — a repacotagem
+          // que roda depois do corte por limite (ver _compactarRacksGenericos) precisa
+          // saber quem NÃO pode ser movida dali.
+          rackAssignments[rackId].push({ ...miner, _rackId: rackId, _pecaDeSetFixa: true });
           rackCapacity[rackId] -= miner.cells;
+          ocupadosPorRack[rackId].add(slotKey);
           alocada = true;
           break;
         }
@@ -1346,9 +1432,52 @@ const UI_RoomPlanner = {
     // Teto de poder: aplicado DEPOIS do preenchimento por fragmentação, senão aquele passo
     // encheria de volta os buracos que a limitação acabou de abrir.
     const limiteGH = this._limiteEmGH();
-    this._limiteInfo = limiteGH
-      ? { limiteGH, ...this._aplicarLimiteDePoder(rackAssignments, bancoInicial, racks, userData, limiteGH, rackCapacity) }
-      : null;
+    this._limiteInfo = null;
+    if (limiteGH) {
+      const info = this._aplicarLimiteDePoder(rackAssignments, bancoInicial, racks, userData, limiteGH, rackCapacity);
+
+      // Repacotagem: o preenchimento acima ocupa a sala INTEIRA achando que vai usar toda a
+      // capacidade — com um limite de poder apertado, o corte que acabou de rodar sobra
+      // remanescentes espalhados pelos racks que por acaso ficaram de pé, em vez de
+      // consolidados nos de maior bônus. Confirmado com dados reais: sem limite, o
+      // preenchimento usa TODOS os racks disponíveis; com limite, sobram só ~20 miners, mas
+      // espalhadas pelos MESMOS ~20 racks que sobreviveram por acaso — nenhuma tentativa de
+      // juntar. Esta repassada pega só as miners GENÉRICAS (peça de set fica onde tem que
+      // ficar — ver _pecaDeSetFixa) e refaz o encaixe do zero, denso, do rack de maior bônus
+      // pro de menor — o mesmo algoritmo de preenchimento normal, só que rodando de novo
+      // sobre quem sobreviveu ao corte.
+      //
+      // Isso tem um efeito colateral que quase virou bug: mover pra racks de bônus MELHOR
+      // aumenta o poder total (mesma base, rack-bônus maior) — o corte acima calculou quantas
+      // miners cabiam nas posições ANTIGAS (espalhadas), não nas novas (compactas). Por isso
+      // repete o ciclo corte→repacotagem até estabilizar abaixo do teto: cada repacotagem só
+      // pode SUBIR o poder (nunca desce), então o corte seguinte convergiu rápido nos testes
+      // (1-2 voltas) — o teto de 6 é só segurança contra um caso patológico de oscilação.
+      this._compactarRacksGenericos(rackAssignments, rackCapacity, camadasPorBonus);
+      const poderAtualDaSala = () => {
+        const placedAgora = Object.values(rackAssignments).flat();
+        return placedAgora.length ? this._calcularPoderEstimado(placedAgora, racks, userData) : 0;
+      };
+      for (let volta = 0; volta < 6 && poderAtualDaSala() > limiteGH; volta++) {
+        const extra = this._aplicarLimiteDePoder(rackAssignments, bancoInicial, racks, userData, limiteGH, rackCapacity);
+        info.removidas += extra.removidas;
+        info.recolocadas += extra.recolocadas;
+        info.inalcancavel = extra.inalcancavel;
+        this._compactarRacksGenericos(rackAssignments, rackCapacity, camadasPorBonus);
+      }
+      // Segurança: a repacotagem é a ÚNICA operação capaz de subir o poder (move miner pra
+      // rack de bônus melhor) — se o laço acima esgotar as 6 voltas sem convergir (caso
+      // patológico), a última coisa executada ali em cima ainda teria sido uma repacotagem,
+      // podendo terminar acima do teto. Por isso fecha SEMPRE com um corte, nunca com
+      // repacotagem — sacrifica um pouco de compactação nesse caso raro, mas nunca estoura.
+      if (poderAtualDaSala() > limiteGH) {
+        const extra = this._aplicarLimiteDePoder(rackAssignments, bancoInicial, racks, userData, limiteGH, rackCapacity);
+        info.removidas += extra.removidas;
+        info.recolocadas += extra.recolocadas;
+        info.inalcancavel = extra.inalcancavel;
+      }
+      this._limiteInfo = { limiteGH, ...info };
+    }
 
     // Dentro de cada rack, ordena por poder decrescente (mais forte no primeiro slot, mais
     // fraca no último) e apaga a posição física antiga (_placementY/_placementX) — sem isso
