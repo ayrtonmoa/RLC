@@ -38,18 +38,6 @@ const UI_Tabs = {
     
         
         // ========== CHAMAR MOSTRAR() DOS MÓDULOS ==========
-        
-        // Merge Analyzer
-        if (targetTab === 'merge' || targetTab === 'mergeanalyzer') {
-          console.log('🎯 Aba: Merge Analyzer');
-          if (typeof UI_MergeAnalyzer !== 'undefined' && typeof UI_MergeAnalyzer.mostrar === 'function') {
-            console.log('✅ Chamando UI_MergeAnalyzer.mostrar()');
-            UI_MergeAnalyzer.mostrar();
-          } else {
-            console.error('❌ UI_MergeAnalyzer não está definido!');
-          }
-        }
-
 
         // Se for a aba farmcalculator, recarregar o power
 if (targetTab === 'farmcalculator') {
