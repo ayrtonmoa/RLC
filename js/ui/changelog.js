@@ -4,6 +4,17 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '19 Ago 2026', time: '10:13', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado</strong> — a base saiu de 8.220 para <strong>8.594</strong> registros, com <strong>374 miners novas</strong> que o jogo lançou e o app ainda não conhecia. Entre elas <em>Mystic Void</em>, <em>Corsair's Oath</em>, <em>Coin's Seal</em>, <em>Crewmark</em>, <em>Diamondfall</em>, <em>Sushi Stop</em> e as demais da linha pirata — miners que apareciam no seu inventário sem poder, receita ou imagem.
+      <ul class="guia-tl-list">
+        <li>A <strong>Sushi Stop</strong> é um bom exemplo do efeito: ela é peça do Roadside Stars Set (adicionado ontem) e agora o SmartRoom a reconhece como tal, com poder e receita corretos.</li>
+        <li>As <strong>receitas não mudaram</strong>: das 6.885 conferidas, nenhuma teve alteração real de ingrediente. As diferenças eram só ordem de listagem e apóstrofo tipográfico.</li>
+        <li>43 merges antigos (RollerArc, Milly, Santa Sleigh…) tiveram o <strong>poder rebalanceado pelo jogo</strong> — em média +14% — e agora batem com o valor real.</li>
+        <li>Corrigidos 18 nomes que estavam com apóstrofo diferente do que o jogo usa hoje (<em>King's Legacy</em>, <em>Devil's Ember</em>, <em>Hashbeard's Ship</em>), o que atrapalhava o reconhecimento ao colar o inventário.</li>
+        <li>Dados extraídos direto da API do jogo, combinando o catálogo (atributos e imagens) com o forge (receitas e preços).</li>
+      </ul>`
+    },
+    {
       date: '18 Ago 2026', time: '21:00', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Sets atualizados</strong> — a base de sets estava em 14 e o jogo já tem <strong>17</strong>. Entraram <strong>The Lost Treasure</strong> (rack The Lost Treasure Rack 8; peças Manners &amp; Mayhem, Gilded Greed, Wrongway Atlas e Drama Chest), <strong>Roadside Stars</strong> (Roadside Rack 8; Taco Turn, Burger Boulevard, Hot Dog Highway e Sushi Stop) e <strong>Beach</strong> (Beach Rack 8; Mine-a Colada, Tai One On, Bartender e Salt &amp; Vault). Sem esses dados o SmartRoom era cego pra eles: não somava o bônus e, no corte por limite de poder, podia descartar uma peça sem perceber que derrubava a faixa inteira do set.
       <ul class="guia-tl-list">
