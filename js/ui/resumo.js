@@ -21,7 +21,6 @@ const UI_Resumo = {
     const totalApiEHS = Utils.formatPower(powerData.current_power * 1e9);
     const totalCalculadoEHS = Utils.formatPower(calculatedTotalPower * 1e9);
     const difference = (powerData.current_power - calculatedTotalPower) * 1e9;
-    const diffClass = Math.abs(difference) < 1000 ? 'good' : 'warning';
 
     State.addDebugInfo(`Resumo: Base=${basePowerMinersFromRoom.toFixed(3)}, Bonus=${bonusPowerFromApi.toFixed(3)}, Total=${calculatedTotalPower.toFixed(3)}`);
 
@@ -43,7 +42,7 @@ const UI_Resumo = {
       </div>
 
       <h3>Resumo de Poder</h3>
-      <div class="summary-grid">
+      <div class="summary-grid summary-grid-2col">
         <div class="summary-item">
           <h4>📊 Poder Total (Oficial)</h4>
           <p class="power-value-main power-value-official">${totalApiEHS}</p>
@@ -54,11 +53,39 @@ const UI_Resumo = {
           <p class="power-value-main">${totalCalculadoEHS}</p>
           <small class="power-value-small">Exato: ${calculatedTotalPower.toFixed(9)} GH/s</small>
         </div>
-        <div class="summary-item">
-          <h4>📈 Diferença</h4>
-          <p class="power-diff ${diffClass}">${Utils.formatPowerSigned(difference)}</p>
-          <small class="power-value-small">${Math.abs(difference) < 1000 ? 'Precisão excelente!' : 'Pequena variação normal'}</small>
-        </div>
+      </div>
+
+      <div class="summary-item power-liga-box">
+        <h4>🏆 Poder sem Temporário</h4>
+        <p class="power-value-main">${Utils.formatPower((calculatedTotalPower - powerData.temp) * 1e9)}</p>
+        <small class="power-value-small">Exato: ${(calculatedTotalPower - powerData.temp).toFixed(9)} GH/s</small>
+        <p class="power-liga-nota">
+          Este é o poder que você <strong>sustenta de verdade</strong>: o total menos o temporário, que expira.
+          É o número que importa pra liga, porque o <strong>poder temporário não promove</strong>.
+          ${powerData.temp > 0
+            ? `Hoje o seu total é ${Utils.formatPower(powerData.current_power * 1e9)}, mas ${Utils.formatPower(powerData.temp * 1e9)} disso é temporário.`
+            : 'No momento você não tem poder temporário ativo, então ele é igual ao total.'}
+        </p>
+        <!-- Usa calculatedTotalPower - temp, e não Utils.poderSemTemporario(powerData) (que
+             faria current_power - temp): o current_power da API demora a refletir quando
+             você instala/muda uma miner no jogo e reanalisa, mas roomData.miners e temp já
+             vêm atualizados na mesma resposta. calculatedTotalPower é o número "rápido" que
+             o card Poder Calculado logo acima já usa por esse mesmo motivo.
+
+             O aviso abaixo só aparece se a diferença for RELEVANTE (mais de 0.01% do total)
+             — um limiar em Hz absoluto (o antigo, maior que 1000) sempre dispara em contas
+             grandes, porque somar ~70 valores que a própria API já arredonda individualmente
+             sempre deixa um resíduo de ponto flutuante bem maior que 1000 Hz, mesmo sem nada
+             ter mudado. Isso não é "servidor atrasado": é ruído estrutural de somar partes já
+             truncadas. -->
+        ${powerData.current_power && Math.abs(difference) / (powerData.current_power * 1e9) > 0.0001
+          ? `<p class="power-liga-nota" style="opacity:.8;">⚠️ Difere ${Utils.formatPowerSigned(difference)} do "Poder Total (Oficial)" — normal logo após instalar/trocar uma miner, ou apenas o resíduo de somar várias partes que a API já arredonda cada uma por conta própria.</p>`
+          : ''}
+        ${powerData.max_power ? `
+        <p class="power-liga-nota">
+          Não confunda com o <strong>"Maximum power"</strong> que o jogo mostra (${Utils.formatPower(powerData.max_power * 1e9)}):
+          aquilo é uma <strong>marca d'água do maior poder já registrado</strong> — só sobe, e não desce quando você tira miner.
+        </p>` : ''}
       </div>
       
       <hr>

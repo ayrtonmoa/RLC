@@ -852,6 +852,31 @@ body.dark-mode .sets-progresso-card {
   padding-bottom: 12px;
 }
 
+/* Linha do poder que decide a liga (max_power). Fica junto das outras comparações,
+   destacada em âmbar porque é o número que importa pra promoção, não o total. */
+.room-planner-comparison-liga {
+  border-bottom: none;
+  border-top: 1px dashed var(--border-color, #e0e0e0);
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.room-planner-comparison-liga .comparison-value {
+  color: #b8860b;
+}
+
+body.dark-mode .room-planner-comparison-liga .comparison-value {
+  color: #ffc107;
+}
+
+.comparison-liga-nota {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  margin-top: 4px;
+}
+
 .room-planner-comparison-bonus .comparison-value {
   font-size: 13px;
 }

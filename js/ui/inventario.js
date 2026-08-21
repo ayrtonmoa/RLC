@@ -1229,16 +1229,27 @@ const UI_Inventario = {
 
       html += '<div class="inv-sim-cards-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">';
 
+      // Os dois cards de poder mostram o total, que inclui o temporário. Como ele não
+      // conta pra subir de liga, quando existe temp ativo cada card ganha o valor de liga
+      // embaixo — senão dá pra achar que passou de faixa por causa de um bônus que expira.
+      const powerDataSim = (State.getUserData() || {}).powerData;
+      const tempSim = powerDataSim ? (powerDataSim.temp || 0) : 0;
+      const notaLiga = valor => tempSim > 0
+        ? '<p style="margin: 4px 0 0 0; font-size: 11px; color: rgba(255,255,255,0.75);">liga: ~' + Utils.formatPower((valor - tempSim) * 1e9) + '</p>'
+        : '';
+
       // Card 1: Power Atual
       html += '<div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 15px; border: 1px solid rgba(255,255,255,0.2);">';
       html += '<p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.8);">Power Atual</p>';
       html += '<p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold; color: white;">' + Utils.formatPower(simResult.poderAtual * 1e9) + '</p>';
+      html += notaLiga(simResult.poderAtual);
       html += '</div>';
 
       // Card 2: Power Simulado
       html += '<div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 15px; border: 1px solid rgba(255,255,255,0.2);">';
       html += '<p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.8);">Power Simulado</p>';
       html += '<p style="margin: 8px 0 0 0; font-size: 16px; font-weight: bold; color: white;">' + Utils.formatPower(simResult.novoPoderTotal * 1e9) + '</p>';
+      html += notaLiga(simResult.novoPoderTotal);
       html += '</div>';
 
       // Card 3: Mudança

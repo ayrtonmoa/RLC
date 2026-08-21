@@ -11,6 +11,11 @@ const Utils = {
     const abs = Math.abs(value);
     if (abs === 0) return "0 H/s";
 
+    // Faltavam Zh/s e Yh/s: contas grandes ficavam presas em "1025.648 Eh/s" em vez de
+    // rolar pra "1.026 Zh/s" como o próprio jogo mostra — não é sobre escolher a unidade
+    // do jogador, é que a escala simplesmente não subia mais alto que Eh/s.
+    if (abs >= 1e24) return (abs / 1e24).toFixed(3) + " Yh/s";
+    if (abs >= 1e21) return (abs / 1e21).toFixed(3) + " Zh/s";
     if (abs >= 1e18) return (abs / 1e18).toFixed(3) + " Eh/s";
     if (abs >= 1e15) return (abs / 1e15).toFixed(3) + " Ph/s";
     if (abs >= 1e12) return (abs / 1e12).toFixed(3) + " Th/s";
@@ -19,6 +24,24 @@ const Utils = {
     return abs.toFixed(3) + " H/s";
   },
   
+  /**
+   * Poder permanente, em GH/s: o total menos o poder temporário (boosters, eventos),
+   * que expira. É o poder que você de fato sustenta e o único que dá pra controlar
+   * montando a sala.
+   *
+   * NÃO confundir com o `max_power` da API (o "Maximum power" do jogo): aquele é uma
+   * marca d'água do maior poder já registrado — só sobe, nunca desce quando você tira
+   * miner. Por isso ele não serve pra responder "quanto eu tenho agora sem o boost":
+   * numa conta real o permanente estava em 553.961 e o max_power em 553.554, porque o
+   * pico ainda não tinha alcançado.
+   *
+   * Centralizado aqui pra Resumo, SmartRoom e Inventário não divergirem entre si.
+   */
+  poderSemTemporario(powerData) {
+    if (!powerData) return 0;
+    return (powerData.current_power || 0) - (powerData.temp || 0);
+  },
+
   /**
    * Formata valores de power com sinal (+/-)
    */

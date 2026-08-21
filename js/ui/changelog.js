@@ -4,6 +4,34 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '20 Ago 2026', time: '14:20', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Poder acima de 1.000 Eh/s ficava preso na unidade errada</strong> — faltavam Zh/s e Yh/s na formatação de poder. Contas grandes mostravam "1025.648 Eh/s" em vez de "1.026 Zh/s" como o próprio jogo exibe: não era sobre escolher a unidade, a escala automática simplesmente não subia além de Eh/s.
+      <ul class="guia-tl-list">
+        <li>Corrigido na função central que toda a aba usa pra formatar poder — Resumo, SmartRoom, Inventário, MinerMerge, Racks e Buy passam a rolar pra Zh/s e Yh/s automaticamente, sem precisar tocar em cada tela.</li>
+      </ul>`
+    },
+    {
+      date: '20 Ago 2026', time: '14:01', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>SmartRoom — Auto-Otimizar fazia trocas desnecessárias.</strong> Racks com o mesmo bônus são intercambiáveis pro poder total (não importa qual guarda qual miner), mas o Auto-Otimizar reordenava tudo por valor a cada execução — então uma sala já ótima, sem nenhuma miner nova pra adicionar, ainda assim gerava "mover" pra praticamente toda miner instalada, só trocando de lugar entre racks equivalentes.
+      <ul class="guia-tl-list">
+        <li>Agora, depois que o algoritmo decide <em>quem</em> fica em cada faixa de bônus, uma passada final devolve cada miner pro rack onde ela já estava — só quem é novo na faixa (adicionado, ou movido de outra faixa porque valeu a pena) recebe um rack diferente.</li>
+        <li>Num teste controlado (12 miners instaladas, nada novo no inventário), a lista de ações caiu de 12 "mover" pra <strong>0</strong>. Numa conta real com limite de poder ativo, os "mover" caíram de 14 pra 5 — os 9 a menos eram puro embaralhamento cosmético; "remover" e "adicionar" (as mudanças reais) ficaram idênticos.</li>
+        <li>Trocas que genuinamente valem a pena (uma miner subindo pra um rack de bônus melhor que abriu espaço, por exemplo) continuam acontecendo normalmente.</li>
+      </ul>`
+    },
+    {
+      date: '20 Ago 2026', time: '10:20', tag: 'new', label: 'NOVO',
+      html: `<strong>Poder sem Temporário</strong> — o poder que você realmente sustenta, agora explícito. O <strong>poder temporário não promove de liga</strong>: ele entra no total que o jogo mostra, mas expira. Antes você precisava fazer essa subtração de cabeça toda vez.
+      <ul class="guia-tl-list">
+        <li><strong>Resumo</strong> — card <em>🏆 Poder sem Temporário</em> logo abaixo do Poder Total, com a conta explicada. O card também avisa pra <strong>não confundir com o "Maximum power"</strong> do jogo: aquele é uma marca d'água do maior poder já registrado, só sobe e não desce quando você tira miner — por isso não serve pra responder "quanto eu tenho agora sem o boost".</li>
+        <li><strong>SmartRoom — o limite de poder agora vale pro poder de liga</strong>, não mais pro total. Antes, com boost temporário ativo, o teto cortava miners por causa de um poder que nem promove: numa conta com 115 Eh/s de temporário, o teto de 649.999 removia <strong>19 Eh/s de miners</strong> enquanto a liga estava 96 Eh/s abaixo da faixa seguinte. Agora não corta nada nesse caso. Sem boost ativo o comportamento é exatamente o mesmo de antes.</li>
+        <li><strong>SmartRoom</strong> — a comparação ganha a linha <em>Sem temporário → Estimado sem temporário</em>, junto do poder e do bônus, e o status do limite explica que o teto ignora o temporário.</li>
+        <li><strong>Inventário</strong> — os cards Power Atual e Power Simulado ganham o valor de liga embaixo, pra não parecer que você mudou de faixa por causa de um bônus que vai expirar.</li>
+        <li>O cálculo fica num só lugar (<code>Utils.poderSemTemporario</code>), então as três telas não têm como divergir entre si.</li>
+        <li>O aviso de divergência entre "Poder Total" e "Poder Calculado" agora só aparece quando a diferença é <strong>relevante</strong> (acima de 0,01% do total). O limiar antigo era em Hz absoluto e disparava sempre em conta grande — somar ~70 valores que a própria API já arredonda individualmente sempre deixa um resíduo de ponto flutuante bem maior que esse teto, mesmo sem nada ter mudado. Não é o servidor atrasado, é ruído estrutural de somar partes já truncadas.</li>
+      </ul>`
+    },
+    {
       date: '19 Ago 2026', time: '19:21', tag: 'new', label: 'NOVO',
       html: `<strong>Farm Calculator</strong> — três recursos novos e a página reorganizada.
       <ul class="guia-tl-list">
