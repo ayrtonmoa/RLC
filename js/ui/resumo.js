@@ -65,7 +65,12 @@ const UI_Resumo = {
       <div class="summary-item power-liga-box">
         <h4>🏆 Poder sem Temporário</h4>
         <p class="power-value-main">${Utils.formatPower(Utils.poderSemTemporario(powerData) * 1e9)}</p>
-        <small class="power-value-small">Exato: ${Utils.poderSemTemporario(powerData).toFixed(9)} GH/s</small>
+        <!-- "Aproximado", não "Exato" como os cards acima: os dois de cima são reconstrução
+             fiel de campos que a própria API devolve. Este é current_power menos temp e
+             hamster_expedition_bonus_power — matematicamente correto, mas testado contra o
+             jogo com ~0.09% de resíduo (a mesma margem do max_power não acompanhar em tempo
+             real), então não é a mesma garantia de exatidão dos outros dois. -->
+        <small class="power-value-small">Aproximado: ${Utils.poderSemTemporario(powerData).toFixed(9)} GH/s</small>
         <p class="power-liga-nota">
           Este é o poder que você <strong>sustenta de verdade</strong>: o total menos o temporário, que expira.
           É o número que importa pra liga, porque o <strong>poder temporário não promove</strong>.
