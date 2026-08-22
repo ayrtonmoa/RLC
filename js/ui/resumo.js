@@ -16,7 +16,14 @@ const UI_Resumo = {
 
     const basePowerMinersFromRoom = allMiners.reduce((sum, miner) => sum + miner.power, 0);
     const bonusPowerFromApi = powerData.bonus;
+    // hamster_expedition_bonus_power NÃO entra aqui como termo separado, mesmo sendo um
+    // campo à parte na API: o boost do hamster já vem embutido no `power` de cada miner em
+    // roomData.miners (testado ao vivo — somar ele de novo aqui inflava "Poder Calculado"
+    // pra ~145 Eh/s ACIMA do oficial, quase o valor exato do próprio bônus: contagem em
+    // dobro). Só entra como termo separado em Utils.poderTemporario/poderSemTemporario, que
+    // descontam de current_power (o total já fechado da API), não desta soma manual.
     const calculatedTotalPower = basePowerMinersFromRoom + bonusPowerFromApi + powerData.racks + powerData.games + powerData.temp;
+    const hamsterBonus = powerData.hamster_expedition_bonus_power || 0;
 
     const totalApiEHS = Utils.formatPower(powerData.current_power * 1e9);
     const totalCalculadoEHS = Utils.formatPower(calculatedTotalPower * 1e9);
@@ -57,20 +64,25 @@ const UI_Resumo = {
 
       <div class="summary-item power-liga-box">
         <h4>🏆 Poder sem Temporário</h4>
-        <p class="power-value-main">${Utils.formatPower((calculatedTotalPower - powerData.temp) * 1e9)}</p>
-        <small class="power-value-small">Exato: ${(calculatedTotalPower - powerData.temp).toFixed(9)} GH/s</small>
+        <p class="power-value-main">${Utils.formatPower(Utils.poderSemTemporario(powerData) * 1e9)}</p>
+        <small class="power-value-small">Exato: ${Utils.poderSemTemporario(powerData).toFixed(9)} GH/s</small>
         <p class="power-liga-nota">
           Este é o poder que você <strong>sustenta de verdade</strong>: o total menos o temporário, que expira.
           É o número que importa pra liga, porque o <strong>poder temporário não promove</strong>.
-          ${powerData.temp > 0
-            ? `Hoje o seu total é ${Utils.formatPower(powerData.current_power * 1e9)}, mas ${Utils.formatPower(powerData.temp * 1e9)} disso é temporário.`
+          ${Utils.poderTemporario(powerData) > 0
+            ? `Hoje o seu total é ${Utils.formatPower(powerData.current_power * 1e9)}, mas ${Utils.formatPower(Utils.poderTemporario(powerData) * 1e9)} disso é temporário (boost + expedição do hamster).`
             : 'No momento você não tem poder temporário ativo, então ele é igual ao total.'}
         </p>
-        <!-- Usa calculatedTotalPower - temp, e não Utils.poderSemTemporario(powerData) (que
-             faria current_power - temp): o current_power da API demora a refletir quando
-             você instala/muda uma miner no jogo e reanalisa, mas roomData.miners e temp já
-             vêm atualizados na mesma resposta. calculatedTotalPower é o número "rápido" que
-             o card Poder Calculado logo acima já usa por esse mesmo motivo.
+        <!-- Usa Utils.poderSemTemporario(powerData), ou seja current_power - temporário — e
+             NÃO calculatedTotalPower - temporário. Cheguei a usar calculatedTotalPower (o
+             número "rápido" que não espera o servidor recalcular após instalar/trocar uma
+             miner), mas isso quebrou: o boost do hamster já vem embutido dentro do "power"
+             de cada miner em roomData.miners (ver nota em calculatedTotalPower acima), então
+             subtrair o valor do hamster de novo aqui virava contagem dupla NA DIREÇÃO
+             CONTRÁRIA — testado ao vivo, "Sem Temporário" ficava idêntico ao total (não
+             descontava nada de verdade). current_power é o total já fechado pela API — dele
+             sim dá pra descontar temp+hamster de forma limpa, sem ambiguidade sobre onde
+             cada termo já está embutido.
 
              O aviso abaixo só aparece se a diferença for RELEVANTE (mais de 0.01% do total)
              — um limiar em Hz absoluto (o antigo, maior que 1000) sempre dispara em contas
@@ -117,6 +129,12 @@ const UI_Resumo = {
           ${Utils.formatPower(powerData.temp * 1e9)}<br>
           <small>${powerData.temp.toFixed(9)} GH/s</small>
         </div>
+        ${hamsterBonus > 0 ? `
+        <div class="summary-item">
+          <strong>Expedição do Hamster:</strong><br>
+          ${Utils.formatPower(hamsterBonus * 1e9)}<br>
+          <small>${hamsterBonus.toFixed(9)} GH/s — também temporário, campo separado de "Temporário"</small>
+        </div>` : ''}
         <div class="summary-item">
           <strong>Miners:</strong><br>
           ${uniqueMiners.length} únicas / ${allMiners.length} total

@@ -4,6 +4,34 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '21 Ago 2026', time: '21:28', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>"Poder sem Temporário" estava contando quase o total inteiro como permanente</strong> — faltava descontar o boost da <strong>Expedição do Hamster</strong>. Numa conta real, isso fez o SmartRoom achar que o limite de poder tinha estourado 108,3% (dizendo "passou 95 Eh/s do teto") quando na verdade o jogo mostrava só 95,6% de uso e ainda faltavam ~52 Eh/s pra próxima liga.
+      <ul class="guia-tl-list">
+        <li>A API do jogo expõe <code>hamster_expedition_bonus_power</code> como campo <strong>separado</strong> de <code>temp</code> — o boost do hamster não entra dentro do temporário comum. Numa conta real ele estava em 145,4 Eh/s (bem maior que os 0,22 Eh/s de <code>temp</code>), e como só descontávamos <code>temp</code>, "Poder sem Temporário" mostrava praticamente o total puro.</li>
+        <li>Corrigido no cálculo central (<code>Utils.poderTemporario</code>), descontado sempre de <code>current_power</code> — o total já fechado pela API. <strong>Não</strong> do "Poder Calculado" (a soma manual de miners + bônus + racks): esse já tenta reconstruir o total pra ficar rápido (não espera o servidor recalcular após instalar/trocar miner), só que o boost do hamster já vem embutido dentro do poder de cada miner ali — subtrair de novo ali seria contar em dobro, o que gerou uma rodada extra de correção quando o "Poder Calculado" disparou 145 Eh/s <em>acima</em> do oficial.</li>
+        <li>Testado contra uma conta real: Poder Total e Poder Calculado batem entre si (resíduo de 0,0000015%, ruído normal), e "Poder sem Temporário" bate com o que o jogo mostra na barra de progresso de liga — 1.099 Zh/s calculado contra 1.098 Zh/s do jogo.</li>
+        <li>Ganhou um card "Expedição do Hamster" no detalhamento, só informativo (não entra em nenhuma soma), pra mostrar de onde vem esse número quando ele está ativo.</li>
+      </ul>`
+    },
+    {
+      date: '21 Ago 2026', time: '10:41', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>SmartRoom — miner já instalada não muda mais de rack sem necessidade.</strong> O Auto-Otimizar continuava reorganizando miners que já estavam na sala: uma instalada podia "trocar de lugar" com outra (ex: duas indo em faixas de bônus opostas, uma pra melhor e outra pra pior) mesmo sem nenhuma miner nova envolvida — puro reposicionamento por valor.
+      <ul class="guia-tl-list">
+        <li>Agora miner já instalada volta <strong>sempre pro próprio rack</strong>, sem disputar espaço por valor com outra instalada nem com o inventário. Só o <strong>corte por limite de poder</strong> pode tirá-la da sala — nunca realocá-la pra "um rack melhor".</li>
+        <li>A consolidação sob limite apertado (que junta sobreviventes em menos racks) passa a mexer só nas <strong>miners do inventário</strong> que sobreviveram ao corte — instalada nunca entra nessa repacotagem.</li>
+        <li>Faltava um caso: quando o corte tira uma miner e sobra espaço pra recolocar algo ali mesmo, essa recolocação jogava a miner pro primeiro rack qualquer com vaga, não pro rack dela — resultado prático era o mesmo "corta e recoloca em outro lugar", que parece um movimento sem sentido. Agora, se for instalada, a recolocação tenta primeiro devolver pro rack de origem.</li>
+        <li>Testado numa conta real (1216 unidades de inventário): mirando o topo da Diamond III, e também da Diamond II (essa força cortar 102 miners, teste bem mais agressivo) — nos dois casos, <strong>0 movimentos</strong> entre instaladas. Só remoções (quando o limite obriga) e adições do inventário nas vagas livres. O teto de liga continua sendo respeitado nos dois.</li>
+      </ul>`
+    },
+    {
+      date: '20 Ago 2026', time: '22:29', tag: 'new', label: 'NOVO',
+      html: `<strong>SmartRoom</strong> — aviso de cautela perto do limite de poder. O poder mostrado na simulação é uma <strong>estimativa local</strong>; o RollerCoin só confirma o valor real depois de recalcular no servidor. Perto do teto, essa margem de erro pode fazer você passar de liga sem perceber, principalmente instalando várias miners de uma vez antes de conferir o poder oficial.
+      <ul class="guia-tl-list">
+        <li>Quando o uso do teto passa de <strong>90%</strong>, aparece o aviso <em>"⚠️ Perto do teto — instale devagar"</em>, recomendando instalar (ou remover) <strong>uma miner por vez</strong>, esperar o jogo atualizar o poder oficial e reanalisar antes de continuar.</li>
+        <li>Com folga maior que isso, o aviso não aparece — o erro de estimativa não muda decisão nenhuma quando ainda sobra muito espaço até o teto.</li>
+      </ul>`
+    },
+    {
       date: '20 Ago 2026', time: '14:20', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>Poder acima de 1.000 Eh/s ficava preso na unidade errada</strong> — faltavam Zh/s e Yh/s na formatação de poder. Contas grandes mostravam "1025.648 Eh/s" em vez de "1.026 Zh/s" como o próprio jogo exibe: não era sobre escolher a unidade, a escala automática simplesmente não subia além de Eh/s.
       <ul class="guia-tl-list">

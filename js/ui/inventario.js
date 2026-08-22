@@ -1233,7 +1233,7 @@ const UI_Inventario = {
       // conta pra subir de liga, quando existe temp ativo cada card ganha o valor de liga
       // embaixo — senão dá pra achar que passou de faixa por causa de um bônus que expira.
       const powerDataSim = (State.getUserData() || {}).powerData;
-      const tempSim = powerDataSim ? (powerDataSim.temp || 0) : 0;
+      const tempSim = powerDataSim ? Utils.poderTemporario(powerDataSim) : 0;
       const notaLiga = valor => tempSim > 0
         ? '<p style="margin: 4px 0 0 0; font-size: 11px; color: rgba(255,255,255,0.75);">liga: ~' + Utils.formatPower((valor - tempSim) * 1e9) + '</p>'
         : '';

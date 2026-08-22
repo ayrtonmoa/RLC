@@ -25,9 +25,27 @@ const Utils = {
   },
   
   /**
-   * Poder permanente, em GH/s: o total menos o poder temporário (boosters, eventos),
-   * que expira. É o poder que você de fato sustenta e o único que dá pra controlar
-   * montando a sala.
+   * Soma de TODO poder temporário da conta, em GH/s.
+   *
+   * `powerData.temp` NÃO é o único componente temporário — a API também expõe
+   * `hamster_expedition_bonus_power` separado (o boost do hamster/"Battery" do jogo), que
+   * NÃO entra em `temp`. Numa conta real, `temp` estava em 0.22 Eh/s (desprezível) enquanto
+   * `hamster_expedition_bonus_power` estava em 145.4 Eh/s — ignorar esse campo fazia
+   * "Poder sem Temporário" mostrar praticamente o total (1.244 Zh/s) quando o jogo, na
+   * barra de progresso de liga, mostrava 1.098 Zh/s: 146 Eh/s de diferença, grande o
+   * suficiente pra passar a impressão errada de estar mais perto da próxima liga do que
+   * está de verdade. Se a API adicionar mais fontes de boost temporário no futuro, é aqui
+   * que entram.
+   */
+  poderTemporario(powerData) {
+    if (!powerData) return 0;
+    return (powerData.temp || 0) + (powerData.hamster_expedition_bonus_power || 0);
+  },
+
+  /**
+   * Poder permanente, em GH/s: o total menos TODO poder temporário (ver poderTemporario) —
+   * boosters, eventos, expedição do hamster. É o poder que você de fato sustenta e o único
+   * que dá pra controlar montando a sala.
    *
    * NÃO confundir com o `max_power` da API (o "Maximum power" do jogo): aquele é uma
    * marca d'água do maior poder já registrado — só sobe, nunca desce quando você tira
@@ -39,7 +57,7 @@ const Utils = {
    */
   poderSemTemporario(powerData) {
     if (!powerData) return 0;
-    return (powerData.current_power || 0) - (powerData.temp || 0);
+    return (powerData.current_power || 0) - this.poderTemporario(powerData);
   },
 
   /**
