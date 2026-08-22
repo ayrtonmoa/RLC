@@ -189,6 +189,26 @@
   opacity: 0.8;
 }
 
+/* Aviso de margem de erro perto do teto — o poder é uma estimativa local, o jogo só confirma
+   depois de recalcular. Âmbar de propósito: não é erro (a simulação pode estar certa), é
+   cautela. Mesmo tom do aviso equivalente no Farm Calculator (.farm-network-notice). */
+.room-planner-limite-aviso {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+body.dark-mode .room-planner-limite-aviso {
+  background: #2d2600;
+  border-color: #997a00;
+  color: #ffd966;
+}
+
 @media (max-width: 600px) {
   .room-planner-limite-hint {
     flex-basis: 100%;

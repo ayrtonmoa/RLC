@@ -47,12 +47,13 @@ const UI_RoomPlanner = {
     return v * (this._UNIDADES_POWER[lim.unidade] || 1);
   },
 
-  // Quanto do poder total NÃO conta pra liga: é sempre o campo temp (poderSemTemporario
-  // é current_power - temp, então "current_power - poderSemTemporario" sempre devolve temp
-  // de novo — ler o campo direto evita essa volta e uma subtração dupla à toa).
+  // Quanto do poder total NÃO conta pra liga: temp + hamster_expedition_bonus_power (ver
+  // Utils.poderTemporario — o hamster é um campo separado da API, não soma dentro de temp,
+  // e ignorá-lo já subestimou o desconto em ~146 Eh/s numa conta real).
   _descontoDeLiga: function() {
     const pd = (typeof State !== 'undefined' && State.getUserData) ? (State.getUserData() || {}).powerData : null;
-    return pd ? (pd.temp || 0) : 0;
+    if (!pd || typeof Utils === 'undefined' || typeof Utils.poderTemporario !== 'function') return 0;
+    return Utils.poderTemporario(pd);
   },
 
   // O teto que o usuário digita vale pro poder que decide a liga, mas todo o algoritmo de
@@ -420,7 +421,7 @@ const UI_RoomPlanner = {
     const descontoLiga = userData.powerData.current_power
       ? userData.powerData.current_power - Utils.poderSemTemporario(userData.powerData)
       : 0;
-    if ((userData.powerData.temp || 0) > 0 && descontoLiga > 0) {
+    if (Utils.poderTemporario(userData.powerData) > 0 && descontoLiga > 0) {
       const ligaAtual = Utils.poderSemTemporario(userData.powerData);
       const ligaEstimada = result.poderEstimado - descontoLiga;
       const ligaGanho = ligaEstimada - ligaAtual;
@@ -430,7 +431,7 @@ const UI_RoomPlanner = {
       html += '<div class="comparison-arrow">→</div>';
       html += '<div class="comparison-item"><span class="comparison-label">Estimado sem temporário</span><span class="comparison-value">~' + Utils.formatPower(ligaEstimada * 1e9) + '</span></div>';
       html += '<div class="comparison-delta" style="color:' + ligaColor + '">' + Utils.formatPowerSigned(ligaGanho * 1e9) + '</div>';
-      html += '<div class="comparison-liga-nota">🏆 é este o poder que você sustenta e que importa pra liga — os ' + Utils.formatPower((userData.powerData.temp || 0) * 1e9) + ' de poder temporário entram no total acima, mas expiram e não promovem.</div>';
+      html += '<div class="comparison-liga-nota">🏆 é este o poder que você sustenta e que importa pra liga — os ' + Utils.formatPower(Utils.poderTemporario(userData.powerData) * 1e9) + ' de poder temporário (boost + expedição do hamster) entram no total acima, mas expiram e não promovem.</div>';
       html += '</div>';
     }
 
@@ -498,6 +499,18 @@ const UI_RoomPlanner = {
     if (desconto > 0) {
       html += '<span class="room-planner-limite-status-sub">O teto é aplicado ao poder <strong>sem o temporário</strong> — os '
         + Utils.formatPower(desconto * 1e9) + ' temporários não promovem, então não faz sentido cortar miner por causa deles.</span>';
+    }
+
+    // Isto é uma ESTIMATIVA local (ver _calcularPoderEstimado — âncora no current_power da
+    // última análise + delta calculado aqui, não o valor que o RollerCoin vai computar de
+    // verdade). Perto do teto essa margem de erro importa: instalar tudo de uma vez com base
+    // só na simulação pode passar da liga sem avisar. Só aparece quando o uso já está alto
+    // (>=90%) — com folga grande, o erro de estimativa não muda decisão nenhuma.
+    if (percentualConfiavel && uso >= 90) {
+      html += '<div class="room-planner-limite-aviso">⚠️ <strong>Perto do teto — instale devagar.</strong> '
+        + 'Isto é uma estimativa; o poder real só fica certo quando o RollerCoin recalcula depois de cada instalação. '
+        + 'Instale (ou remova) <strong>uma miner por vez</strong>, espere o jogo atualizar o poder oficial e reanalise aqui antes de continuar — '
+        + 'instalar tudo de uma vez perto do limite pode te fazer passar de liga sem perceber.</div>';
     }
 
     if (info && info.inalcancavel) {
@@ -981,7 +994,15 @@ const UI_RoomPlanner = {
       candidatos.forEach(({ m, idx }) => {
         if (jaUsados.has(idx)) return;
         const cells = m.cells || 2;
-        const rack = racks.find(r => (rackCapacity[r._id] || 0) >= cells);
+        // Se ela é instalada (foi cortada aqui mesmo, ou já entrou no banco instalada de
+        // algum passo anterior), tenta primeiro devolver pro PRÓPRIO rack — nunca joga
+        // instalada pro primeiro rack qualquer com espaço, senão essa recolocação vira
+        // exatamente o tipo de troca sem sentido que _preservarPosicoesNaMesmaFaixa e o
+        // preenchimento genérico já evitam em todo resto do fluxo.
+        let rack = (m._minerIndexOriginal != null && m._rackIdOriginal)
+          ? racks.find(r => r._id === m._rackIdOriginal && (rackCapacity[r._id] || 0) >= cells)
+          : null;
+        if (!rack) rack = racks.find(r => (rackCapacity[r._id] || 0) >= cells);
         if (!rack) return;
 
         rackAssignments[rack._id].push({ ...m, _rackId: rack._id });
@@ -1075,19 +1096,22 @@ const UI_RoomPlanner = {
     });
   },
 
-  // Reagrupa as miners GENÉRICAS (não peça de set) que sobreviveram ao corte por limite de
-  // poder, nos racks de maior bônus disponíveis — em vez de deixá-las onde sobraram por
-  // acaso do preenchimento original (que ocupa a sala inteira achando que vai usar toda a
-  // capacidade, e sob um limite apertado sobra picado por dezenas de racks distintos com 1-3
-  // miners cada). Não mexe em `_pecaDeSetFixa` (essas só valem alguma coisa no rack temático
-  // delas, sair de lá anularia o bônus de set) nem no poder total (mesmo conjunto de miners,
-  // só reorganizado — o valor de coleção/rack não muda dependendo de qual rack guarda qual).
+  // Reagrupa as miners GENÉRICAS **do inventário** (não instaladas, não peça de set) que
+  // sobreviveram ao corte por limite de poder, nos racks de maior bônus disponíveis — em vez
+  // de deixá-las onde sobraram por acaso do preenchimento original (que ocupa a sala inteira
+  // achando que vai usar toda a capacidade, e sob um limite apertado sobra picado por dezenas
+  // de racks distintos com 1-3 miners cada). Não mexe em `_pecaDeSetFixa` (só valem no rack
+  // temático) nem em miner JÁ INSTALADA (_minerIndexOriginal != null) — quem já estava na
+  // sala não é candidata a reorganização por valor, só o corte pode tirá-la da sala, nunca
+  // realocá-la pra outro rack "melhor". Sem essa exclusão, esta função desfazia o trabalho de
+  // executarAutoOtimizacao (que já devolve cada instalada pro próprio rack): ela varria TODO
+  // sobrevivente genérico pra repacotar, arrastando junto quem nem tinha saído do lugar.
   _compactarRacksGenericos: function(rackAssignments, rackCapacity, camadasPorBonus) {
     const soltas = [];
     Object.keys(rackAssignments).forEach(rackId => {
       const ficam = [];
       rackAssignments[rackId].forEach(m => {
-        if (m._pecaDeSetFixa) { ficam.push(m); return; }
+        if (m._pecaDeSetFixa || m._minerIndexOriginal != null) { ficam.push(m); return; }
         soltas.push(m);
         rackCapacity[rackId] += m.cells;
       });
@@ -1409,12 +1433,32 @@ const UI_RoomPlanner = {
       m._valorSelecao = valorBaseComBonusAcumulado + valorNovoBonus + valorExtraSet + (m._valorProtecaoSet || 0);
     });
 
-    const prioridadeSelecao = [...pool].sort((a, b) => b._valorSelecao - a._valorSelecao);
+    // Miner JÁ INSTALADA nunca perde vaga pra uma candidata do inventário só por valor — a
+    // única coisa que pode tirar uma instalada da sala é o corte por limite de poder mais
+    // adiante (_aplicarLimiteDePoder, que remove por menor impacto, instalada ou não). Por
+    // isso a seleção roda em duas fases: primeiro garante vaga pra TODAS as instaladas (a
+    // capacidade total da sala já comporta o que já está nela, então sempre cabe), só depois
+    // preenche o que sobrou com o inventário, por valor — igual a antes, mas sem o
+    // inventário competir por espaço com quem já estava lá.
+    const instaladasNoPool = pool.filter(m => m._minerIndexOriginal != null);
+    const inventarioPorValor = pool
+      .filter(m => m._minerIndexOriginal == null)
+      .sort((a, b) => b._valorSelecao - a._valorSelecao);
 
     const incluidos = [];
     const bancoInicial = [];
     let capacidadeRestante = capacidadeRestanteTotal;
-    prioridadeSelecao.forEach(m => {
+    instaladasNoPool.forEach(m => {
+      if (capacidadeRestante >= m.cells) {
+        incluidos.push(m);
+        capacidadeRestante -= m.cells;
+      } else {
+        // Não deveria acontecer (a sala já comporta o que já está instalada) — mas por
+        // segurança, se acontecer, cai no banco em vez de travar a otimização.
+        bancoInicial.push(m);
+      }
+    });
+    inventarioPorValor.forEach(m => {
       if (capacidadeRestante >= m.cells) {
         incluidos.push(m);
         capacidadeRestante -= m.cells;
@@ -1527,11 +1571,35 @@ const UI_RoomPlanner = {
       return false;
     };
 
+    // Miner GENÉRICA (não peça de set) que já estava instalada não disputa rack por valor
+    // com mais ninguém — nem com outra instalada, nem com o inventário: ela volta pro
+    // PRÓPRIO rack original, ponto. Sem isso, mesmo com "nunca evict por inventário" já
+    // valendo, duas instaladas ainda podiam trocar de rack entre si (uma "vale mais" numa
+    // faixa de bônus melhor, empurra a outra pra pior) — exatamente as trocas sem sentido
+    // reportadas ("Red Mask On" e "ProtoMiner" trocando de lugar um com o outro). Só o
+    // inventário passa pelo preenchimento por valor (alocarNoMelhorRackDisponivel), e só
+    // no que sobrar depois que toda instalada já garantiu o lugar dela.
+    const instaladasGerais = [];
+    const inventarioGerais = [];
+    incluidosGerais.forEach(m => (m._minerIndexOriginal != null ? instaladasGerais : inventarioGerais).push(m));
+
+    instaladasGerais.forEach(miner => {
+      const rid = miner._rackIdOriginal;
+      if (rid && rackCapacity[rid] != null && rackCapacity[rid] >= miner.cells) {
+        rackAssignments[rid].push({ ...miner, _rackId: rid });
+        rackCapacity[rid] -= miner.cells;
+      } else {
+        // Não deveria acontecer (é o próprio rack dela) — mas por segurança, se o rack
+        // sumiu ou não tem mais espaço, cai no preenchimento genérico como fallback.
+        inventarioGerais.push(miner);
+      }
+    });
+
     // A seleção só olha a capacidade AGREGADA da sala, não qual rack específico tem espaço
     // (isso é fragmentação normal: a soma bate, mas nenhum rack individual sobrou com célula
     // livre suficiente pra essa miner específica). Sem o fallback pro banco, ela simplesmente
     // desaparecia do resultado — nem ficava alocada, nem voltava pro banco.
-    incluidosGerais.forEach(miner => {
+    inventarioGerais.forEach(miner => {
       if (!alocarNoMelhorRackDisponivel(miner)) bancoInicial.push(miner);
     });
 
@@ -1608,14 +1676,32 @@ const UI_RoomPlanner = {
     // poder nenhum, só trocam miners de lugar entre racks equivalentes.
     this._preservarPosicoesNaMesmaFaixa(rackAssignments, rackCapacity, camadasPorBonus);
 
-    // Dentro de cada rack, ordena por poder decrescente (mais forte no primeiro slot, mais
-    // fraca no último) e apaga a posição física antiga (_placementY/_placementX) — sem isso
-    // o _renderRackCard ignoraria essa ordem e desenharia pela posição real de origem (ver
+    // Rack cujo conteúdo final é EXATAMENTE o mesmo conjunto de miners que já estava
+    // instalado nele — nenhuma saiu, nenhuma entrou — fica com a posição física real
+    // intacta. Sem essa checagem, o passo abaixo reordenava por poder e apagava
+    // _placementY/_placementX em TODO rack, sempre, mesmo quando nada mudou de verdade:
+    // a sala parecia "embaralhada" (miners trocando de slot dentro do mesmo rack) mesmo
+    // quando o plano era idêntico ao que já estava instalado no jogo.
+    const contagemOriginalPorRack = {};
+    roomMiners.forEach(m => {
+      const rid = m.placement?.user_rack_id;
+      if (rid) contagemOriginalPorRack[rid] = (contagemOriginalPorRack[rid] || 0) + 1;
+    });
+
+    // Dentro de cada rack que MUDOU de verdade, ordena por poder decrescente (mais forte no
+    // primeiro slot) e apaga a posição física antiga (_placementY/_placementX) — sem isso o
+    // _renderRackCard ignoraria essa ordem e desenharia pela posição real de origem (ver
     // comentário em ordemExibicao), que não tem relação nenhuma com o resultado novo do
     // Auto-Otimizar.
     Object.keys(rackAssignments).forEach(rackId => {
-      rackAssignments[rackId].sort((a, b) => b.power - a.power);
-      rackAssignments[rackId].forEach(m => {
+      const itens = rackAssignments[rackId];
+      const rackIntacto = itens.length > 0
+        && itens.length === (contagemOriginalPorRack[rackId] || 0)
+        && itens.every(m => m._minerIndexOriginal != null && m._rackIdOriginal === rackId);
+      if (rackIntacto) return;
+
+      itens.sort((a, b) => b.power - a.power);
+      itens.forEach(m => {
         delete m._placementY;
         delete m._placementX;
       });
