@@ -16,6 +16,40 @@ const UI_RoomPlanner = {
   _limitePower: null,
   _limiteInfo: null,
 
+  // Modo do Auto-Otimizar.  São dois objetivos legítimos e opostos:
+  //   'preservar' — miner já instalada não sai do lugar por valor, só o teto de poder pode
+  //                 tirá-la.  Gera pouquíssima ação pra executar no jogo, bom pra ajustar
+  //                 a liga sem desmontar a sala que já está pronta.
+  //   'maximo'    — tudo compete por valor, instalada e inventário no mesmo saldo.  Extrai
+  //                 o máximo de poder possível, ao custo de mandar remontar meia sala.
+  // Sem essa escolha o app impunha 'preservar' a todo mundo, o que sabota justamente quem
+  // abre o SmartRoom pra descobrir o teto do que a coleção dele consegue alcançar.
+  _MODO_PADRAO: 'maximo',
+  _modoOtimizacao: null,
+
+  _carregarModo: function() {
+    if (this._modoOtimizacao) return this._modoOtimizacao;
+    try {
+      const salvo = localStorage.getItem('smartroom_modo_otimizacao');
+      this._modoOtimizacao = (salvo === 'preservar' || salvo === 'maximo') ? salvo : this._MODO_PADRAO;
+    } catch {
+      this._modoOtimizacao = this._MODO_PADRAO;
+    }
+    return this._modoOtimizacao;
+  },
+
+  setModoOtimizacao: function(modo) {
+    if (modo !== 'preservar' && modo !== 'maximo') return;
+    this._modoOtimizacao = modo;
+    try { localStorage.setItem('smartroom_modo_otimizacao', modo); } catch {}
+    this._rerender();
+  },
+
+  // Atalho usado nos pontos de ancoragem espalhados pelo algoritmo.
+  _preservandoInstaladas: function() {
+    return this._carregarModo() === 'preservar';
+  },
+
   // Unidade inicial na escala do poder de quem está usando: com 635 EH/s na conta, abrir o
   // seletor em "PH/s" é convite pra digitar 300 pensando em EH e capar a sala em 0.3 EH.
   // Só vale como palpite inicial — assim que o usuário salva qualquer limite, a escolha dele manda.
@@ -292,6 +326,33 @@ const UI_RoomPlanner = {
       html += '<span class="room-planner-limite-hint">Sem limite: o Auto-Otimizar usa o máximo de poder possível.</span>';
     }
     html += '</div>';
+
+    html += this._renderModoControle();
+    return html;
+  },
+
+  // Escolha entre extrair o máximo de poder e preservar a sala já montada.  São objetivos
+  // opostos e os dois são legítimos, então não dá pra escolher um por baixo dos panos: quem
+  // quer descobrir o teto da coleção precisa de 'maximo', quem só quer ajustar a liga sem
+  // desmontar tudo precisa de 'preservar'.
+  _renderModoControle: function() {
+    const modo = this._carregarModo();
+    const opcoes = [
+      { id: 'maximo', rotulo: '🚀 Máximo poder', dica: 'Reorganiza a sala inteira em busca do maior poder possível, movendo até miners que já estão instaladas.  Gera mais trabalho pra executar no jogo.' },
+      { id: 'preservar', rotulo: '📌 Preservar sala', dica: 'Miner já instalada não sai do lugar: o inventário só entra nas vagas livres.  Bem menos trabalho pra executar, mas não alcança o poder máximo.' },
+    ];
+
+    let html = '<div class="room-planner-modo">';
+    html += '<span class="room-planner-modo-label">⚙️ Objetivo</span>';
+    html += '<div class="room-planner-modo-botoes">';
+    opcoes.forEach(o => {
+      html += '<button class="room-planner-modo-btn' + (modo === o.id ? ' ativo' : '') + '"'
+        + ' onclick="UI_RoomPlanner.setModoOtimizacao(\'' + o.id + '\')"'
+        + ' title="' + o.dica.replace(/"/g, '&quot;') + '">' + o.rotulo + '</button>';
+    });
+    html += '</div>';
+    html += '<span class="room-planner-modo-hint">' + (opcoes.find(o => o.id === modo) || opcoes[0]).dica + '</span>';
+    html += '</div>';
     return html;
   },
 
@@ -496,6 +557,23 @@ const UI_RoomPlanner = {
         + '</span>';
     }
 
+    // Explica os racks que ficaram com buraco.  Vendo só o resultado, um rack meio vazio
+    // parece erro do otimizador ou culpa do bônus baixo daquele rack, quando na verdade é o
+    // teto segurando: sobrou espaço físico, mas não sobrou orçamento de poder.
+    // Conta só quem passa da folga pelo poder BRUTO: é um limite inferior honesto e barato.
+    // O número real de bloqueadas é maior, porque cada miner ainda soma bônus de coleção por
+    // cima, mas medir isso exigiria recalcular a sala inteira uma vez por miner do banco.
+    if (dentro && percentualConfiavel && folga >= 0 && this.sim && this.sim.banco && this.sim.banco.length) {
+      const naoCabem = this.sim.banco.filter(m => (m.power || 0) > folga).length;
+      if (naoCabem > 0) {
+        const total = this.sim.banco.length;
+        html += '<span class="room-planner-limite-status-sub">Rack com espaço sobrando é o teto agindo, não erro: '
+          + 'restam só ' + Utils.formatPower(folga * 1e9) + ' de folga, e '
+          + (naoCabem === total ? 'todas as ' + total : naoCabem + ' das ' + total)
+          + ' miners no banco já passam disso sozinhas.</span>';
+      }
+    }
+
     if (desconto > 0) {
       html += '<span class="room-planner-limite-status-sub">O teto é aplicado ao poder <strong>sem o temporário</strong> — os '
         + Utils.formatPower(desconto * 1e9) + ' temporários não promovem, então não faz sentido cortar miner por causa deles.</span>';
@@ -635,7 +713,14 @@ const UI_RoomPlanner = {
       + impactoAttr
       + ' data-tip-extra="' + extraRack + '">';
     html += '<span class="rack-bonus' + (bonusPercent > 0 ? ' bonus-positive' : '') + '">' + (bonusPercent > 0 ? '+' : '') + bonusPercent.toFixed(2) + '%</span>';
-    html += '<span class="rack-slots">' + (livres > 0 ? livres + ' livre' + (livres > 1 ? 's' : '') : 'cheio') + '</span>';
+    // Rack com espaço sobrando durante a simulação levanta a pergunta óbvia "por que não
+    // encheu?".  Quase sempre a resposta é o teto de poder, não falta de miner nem o bônus
+    // do rack: a sala já bateu no limite e qualquer peça a mais passaria dele.  Sem dizer
+    // isso, o buraco parece erro do otimizador.
+    const motivoBuraco = (livres > 0 && this._plannerMode === 'otimizado' && this._limiteEmGH())
+      ? ' <span class="rack-slots-motivo" title="A sala já atingiu o teto de poder configurado.  Encaixar mais qualquer miner aqui passaria do limite, então o espaço fica livre de propósito.  Não é o bônus deste rack nem falta de miners no banco.">🎯 teto</span>'
+      : '';
+    html += '<span class="rack-slots">' + (livres > 0 ? livres + ' livre' + (livres > 1 ? 's' : '') : 'cheio') + motivoBuraco + '</span>';
     html += '</div>';
 
     html += '<div class="room-planner-grid" style="--rack-w:' + width + ';">';
@@ -994,12 +1079,12 @@ const UI_RoomPlanner = {
       candidatos.forEach(({ m, idx }) => {
         if (jaUsados.has(idx)) return;
         const cells = m.cells || 2;
-        // Se ela é instalada (foi cortada aqui mesmo, ou já entrou no banco instalada de
-        // algum passo anterior), tenta primeiro devolver pro PRÓPRIO rack — nunca joga
-        // instalada pro primeiro rack qualquer com espaço, senão essa recolocação vira
-        // exatamente o tipo de troca sem sentido que _preservarPosicoesNaMesmaFaixa e o
-        // preenchimento genérico já evitam em todo resto do fluxo.
-        let rack = (m._minerIndexOriginal != null && m._rackIdOriginal)
+        // No modo 'preservar', se ela é instalada (foi cortada aqui mesmo, ou já entrou no
+        // banco instalada de algum passo anterior), tenta primeiro devolver pro PRÓPRIO
+        // rack: jogar instalada pro primeiro rack qualquer com espaço faria essa recolocação
+        // virar exatamente o tipo de troca sem sentido que _preservarPosicoesNaMesmaFaixa e
+        // o preenchimento genérico já evitam em todo resto do fluxo.
+        let rack = (this._preservandoInstaladas() && m._minerIndexOriginal != null && m._rackIdOriginal)
           ? racks.find(r => r._id === m._rackIdOriginal && (rackCapacity[r._id] || 0) >= cells)
           : null;
         if (!rack) rack = racks.find(r => (rackCapacity[r._id] || 0) >= cells);
@@ -1084,6 +1169,10 @@ const UI_RoomPlanner = {
         }
       });
 
+      // Maiores primeiro: os itens saíram todos de uma vez lá em cima e voltam em outra
+      // ordem, então encaixar as peças grandes enquanto o espaço ainda está inteiro evita
+      // o caso em que duas de 1 célula ocupam onde uma de 2 caberia, e a de 2 fica sem lugar.
+      resto.sort((a, b) => (b.cells || 2) - (a.cells || 2));
       resto.forEach(item => {
         for (const rid of rackIds) {
           if (rackCapacity[rid] >= (item.cells || 2)) {
@@ -1091,6 +1180,18 @@ const UI_RoomPlanner = {
             rackCapacity[rid] -= (item.cells || 2);
             return;
           }
+        }
+        // Nenhum rack da faixa aceitou de volta.  Isso acontece por fragmentação: os itens
+        // são retirados TODOS de uma vez lá em cima e recolocados em outra ordem, então uma
+        // miner de 2 células pode não caber onde antes havia duas de 1.  Sem este retorno ao
+        // rack de origem, a miner era silenciosamente DESCARTADA: sumia do plano sem ir pro
+        // banco, levando junto o poder dela.  Numa conta real isso jogava fora 16 Eh/s e
+        // deixava 251 células vazias, fazendo o modo "máximo poder" render MENOS que o
+        // "preservar" quando havia teto de liga.
+        const origem = item._rackId;
+        if (origem && rackAssignments[origem]) {
+          rackAssignments[origem].push({ ...item, _rackId: origem });
+          rackCapacity[origem] = (rackCapacity[origem] || 0) - (item.cells || 2);
         }
       });
     });
@@ -1101,17 +1202,20 @@ const UI_RoomPlanner = {
   // de deixá-las onde sobraram por acaso do preenchimento original (que ocupa a sala inteira
   // achando que vai usar toda a capacidade, e sob um limite apertado sobra picado por dezenas
   // de racks distintos com 1-3 miners cada). Não mexe em `_pecaDeSetFixa` (só valem no rack
-  // temático) nem em miner JÁ INSTALADA (_minerIndexOriginal != null) — quem já estava na
+  // temático).  No modo 'preservar' também não mexe em miner JÁ INSTALADA: quem já estava na
   // sala não é candidata a reorganização por valor, só o corte pode tirá-la da sala, nunca
-  // realocá-la pra outro rack "melhor". Sem essa exclusão, esta função desfazia o trabalho de
-  // executarAutoOtimizacao (que já devolve cada instalada pro próprio rack): ela varria TODO
-  // sobrevivente genérico pra repacotar, arrastando junto quem nem tinha saído do lugar.
+  // realocá-la pra outro rack "melhor".  Sem essa exclusão, esta função desfazia o trabalho
+  // de executarAutoOtimizacao (que já devolve cada instalada pro próprio rack): ela varria
+  // TODO sobrevivente genérico pra repacotar, arrastando junto quem nem tinha saído do lugar.
+  // No modo 'maximo' a instalada entra na repacotagem normalmente, porque mover pra um rack
+  // de bônus melhor é ganho de poder real.
   _compactarRacksGenericos: function(rackAssignments, rackCapacity, camadasPorBonus) {
+    const preservar = this._preservandoInstaladas();
     const soltas = [];
     Object.keys(rackAssignments).forEach(rackId => {
       const ficam = [];
       rackAssignments[rackId].forEach(m => {
-        if (m._pecaDeSetFixa || m._minerIndexOriginal != null) { ficam.push(m); return; }
+        if (m._pecaDeSetFixa || (preservar && m._minerIndexOriginal != null)) { ficam.push(m); return; }
         soltas.push(m);
         rackCapacity[rackId] += m.cells;
       });
@@ -1433,39 +1537,30 @@ const UI_RoomPlanner = {
       m._valorSelecao = valorBaseComBonusAcumulado + valorNovoBonus + valorExtraSet + (m._valorProtecaoSet || 0);
     });
 
-    // Miner JÁ INSTALADA nunca perde vaga pra uma candidata do inventário só por valor — a
-    // única coisa que pode tirar uma instalada da sala é o corte por limite de poder mais
-    // adiante (_aplicarLimiteDePoder, que remove por menor impacto, instalada ou não). Por
-    // isso a seleção roda em duas fases: primeiro garante vaga pra TODAS as instaladas (a
-    // capacidade total da sala já comporta o que já está nela, então sempre cabe), só depois
-    // preenche o que sobrou com o inventário, por valor — igual a antes, mas sem o
-    // inventário competir por espaço com quem já estava lá.
-    const instaladasNoPool = pool.filter(m => m._minerIndexOriginal != null);
-    const inventarioPorValor = pool
-      .filter(m => m._minerIndexOriginal == null)
-      .sort((a, b) => b._valorSelecao - a._valorSelecao);
+    // No modo 'preservar', miner JÁ INSTALADA não perde vaga pra candidata do inventário só
+    // por valor: a seleção roda em duas fases, garantindo vaga pra todas as instaladas antes
+    // de preencher o resto com o inventário.  A única coisa que ainda pode tirar uma
+    // instalada da sala é o corte por limite de poder (_aplicarLimiteDePoder, que remove por
+    // menor impacto, instalada ou não).
+    // No modo 'maximo' é fila única por valor, instalada e inventário disputando igual, que
+    // é o que extrai o máximo de poder da coleção.
+    const preservar = this._preservandoInstaladas();
+    const filas = preservar
+      ? [pool.filter(m => m._minerIndexOriginal != null),
+         pool.filter(m => m._minerIndexOriginal == null).sort((a, b) => b._valorSelecao - a._valorSelecao)]
+      : [[...pool].sort((a, b) => b._valorSelecao - a._valorSelecao)];
 
     const incluidos = [];
     const bancoInicial = [];
     let capacidadeRestante = capacidadeRestanteTotal;
-    instaladasNoPool.forEach(m => {
-      if (capacidadeRestante >= m.cells) {
-        incluidos.push(m);
-        capacidadeRestante -= m.cells;
-      } else {
-        // Não deveria acontecer (a sala já comporta o que já está instalada) — mas por
-        // segurança, se acontecer, cai no banco em vez de travar a otimização.
-        bancoInicial.push(m);
-      }
-    });
-    inventarioPorValor.forEach(m => {
+    filas.forEach(fila => fila.forEach(m => {
       if (capacidadeRestante >= m.cells) {
         incluidos.push(m);
         capacidadeRestante -= m.cells;
       } else {
         bancoInicial.push(m);
       }
-    });
+    }));
 
     incluidos.sort((a, b) => b.power - a.power);
 
@@ -1571,17 +1666,20 @@ const UI_RoomPlanner = {
       return false;
     };
 
-    // Miner GENÉRICA (não peça de set) que já estava instalada não disputa rack por valor
-    // com mais ninguém — nem com outra instalada, nem com o inventário: ela volta pro
-    // PRÓPRIO rack original, ponto. Sem isso, mesmo com "nunca evict por inventário" já
-    // valendo, duas instaladas ainda podiam trocar de rack entre si (uma "vale mais" numa
-    // faixa de bônus melhor, empurra a outra pra pior) — exatamente as trocas sem sentido
-    // reportadas ("Red Mask On" e "ProtoMiner" trocando de lugar um com o outro). Só o
-    // inventário passa pelo preenchimento por valor (alocarNoMelhorRackDisponivel), e só
-    // no que sobrar depois que toda instalada já garantiu o lugar dela.
+    // No modo 'preservar', miner GENÉRICA (não peça de set) que já estava instalada não
+    // disputa rack por valor com ninguém: volta pro PRÓPRIO rack original, ponto.  Sem isso,
+    // mesmo com "nunca evict por inventário" já valendo, duas instaladas ainda trocavam de
+    // rack entre si (uma "vale mais" numa faixa de bônus melhor e empurra a outra pra pior),
+    // que foram as trocas sem sentido reportadas ("Red Mask On" e "ProtoMiner" trocando de
+    // lugar um com o outro).
+    // No modo 'maximo' ninguém fica ancorado: todo mundo passa pelo preenchimento por valor.
     const instaladasGerais = [];
     const inventarioGerais = [];
-    incluidosGerais.forEach(m => (m._minerIndexOriginal != null ? instaladasGerais : inventarioGerais).push(m));
+    if (preservar) {
+      incluidosGerais.forEach(m => (m._minerIndexOriginal != null ? instaladasGerais : inventarioGerais).push(m));
+    } else {
+      inventarioGerais.push(...incluidosGerais);
+    }
 
     instaladasGerais.forEach(miner => {
       const rid = miner._rackIdOriginal;
@@ -1589,7 +1687,7 @@ const UI_RoomPlanner = {
         rackAssignments[rid].push({ ...miner, _rackId: rid });
         rackCapacity[rid] -= miner.cells;
       } else {
-        // Não deveria acontecer (é o próprio rack dela) — mas por segurança, se o rack
+        // Não deveria acontecer (é o próprio rack dela), mas por segurança, se o rack
         // sumiu ou não tem mais espaço, cai no preenchimento genérico como fallback.
         inventarioGerais.push(miner);
       }

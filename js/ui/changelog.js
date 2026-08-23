@@ -4,6 +4,16 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '23 Ago 2026', time: '12:00', tag: 'new', label: 'NOVO',
+      html: `<strong>SmartRoom: escolha o objetivo do Auto-Otimizar.</strong>  Agora existem dois modos, porque são duas coisas opostas que você pode querer, e antes o app decidia por você.
+      <ul class="guia-tl-list">
+        <li><strong>🚀 Máximo poder</strong> (padrão): reorganiza a sala inteira atrás do maior poder possível, movendo até miners que já estão instaladas.  É o modo pra descobrir o teto real da sua coleção.  Numa conta real chegou a 1.896 Zh/s, contra 1.885 Zh/s do outro modo, ao custo de 201 ações pra executar no jogo em vez de 132.</li>
+        <li><strong>📌 Preservar sala</strong>: miner já instalada não sai do lugar, o inventário só entra nas vagas livres.  Só o teto de poder pode remover uma instalada.  Serve pra ajustar a liga sem desmontar a sala que já está pronta, e gera bem menos trabalho manual.  A escolha fica salva entre sessões.</li>
+        <li><strong>Corrigido no caminho:</strong> o Auto-Otimizar estava <strong>perdendo miners</strong> quando havia teto de poder.  A etapa que devolve cada miner instalada ao rack de origem tirava todas de uma vez e recolocava em outra ordem.  Se alguma não coubesse mais por fragmentação (duas peças de 1 célula ocupando onde uma de 2 caberia), ela era silenciosamente descartada: sumia do plano, não voltava pro banco, e levava o poder dela junto.  Numa conta real isso jogava fora <strong>16 Eh/s</strong> e deixava 251 células vazias, fazendo o modo Máximo render <em>menos</em> que o Preservar, o que nunca deveria acontecer.  Depois da correção o Máximo subiu de 1.279 para <strong>1.295 Zh/s</strong> nesse cenário.</li>
+        <li><strong>O app agora explica os racks com espaço sobrando.</strong>  Um rack com uma ou duas miners soltas parece erro do otimizador, ou culpa do bônus baixo daquele rack.  Quase sempre é o teto de poder segurando: sobra espaço físico, mas não sobra orçamento de poder.  Racks nessa situação ganham o selo <strong>🎯 teto</strong>, e o resumo do limite mostra a conta (num caso real: 2,9 Ph/s de folga contra 730 das 1.215 miners do banco que já passam disso sozinhas).</li>
+      </ul>`
+    },
+    {
       date: '23 Ago 2026', time: '10:12', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado</strong>: a base saiu de 8.594 para <strong>8.636</strong> registros, com <strong>42 miners novas</strong>: sete famílias de merge inteiras (Bronze Core, Hash Grill, Smthg Cooks, Cold Cut, Burnout, Chef Knife, Silver Knives), cada uma com os 6 tiers completos, do Common ao Unreal.
       <ul class="guia-tl-list">
