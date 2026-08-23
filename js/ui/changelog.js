@@ -4,6 +4,15 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '23 Ago 2026', time: '10:12', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado</strong>: a base saiu de 8.594 para <strong>8.636</strong> registros, com <strong>42 miners novas</strong>: sete famílias de merge inteiras (Bronze Core, Hash Grill, Smthg Cooks, Cold Cut, Burnout, Chef Knife, Silver Knives), cada uma com os 6 tiers completos, do Common ao Unreal.
+      <ul class="guia-tl-list">
+        <li>6.152 miners existentes tiveram a <strong>oferta de mercado</strong> (quantas unidades existem em circulação) ressincronizada. Esse número muda o tempo todo no jogo, então a maior parte do catálogo tende a mudar um pouco a cada atualização, mesmo sem nenhuma miner nova.</li>
+        <li>As receitas de merge continuam batendo: nenhuma mudança real de ingrediente, só o de sempre, normalização de apóstrofo e preservação de ordem quando o conteúdo é idêntico.</li>
+        <li>Dados extraídos direto do jogo, combinando o catálogo com o forge.</li>
+      </ul>`
+    },
+    {
       date: '21 Ago 2026', time: '21:28', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>"Poder sem Temporário" estava contando quase o total inteiro como permanente</strong> — faltava descontar o boost da <strong>Expedição do Hamster</strong>. Numa conta real, isso fez o SmartRoom achar que o limite de poder tinha estourado 108,3% (dizendo "passou 95 Eh/s do teto") quando na verdade o jogo mostrava só 95,6% de uso e ainda faltavam ~52 Eh/s pra próxima liga.
       <ul class="guia-tl-list">
