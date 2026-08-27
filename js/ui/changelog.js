@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '26 Ago 2026', time: '21:07', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Farm Calculator:</strong> removida a linha extra de "🐕 3x EVENTO" do DOGE.  Era um boost temporário anunciado em 19/08/2026, valia por 7 dias e já acabou, então a linha triplicada foi tirada da tabela de recompensas.`
+    },
+    {
       date: '26 Ago 2026', time: '20:41', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.636 → 8.668 (37 novas, 5 removidas). 45 receitas de craft mudaram de verdade (fora reordenação): Bronze Core passou a pedir Hashboard em alguns níveis em vez de só cópias da própria miner, e vários eventos sazonais (RollerArc S1/SX, Milly, Milly Mini, Santa Sleigh, Jack-o'-Miner, Clover Lover, DOGER 420, entre outros) ficaram sem receita e com preço zerado, parecem descontinuados.
       <br><br><strong>Farm Calculator:</strong> block rewards revalidados nas 21 ligas. De <strong>Gold I até Diamond III</strong> tiveram reajuste; Bronze, Silver, Titan, Emerald e Legend seguem exatamente iguais. Cada célula mostra o valor <span style="color:#999;">antigo</span> em cima e o <strong>novo</strong> embaixo, com <span style="color:#28a745; font-weight:600;">▲ verde</span> pra aumento e <span style="color:#dc3545; font-weight:600;">▼ vermelho</span> pra queda; moeda sem mudança fica cinza, sem seta.

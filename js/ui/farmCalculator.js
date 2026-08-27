@@ -1043,21 +1043,6 @@ const UI_FarmCalculator = {
         html += `<td style="text-align: right;">${this.formatValue(r.weekly, r.weeklyQty, !r.isGameCoin, r.coin, 'weekly')}</td>`;
         html += `<td style="text-align: right;">${this.formatValue(r.monthly, r.monthlyQty, !r.isGameCoin, r.coin, 'monthly')}</td>`;
         html += '</tr>';
-
-        // EVENTO TEMPORÁRIO — boost DOGE x3. Anunciado por e-mail em 19/08/2026 16:35 como
-        // "próximos 7 dias", ou seja, acaba por volta de 26/08/2026: REMOVER este bloco então.
-        // (Não confundir com 20 e 21/08, que são os fins dos eventos No Reservations e
-        // Road to Five Stars — esses são outra coisa e não afetam o multiplicador do DOGE.)
-        if (r.coin === 'DOGE') {
-          html += '<tr style="background: rgba(255, 193, 7, 0.12);">';
-          html += `<td><strong>DOGE</strong> <span class="farm-badge-crypto">Crypto</span> <span style="background:#ffc107; color:#000; font-weight:700; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:4px; white-space:nowrap; display:inline-block;">🐕 3x EVENTO</span></td>`;
-          html += `<td style="text-align: right; font-size: 13px;">${r.contribution}%</td>`;
-          html += `<td style="text-align: right;">${this.formatValue(r.block * 3, r.blockQty * 3, true, 'DOGE', 'block')}</td>`;
-          html += `<td style="text-align: right;">${this.formatValue(r.daily * 3, r.dailyQty * 3, true, 'DOGE', 'daily')}</td>`;
-          html += `<td style="text-align: right;">${this.formatValue(r.weekly * 3, r.weeklyQty * 3, true, 'DOGE', 'weekly')}</td>`;
-          html += `<td style="text-align: right;">${this.formatValue(r.monthly * 3, r.monthlyQty * 3, true, 'DOGE', 'monthly')}</td>`;
-          html += '</tr>';
-        }
       });
 
       html += '</tbody></table>';
