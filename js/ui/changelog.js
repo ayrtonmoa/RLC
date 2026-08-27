@@ -4,6 +4,114 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '26 Ago 2026', time: '20:41', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.636 → 8.668 (37 novas, 5 removidas). 45 receitas de craft mudaram de verdade (fora reordenação): Bronze Core passou a pedir Hashboard em alguns níveis em vez de só cópias da própria miner, e vários eventos sazonais (RollerArc S1/SX, Milly, Milly Mini, Santa Sleigh, Jack-o'-Miner, Clover Lover, DOGER 420, entre outros) ficaram sem receita e com preço zerado, parecem descontinuados.
+      <br><br><strong>Farm Calculator:</strong> block rewards revalidados nas 21 ligas. De <strong>Gold I até Diamond III</strong> tiveram reajuste; Bronze, Silver, Titan, Emerald e Legend seguem exatamente iguais. Cada célula mostra o valor <span style="color:#999;">antigo</span> em cima e o <strong>novo</strong> embaixo, com <span style="color:#28a745; font-weight:600;">▲ verde</span> pra aumento e <span style="color:#dc3545; font-weight:600;">▼ vermelho</span> pra queda; moeda sem mudança fica cinza, sem seta.
+      <div style="overflow-x:auto; margin-top:10px;">
+      ${(() => {
+        const COINS = ['RLT','RST','BTC','LTC','BNB','POL','XRP','DOGE','ETH','TRX','SOL','ALGO','HMT','USDT'];
+        const powerGoals = {
+          'Bronze I':'0 GH/s', 'Bronze II':'25 PH/s', 'Bronze III':'50 PH/s',
+          'Silver I':'100 PH/s', 'Silver II':'150 PH/s', 'Silver III':'250 PH/s',
+          'Gold I':'650 PH/s', 'Gold II':'1.5 EH/s', 'Gold III':'3.5 EH/s',
+          'Platinum I':'16 EH/s', 'Platinum II':'50 EH/s', 'Platinum III':'100 EH/s',
+          'Diamond I':'200 EH/s', 'Diamond II':'375 EH/s', 'Diamond III':'650 EH/s',
+          'Titan I':'1.15 ZH/s', 'Titan II':'2.16 ZH/s', 'Titan III':'4 ZH/s',
+          'Emerald I':'13 ZH/s', 'Emerald II':'25 ZH/s', 'Emerald III':'70 ZH/s',
+          'Legend':'1 YH/s'
+        };
+        const antes = {
+          'Bronze I':     { RLT:3.0127, RST:160.6768, BTC:0.00000772, LTC:0.004825 },
+          'Bronze II':    { RLT:0.5144, RST:77.1601, BTC:0.0000039, LTC:0.002922, BNB:0.000292 },
+          'Bronze III':   { RLT:1.0196, RST:81.5663, BTC:0.00000441, LTC:0.002878, BNB:0.000504, POL:3.8369 },
+          'Silver I':     { RLT:0.819, RST:51.1862, BTC:0.00000386, LTC:0.00193, BNB:0.000135, POL:1.3507, XRP:0.2412, USDT:0.1024 },
+          'Silver II':    { RLT:0.5644, RST:51.3046, BTC:0.00000317, LTC:0.001922, BNB:0.000096, POL:0.9611, XRP:0.0961, DOGE:5.2862, USDT:0.2052 },
+          'Silver III':   { RLT:2.0585, RST:154.3893, BTC:0.00000675, LTC:0.007235, BNB:0.000482, POL:2.8941, XRP:0.3859, DOGE:5.7881, ETH:0.000241, USDT:0.2573 },
+          'Gold I':       { RLT:1.5916, RST:106.1038, BTC:0.0000121, LTC:0.004838, BNB:0.000726, POL:3.3866, XRP:0.2903, DOGE:7.7409, ETH:0.00029, TRX:1.9352, USDT:0.3714 },
+          'Gold II':      { RLT:2.0937, RST:157.0244, BTC:0.00000631, LTC:0.002525, BNB:0.000486, POL:2.6219, XRP:0.1651, DOGE:7.7686, ETH:0.000272, TRX:2.0393, SOL:0.007769, HMT:68.0439, USDT:0.314 },
+          'Gold III':     { RLT:4.2084, RST:263.0258, BTC:0.00002903, LTC:0.009677, BNB:0.001645, POL:6.7742, XRP:0.6774, DOGE:29.0323, ETH:0.000581, TRX:7.7419, SOL:0.020323, HMT:1630.7601, USDT:1.736 },
+          'Platinum I':   { RLT:5.7428, RST:417.6555, BTC:0.00004164, LTC:0.019366, BNB:0.002275, POL:15.0083, XRP:1.2103, DOGE:31.9531, ETH:0.001288, TRX:22.7545, SOL:0.031953, ALGO:36.5449, HMT:4072.1415, USDT:3.1324 },
+          'Platinum II':  { RLT:2.6586, RST:212.6904, BTC:0.00002714, LTC:0.012117, BNB:0.001454, POL:9.6936, XRP:0.9694, DOGE:24.2339, ETH:0.000969, TRX:16.4791, SOL:0.036836, ALGO:14.8883, HMT:3043.599, USDT:1.9142 },
+          'Platinum III': { RLT:1.9093, RST:143.6189, BTC:0.00002134, LTC:0.010215, BNB:0.001312, POL:8.9078, XRP:0.7762, DOGE:22.262, ETH:0.000953, TRX:17.259, SOL:0.047063, ALGO:11.6387, HMT:3285.4745, USDT:2.0756 },
+          'Diamond I':    { RST:94.2671, BTC:0.00001708, LTC:0.017757, BNB:0.001184, POL:12.6832, XRP:1.0569, DOGE:19.4476, ETH:0.000676, TRX:4.3123, SOL:0.010147, ALGO:21.6814, USDT:1.5083 },
+          'Diamond II':   { RST:41.929, BTC:0.00002635, LTC:0.021252, BNB:0.00221, POL:11.9012, XRP:0.8926, DOGE:29.753, ETH:0.000595, TRX:3.4003, SOL:0.012751, ALGO:33.0773, USDT:2.7953 },
+          'Diamond III':  { RST:22.8695, BTC:0.00001418, LTC:0.011406, BNB:0.001153, POL:6.3032, XRP:0.4725, DOGE:15.7344, ETH:0.000321, TRX:1.9373, SOL:0.006804, ALGO:17.359, USDT:1.3514 },
+          'Titan I':      { RST:23.5358, BTC:0.00001455, LTC:0.011857, BNB:0.001199, POL:6.5601, XRP:0.4923, DOGE:16.3734, ETH:0.000332, TRX:2.0119, SOL:0.007063, ALGO:18.2403, USDT:1.3886 },
+          'Titan II':     { RST:22.2312, BTC:0.00001123, LTC:0.009882, BNB:0.001011, POL:5.5026, XRP:0.4155, DOGE:14.0371, ETH:0.000281, TRX:1.6845, SOL:0.005952, ALGO:15.0643, USDT:1.161 },
+          'Titan III':    { RST:38.2785, BTC:0.0000253, LTC:0.020656, BNB:0.002066, POL:11.4383, XRP:0.8392, DOGE:28.5313, ETH:0.000555, TRX:3.4857, SOL:0.012265, ALGO:31.4734, USDT:2.5519 },
+          'Emerald I':    { RST:254.8733, BTC:0.00000324, LTC:0.004837, BNB:0.000194, POL:1.9348, XRP:0.2322, DOGE:3.3859, ETH:0.000097, TRX:0.8707, SOL:0.003289, ALGO:4.8936, USDT:0.9175 },
+          'Emerald II':   { RST:204.3251, BTC:0.00000266, LTC:0.004836, BNB:0.000232, POL:1.6828, XRP:0.1934, DOGE:2.9015, ETH:0.000097, TRX:0.7737, SOL:0.002902, ALGO:4.0865, USDT:0.7662 },
+          'Emerald III':  { RST:102.521, BTC:0.00000146, LTC:0.001653, BNB:0.000117, POL:0.9235, XRP:0.0826, DOGE:1.4581, ETH:0.000058, TRX:0.418, SOL:0.001458, ALGO:2.563, USDT:0.4101 },
+          'Legend':       { RST:53.0994, BTC:0.00000084, LTC:0.00084, BNB:0.00005, POL:0.42, XRP:0.042, DOGE:0.714, ETH:0.000025, TRX:0.21, SOL:0.000672, ALGO:1.3275, USDT:0.2035 }
+        };
+        const depois = {
+          'Bronze I':     antes['Bronze I'],
+          'Bronze II':    antes['Bronze II'],
+          'Bronze III':   antes['Bronze III'],
+          'Silver I':     antes['Silver I'],
+          'Silver II':    antes['Silver II'],
+          'Silver III':   antes['Silver III'],
+          'Gold I':       { RLT:1.5916, RST:106.1038, BTC:0.00001222, LTC:0.00489, BNB:0.000726, POL:3.268, XRP:0.2903, DOGE:7.818, ETH:0.00028, TRX:1.9352, USDT:0.3714 },
+          'Gold II':      { RLT:2.0937, RST:157.0244, BTC:0.00000638, LTC:0.00255, BNB:0.000486, POL:2.53, XRP:0.1651, DOGE:7.846, ETH:0.000262, TRX:2.0393, SOL:0.0075, HMT:68.0439, USDT:0.314 },
+          'Gold III':     { RLT:4.2084, RST:263.0258, BTC:0.00002932, LTC:0.00977, BNB:0.001645, POL:6.537, XRP:0.6774, DOGE:29.323, ETH:0.00056, TRX:7.7419, SOL:0.01961, HMT:1630.7601, USDT:1.736 },
+          'Platinum I':   { RLT:5.7428, RST:417.6555, BTC:0.00004205, LTC:0.01956, BNB:0.002275, POL:14.483, XRP:1.2103, DOGE:32.273, ETH:0.001243, TRX:22.7545, SOL:0.03083, ALGO:36.5449, HMT:4072.1415, USDT:3.1324 },
+          'Platinum II':  { RLT:2.6586, RST:212.6904, BTC:0.00002741, LTC:0.01224, BNB:0.001454, POL:9.6936, XRP:0.9694, DOGE:24.476, ETH:0.000935, TRX:16.4791, SOL:0.03555, ALGO:14.8883, HMT:3043.599, USDT:1.9142 },
+          'Platinum III': { RLT:1.9093, RST:143.6189, BTC:0.00002155, LTC:0.01032, BNB:0.001312, POL:8.596, XRP:0.7762, DOGE:22.485, ETH:0.00092, TRX:17.259, SOL:0.04542, ALGO:11.6387, HMT:3285.4745, USDT:2.0756 },
+          'Diamond I':    { RST:94.2671, BTC:0.00001725, LTC:0.01793, BNB:0.001184, POL:12.239, XRP:1.0569, DOGE:19.642, ETH:0.000653, TRX:4.3123, SOL:0.00979, ALGO:21.6814, USDT:1.5083 },
+          'Diamond II':   { RST:41.929, BTC:0.00002662, LTC:0.02146, BNB:0.00221, POL:11.485, XRP:0.8926, DOGE:30.051, ETH:0.000574, TRX:3.4003, SOL:0.01231, ALGO:33.0773, USDT:2.7953 },
+          'Diamond III':  { RST:22.8695, BTC:0.00001432, LTC:0.01152, BNB:0.001153, POL:6.083, XRP:0.4725, DOGE:15.892, ETH:0.00031, TRX:1.9373, SOL:0.00657, ALGO:17.359, USDT:1.3514 },
+          'Titan I':      antes['Titan I'],
+          'Titan II':     antes['Titan II'],
+          'Titan III':    antes['Titan III'],
+          'Emerald I':    antes['Emerald I'],
+          'Emerald II':   antes['Emerald II'],
+          'Emerald III':  antes['Emerald III'],
+          'Legend':       antes['Legend']
+        };
+        // Evita notação científica (8.4e-7) e zeros à direita nos valores pequenos.
+        const fmt = v => {
+          let s = v < 0.0001 ? v.toFixed(8) : String(v);
+          return s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s;
+        };
+        const th = 'padding:4px 5px; font-size:10px; font-weight:600;';
+        const linhas = Object.keys(depois).map(liga => {
+          const celulas = COINS.map(coin => {
+            const a = antes[liga]?.[coin], d = depois[liga][coin];
+            if (d === undefined) {
+              return `<td title="${coin}: não existe nesta liga" style="padding:2px 5px; text-align:right; color:#999; opacity:.6;">—</td>`;
+            }
+            const pct = (d - a) / a * 100;
+            if (Math.abs(pct) < 0.05) {
+              return `<td title="${coin}: sem mudança" style="padding:2px 5px; text-align:right; color:#999;">${fmt(d)}</td>`;
+            }
+            const subiu = pct > 0;
+            const cor = subiu ? '#28a745' : '#dc3545';
+            const sinal = (subiu ? '+' : '') + (Math.abs(pct) >= 10 ? pct.toFixed(0) : pct.toFixed(1)) + '%';
+            return `<td title="${coin}: ${fmt(a)} → ${fmt(d)} (${sinal})" style="padding:2px 5px; text-align:right; line-height:1.3; white-space:nowrap; cursor:help;">
+              <div style="color:#999;">${fmt(a)}</div>
+              <div style="color:${cor}; font-weight:600;">${subiu ? '▲' : '▼'} ${fmt(d)}</div>
+            </td>`;
+          }).join('');
+          return `<tr style="border-bottom:1px solid var(--border-color);">
+            <td style="padding:2px 8px; white-space:nowrap;">${liga}</td>
+            <td style="padding:2px 8px; text-align:right; color:#888; white-space:nowrap;">${powerGoals[liga]}</td>
+            ${celulas}
+          </tr>`;
+        }).join('');
+        return `<table style="border-collapse:collapse; font-size:10.5px; border:1px solid var(--border-color); border-radius:6px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border-color); background:rgba(102,126,234,0.08);">
+              <th style="${th} text-align:left;">Liga</th>
+              <th style="${th} text-align:right;">Power goal</th>
+              ${COINS.map(c => `<th style="${th} text-align:right;">${c}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>${linhas}</tbody>
+        </table>`;
+      })()}
+      </div>`
+    },
+    {
       date: '23 Ago 2026', time: '12:00', tag: 'new', label: 'NOVO',
       html: `<strong>SmartRoom: escolha o objetivo do Auto-Otimizar.</strong>  Agora existem dois modos, porque são duas coisas opostas que você pode querer, e antes o app decidia por você.
       <ul class="guia-tl-list">

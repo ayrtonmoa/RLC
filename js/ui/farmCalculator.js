@@ -34,7 +34,7 @@ const UI_FarmCalculator = {
   // Block rewards por liga (fonte estática oficial).
   // Não há API pública de ligas e a captura via rede exige login,
   // portanto estes valores são mantidos manualmente.
-  // Última sincronização manual: 2026-08-18 (IDs de liga trocaram; 7 ligas novas: Titan I-III, Emerald I-III, Legend)
+  // Última sincronização manual: 2026-08-26 (Gold I a Diamond III: BTC/LTC/DOGE subiram ~1%, POL/ETH/SOL caíram ~3,5%; Bronze, Silver, Titan, Emerald e Legend seguem iguais)
   leagueData: {
     '6a846d84d4be9e1aa9a15591': {
       name: 'Bronze I',
@@ -69,47 +69,47 @@ const UI_FarmCalculator = {
     '6a846d84d4be9e1aa9a15597': {
       name: 'Gold I',
       powerGoal: '650 PH/s',
-      rewards: { RLT: 1.5916, RST: 106.1038, BTC: 0.0000121, LTC: 0.004838, BNB: 0.000726, POL: 3.3866, XRP: 0.2903, DOGE: 7.7409, ETH: 0.00029, TRX: 1.9352, USDT: 0.3714 }
+      rewards: { RLT: 1.5916, RST: 106.1038, BTC: 0.00001222, LTC: 0.00489, BNB: 0.000726, POL: 3.268, XRP: 0.2903, DOGE: 7.818, ETH: 0.00028, TRX: 1.9352, USDT: 0.3714 }
     },
     '6a846d84d4be9e1aa9a15598': {
       name: 'Gold II',
       powerGoal: '1.5 EH/s',
-      rewards: { RLT: 2.0937, RST: 157.0244, BTC: 0.00000631, LTC: 0.002525, BNB: 0.000486, POL: 2.6219, XRP: 0.1651, DOGE: 7.7686, ETH: 0.000272, TRX: 2.0393, SOL: 0.007769, HMT: 68.0439, USDT: 0.314 }
+      rewards: { RLT: 2.0937, RST: 157.0244, BTC: 0.00000638, LTC: 0.00255, BNB: 0.000486, POL: 2.53, XRP: 0.1651, DOGE: 7.846, ETH: 0.000262, TRX: 2.0393, SOL: 0.0075, HMT: 68.0439, USDT: 0.314 }
     },
     '6a846d84d4be9e1aa9a15599': {
       name: 'Gold III',
       powerGoal: '3.5 EH/s',
-      rewards: { RLT: 4.2084, RST: 263.0258, BTC: 0.00002903, LTC: 0.009677, BNB: 0.001645, POL: 6.7742, XRP: 0.6774, DOGE: 29.0323, ETH: 0.000581, TRX: 7.7419, SOL: 0.020323, HMT: 1630.7601, USDT: 1.736 }
+      rewards: { RLT: 4.2084, RST: 263.0258, BTC: 0.00002932, LTC: 0.00977, BNB: 0.001645, POL: 6.537, XRP: 0.6774, DOGE: 29.323, ETH: 0.00056, TRX: 7.7419, SOL: 0.01961, HMT: 1630.7601, USDT: 1.736 }
     },
     '6a846d84d4be9e1aa9a1559a': {
       name: 'Platinum I',
       powerGoal: '16 EH/s',
-      rewards: { RLT: 5.7428, RST: 417.6555, BTC: 0.00004164, LTC: 0.019366, BNB: 0.002275, POL: 15.0083, XRP: 1.2103, DOGE: 31.9531, ETH: 0.001288, TRX: 22.7545, SOL: 0.031953, ALGO: 36.5449, HMT: 4072.1415, USDT: 3.1324 }
+      rewards: { RLT: 5.7428, RST: 417.6555, BTC: 0.00004205, LTC: 0.01956, BNB: 0.002275, POL: 14.483, XRP: 1.2103, DOGE: 32.273, ETH: 0.001243, TRX: 22.7545, SOL: 0.03083, ALGO: 36.5449, HMT: 4072.1415, USDT: 3.1324 }
     },
     '6a846d84d4be9e1aa9a1559b': {
       name: 'Platinum II',
       powerGoal: '50 EH/s',
-      rewards: { RLT: 2.6586, RST: 212.6904, BTC: 0.00002714, LTC: 0.012117, BNB: 0.001454, POL: 9.6936, XRP: 0.9694, DOGE: 24.2339, ETH: 0.000969, TRX: 16.4791, SOL: 0.036836, ALGO: 14.8883, HMT: 3043.599, USDT: 1.9142 }
+      rewards: { RLT: 2.6586, RST: 212.6904, BTC: 0.00002741, LTC: 0.01224, BNB: 0.001454, POL: 9.6936, XRP: 0.9694, DOGE: 24.476, ETH: 0.000935, TRX: 16.4791, SOL: 0.03555, ALGO: 14.8883, HMT: 3043.599, USDT: 1.9142 }
     },
     '6a846d84d4be9e1aa9a1559c': {
       name: 'Platinum III',
       powerGoal: '100 EH/s',
-      rewards: { RLT: 1.9093, RST: 143.6189, BTC: 0.00002134, LTC: 0.010215, BNB: 0.001312, POL: 8.9078, XRP: 0.7762, DOGE: 22.262, ETH: 0.000953, TRX: 17.259, SOL: 0.047063, ALGO: 11.6387, HMT: 3285.4745, USDT: 2.0756 }
+      rewards: { RLT: 1.9093, RST: 143.6189, BTC: 0.00002155, LTC: 0.01032, BNB: 0.001312, POL: 8.596, XRP: 0.7762, DOGE: 22.485, ETH: 0.00092, TRX: 17.259, SOL: 0.04542, ALGO: 11.6387, HMT: 3285.4745, USDT: 2.0756 }
     },
     '6a846d84d4be9e1aa9a1559d': {
       name: 'Diamond I',
       powerGoal: '200 EH/s',
-      rewards: { RST: 94.2671, BTC: 0.00001708, LTC: 0.017757, BNB: 0.001184, POL: 12.6832, XRP: 1.0569, DOGE: 19.4476, ETH: 0.000676, TRX: 4.3123, SOL: 0.010147, ALGO: 21.6814, USDT: 1.5083 }
+      rewards: { RST: 94.2671, BTC: 0.00001725, LTC: 0.01793, BNB: 0.001184, POL: 12.239, XRP: 1.0569, DOGE: 19.642, ETH: 0.000653, TRX: 4.3123, SOL: 0.00979, ALGO: 21.6814, USDT: 1.5083 }
     },
     '6a846d84d4be9e1aa9a1559e': {
       name: 'Diamond II',
       powerGoal: '375 EH/s',
-      rewards: { RST: 41.929, BTC: 0.00002635, LTC: 0.021252, BNB: 0.00221, POL: 11.9012, XRP: 0.8926, DOGE: 29.753, ETH: 0.000595, TRX: 3.4003, SOL: 0.012751, ALGO: 33.0773, USDT: 2.7953 }
+      rewards: { RST: 41.929, BTC: 0.00002662, LTC: 0.02146, BNB: 0.00221, POL: 11.485, XRP: 0.8926, DOGE: 30.051, ETH: 0.000574, TRX: 3.4003, SOL: 0.01231, ALGO: 33.0773, USDT: 2.7953 }
     },
     '6a846d84d4be9e1aa9a1559f': {
       name: 'Diamond III',
       powerGoal: '650 EH/s',
-      rewards: { RST: 22.8695, BTC: 0.00001418, LTC: 0.011406, BNB: 0.001153, POL: 6.3032, XRP: 0.4725, DOGE: 15.7344, ETH: 0.000321, TRX: 1.9373, SOL: 0.006804, ALGO: 17.359, USDT: 1.3514 }
+      rewards: { RST: 22.8695, BTC: 0.00001432, LTC: 0.01152, BNB: 0.001153, POL: 6.083, XRP: 0.4725, DOGE: 15.892, ETH: 0.00031, TRX: 1.9373, SOL: 0.00657, ALGO: 17.359, USDT: 1.3514 }
     },
     '6a846d84d4be9e1aa9a155a0': {
       name: 'Titan I',
