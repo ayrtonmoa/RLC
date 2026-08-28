@@ -148,6 +148,92 @@ body.dark-mode .merge-result-card {
   font-weight: bold;
 }
 
+.parts-fontes {
+  font-size: 12px;
+  margin: 8px 0 0 0;
+  opacity: .85;
+}
+
+.rota-passos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.rota-passo {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  border-left: 3px solid transparent;
+}
+
+.rota-passo-custo {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rota-passo.rota-estoque {
+  background: rgba(108, 117, 125, 0.1);
+  border-left-color: #6c757d;
+}
+
+.rota-passo.rota-comprar {
+  background: rgba(255, 152, 0, 0.12);
+  border-left-color: #FF9800;
+}
+
+.rota-passo.rota-fundir {
+  background: rgba(40, 167, 69, 0.1);
+  border-left-color: #28a745;
+}
+
+body.dark-mode .rota-passo.rota-estoque { background: rgba(108, 117, 125, 0.2); }
+body.dark-mode .rota-passo.rota-comprar { background: rgba(255, 152, 0, 0.18); }
+body.dark-mode .rota-passo.rota-fundir { background: rgba(40, 167, 69, 0.18); }
+
+.rota-economia {
+  font-size: 12px;
+  margin: 8px 0 0 0;
+  color: #28a745;
+}
+
+body.dark-mode .rota-economia { color: #6fd68a; }
+
+.rota-economia.pior { color: #dc3545; }
+body.dark-mode .rota-economia.pior { color: #ff8a95; }
+
+.merge-market-compare {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 0 0 10px 0;
+}
+
+.merge-market-compare.pior {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.merge-market-compare.melhor {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+body.dark-mode .merge-market-compare.pior {
+  background: rgba(220, 53, 69, 0.15);
+  color: #ff8a95;
+}
+
+body.dark-mode .merge-market-compare.melhor {
+  background: rgba(40, 167, 69, 0.15);
+  color: #6fd68a;
+}
+
 /* Details/Summary */
 .merge-details {
   margin-top: 15px;

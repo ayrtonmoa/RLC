@@ -58,17 +58,6 @@ if (targetTab === 'farmcalculator') {
           }
         }
         
-        // Merge vs Market
-        else if (targetTab === 'mergevsmarket') {
-          console.log('🎯 Aba: Merge vs Market');
-          if (typeof UI_MergeVsMarket !== 'undefined' && typeof UI_MergeVsMarket.mostrar === 'function') {
-            console.log('✅ Chamando UI_MergeVsMarket.mostrar()');
-            UI_MergeVsMarket.mostrar();
-          } else {
-            console.error('❌ UI_MergeVsMarket não está definido ou falta o método .mostrar()!');
-          }
-        }
-        
         // RST & Sell Analyzer
         else if (targetTab === 'rstsellanalyzer') {
           console.log('🎯 Aba: RST & Sell Analyzer');

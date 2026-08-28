@@ -109,6 +109,31 @@ body.dark-mode .merge-sort-btn.active {
   color: var(--text-primary);
   margin-bottom: 16px;
 }
+.merge-planner-warning-forte {
+  background: rgba(102, 126, 234, 0.10);
+  border: 1px solid rgba(102, 126, 234, 0.45);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+body.dark-mode .merge-planner-warning-forte {
+  background: rgba(102, 126, 234, 0.16);
+}
+.merge-goto-smartroom-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: none;
+  background: #667eea;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.merge-goto-smartroom-btn:hover {
+  background: #5566d6;
+}
 
 /* ===== Abas de categoria (Prontos / Falta peças / Falta miners) ===== */
 .merge-tabs {
@@ -321,3 +346,233 @@ body.dark-mode .merge-quality-badge.tier-ok { color: #ffc107; }
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* ===== Plano por orçamento (quanto RLT eu tenho) ===== */
+.merge-budget-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.merge-budget-input {
+  width: 100px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+.merge-budget-plan {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: rgba(102, 126, 234, 0.06);
+}
+body.dark-mode .merge-budget-plan {
+  background: rgba(102, 126, 234, 0.12);
+}
+.merge-budget-title {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+}
+.merge-budget-summary {
+  font-size: 12px;
+  margin: 0 0 10px 0;
+  opacity: 0.9;
+}
+.merge-budget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.merge-budget-item {
+  border-radius: 6px;
+  background: var(--bg-primary);
+  padding: 2px 8px;
+}
+.merge-budget-item-summary {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+  padding: 4px 0;
+  cursor: pointer;
+  list-style: none;
+}
+.merge-budget-item-img-placeholder {
+  width: 32px;
+  height: 32px;
+}
+.merge-budget-sort {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.merge-sort-btn.mini {
+  padding: 2px 9px;
+  font-size: 11px;
+}
+.merge-budget-item-summary::-webkit-details-marker {
+  display: none;
+}
+.merge-budget-item[open] .merge-row-caret {
+  transform: rotate(90deg);
+}
+.merge-budget-item-name {
+  font-weight: 600;
+}
+.merge-budget-item-note {
+  font-size: 11px;
+  opacity: 0.7;
+  padding: 2px 0 6px 0;
+}
+
+/* ===== Custo por fusão na cadeia completa (dentro do plano por orçamento) ===== */
+.merge-budget-passos {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+.merge-budget-passo {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(102, 126, 234, 0.06);
+}
+body.dark-mode .merge-budget-passo {
+  background: rgba(102, 126, 234, 0.10);
+}
+
+/* ===== Alternativa descartada (fundir x comprar) no plano por orçamento ===== */
+.merge-budget-alt {
+  font-size: 10px;
+  opacity: 0.75;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* ===== Peça agrupada no plano: cabeçalho + passos indentados ===== */
+.merge-peca-grupo {
+  margin-bottom: 6px;
+  border-left: 2px solid rgba(102, 126, 234, 0.35);
+  padding-left: 8px;
+}
+.merge-peca-cabecalho {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+  padding: 2px 0;
+}
+.merge-peca-passo {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  font-size: 11px;
+  opacity: 0.7;
+  padding: 1px 0 1px 6px;
+}
+
+/* Tela estreita: empilha o cabeçalho da peça em vez de espremer as 3 colunas numa linha */
+@media (max-width: 700px) {
+  .merge-peca-cabecalho {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .merge-budget-alt {
+    white-space: normal;
+  }
+}
+
+/* ===== Matéria-prima total do caminho (soma de todos os passos) ===== */
+.merge-materia-lista {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.merge-materia-item {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.merge-materia-item.ok  { background: #c3e6cb; color: #155724; }
+.merge-materia-item.nok { background: #ffeeba; color: #856404; }
+body.dark-mode .merge-materia-item.ok  { background: #0d2116; color: #75e096; }
+body.dark-mode .merge-materia-item.nok { background: #2d2410; color: #ffd970; }
+
+/* ===== Blocos numerados da aba (1. Orçamento / 2. Plano / 3. Explorar) ===== */
+.merge-etapa {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: var(--bg-primary);
+}
+body.dark-mode .merge-etapa { background: var(--bg-secondary); }
+.merge-etapa-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  margin-bottom: 10px;
+}
+.merge-etapa-nota {
+  font-size: 11px;
+  line-height: 1.5;
+  opacity: 0.85;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.merge-btn-gerar {
+  padding: 6px 18px;
+  border-radius: 20px;
+  border: none;
+  background: #667eea;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 6px;
+}
+.merge-btn-gerar:hover { background: #5566d6; }
+
+/* ===== Bloco de exploração, fechado por padrão ===== */
+.merge-explorar {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  margin-top: 14px;
+}
+.merge-explorar-summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+}
+.merge-explorar-summary::-webkit-details-marker { display: none; }
+.merge-explorar-summary:hover { color: #667eea; }
+.merge-explorar[open] .merge-explorar-summary {
+  border-bottom: 1px solid var(--border-color);
+  color: #667eea;
+}
+.merge-explorar-corpo { padding: 14px 16px; }

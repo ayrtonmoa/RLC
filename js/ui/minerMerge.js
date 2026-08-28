@@ -4,6 +4,13 @@ const UI_MinerMerge = {
   mergeSortMode: 'efficiency',
   qualityFilter: 'all',
   activeGroup: 'ready',
+  budgetRLT: null,
+  budgetRST: null,
+  budgetSortMode: 'eficiencia',
+  // Bloco "Explorar todos os merges" fica fechado por padrão, mas precisa lembrar que foi
+  // aberto: qualquer clique em ordenar/filtrar/aba re-renderiza tudo, e sem isso ele fecharia
+  // na cara do usuário no meio do uso.
+  _explorarAberto: false,
 
   mostrar: function(user) {
     const div = document.getElementById('minermerge');
@@ -211,27 +218,7 @@ const UI_MinerMerge = {
       const badgeHtml = entry._tier ? `<span class="merge-quality-badge ${tierMeta[entry._tier].cls}">${tierMeta[entry._tier].label}</span>` : '';
 
       // níveis que possui — SEMPRE visível, compacto (sem tooltip completo, só o essencial)
-      let levelsHtml = '<div class="merge-row-levels">';
-      tiers.forEach(t => {
-        const lbl = t.type === 'merge' ? (rarityMap[t.level] || 'Lv' + t.level) : (t.rarityGroup?.title || 'Common');
-        const { status, count } = userHasLevel[t.id] || { status: null, count: 0 };
-        const isNext = t.id === nextTier.id;
-        const chipClass = status === 'both' ? 'has-both' : status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
-        const statusIcon = status === 'both' ? '✅🏠' : status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
-        const rarityDot = rarityEmoji[lbl] || '';
-        const countBadge = count > 0 ? `×${count}` : '';
-        const statusTip = status === 'both' ? `No inventário e instalada na sala (${count}×)` : status === 'inv' ? `No inventário (${count}×)` : status === 'room' ? `Instalada na sala (${count}×)` : 'Não possui';
-        const powerVal = Utils.formatPower(t.power * 1e9);
-        const bonusVal = t.bonusPower ? `${(t.bonusPower / 100).toFixed(2)}%` : '';
-        const costVal = t.price ? `${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? 'gratuito' : '');
-        const partsEncoded = (t.craftRecipe || []).map(r => `${r.name}|${r.rarity || ''}|${r.count}`).join('~');
-        const tierImpacto = isNext ? impactoReal : this._calcularImpactoTroca(m, lbl, t.power * 1e9, t.bonusPower, userData);
-        const impactAttr = tierImpacto != null
-          ? ` data-tip-impact="${Utils.formatPowerSigned(tierImpacto)} (estimado, sala/SmartRoom)"`
-          : '';
-        levelsHtml += `<span class="merge-level-chip mini ${chipClass}${isNext ? ' next-tier' : ''}" data-tip-status="${statusTip}" data-tip-power="${powerVal}" data-tip-bonus="${bonusVal}" data-tip-cost="${costVal}" data-tip-parts="${partsEncoded}"${impactAttr}>${statusIcon}${rarityDot}${countBadge}</span>`;
-      });
-      levelsHtml += '</div>';
+      const levelsHtml = this._levelsChipsHtml(entry, userData);
 
       // resumo de decisão — impacto real + custo, sempre visível
       const priceRlt = nextTier.price ? (nextTier.price / 1000000).toFixed(2) : '0';
@@ -369,6 +356,27 @@ const UI_MinerMerge = {
       <li><strong>Badges de qualidade</strong> (🟢 Ótimo / 🟡 Ok / 🔴 Baixo valor) — comparam TODOS os merges disponíveis entre si, não só dentro da categoria; e exigem um ganho minimamente relevante (não só barato) pra valer "Ótimo".</li>
     </ul>`;
     html += '</details>';
+
+    // ===== 1. ORÇAMENTO =====
+    // Vem primeiro porque é a ação principal da aba. Antes ficava depois dos controles de
+    // ordenação/filtro da lista de exploração, então você configurava a lista de baixo antes
+    // de chegar no que realmente resolve.
+    html += '<div class="merge-etapa">';
+    html += '<div class="merge-etapa-titulo">1. Quanto você tem</div>';
+    html += this._budgetControlsHtml();
+    html += '<div class="merge-etapa-nota">🎯 <strong>Rode o Auto-Otimizar no SmartRoom antes de decidir.</strong> Sem isso o plano compara os merges contra miners fracas que ainda ocupam vaga, e o ganho mostrado fica inflado. <button type="button" class="merge-goto-smartroom-btn" onclick="UI_Tabs.switchTo(\'roomplanner\')">Abrir SmartRoom →</button></div>';
+    html += '</div>';
+
+    // ===== 2. PLANO =====
+    html += this._planoHtml(prontos, userData);
+
+    // ===== 3. EXPLORAÇÃO (fechada por padrão) =====
+    // Ordenação, filtros, abas e a lista completa vivem aqui dentro. Ficavam soltos no topo
+    // competindo com o plano, e o "Ordenar por" daqui era confundido com o do plano.
+    html += `<details class="merge-explorar"${this._explorarAberto ? ' open' : ''} ontoggle="UI_MinerMerge._explorarAberto = this.open">`;
+    html += `<summary class="merge-explorar-summary">🔍 Explorar todos os merges <span class="dim">(${prontos.length + faltaPartes.length + faltaMiners.length + recuperaCadeia.length})</span></summary>`;
+    html += '<div class="merge-explorar-corpo">';
+    html += '<div class="merge-planner-warning">⚠️ O <strong>impacto real na sala</strong> mostrado em cada linha é estimado com base no último estado que você deixou na aba <strong>SmartRoom</strong>, a sala real ou a simulação otimizada, o que estiver ativo lá.</div>';
     html += '<div class="merge-planner-header">';
     html += '<div class="merge-header-controls">';
     html += '<div class="merge-sort-controls">';
@@ -397,7 +405,7 @@ const UI_MinerMerge = {
       html += `<button class="merge-sort-btn${active ? ' active' : ''}" title="${desc}" onclick="UI_MinerMerge.setQualityFilter('${key}')">${label}</button>`;
     });
     html += '</div></div></div>';
-    html += '<div class="merge-planner-warning">⚠️ O <strong>impacto real na sala</strong> exibido em cada linha (e usado na ordenação por impacto/custo-benefício) é estimado com base no último estado que você deixou na aba <strong>SmartRoom</strong> — a sala real ou a simulação otimizada, o que estiver ativo lá. Para valores mais próximos do real, abra o SmartRoom e rode o Auto-Otimizar antes de decidir os merges.</div>';
+
 
     // Tabs em vez de 3 colunas lado a lado: só uma categoria por vez, menos informação de
     // uma vez só na tela — o usuário escolhe onde focar.
@@ -421,6 +429,7 @@ const UI_MinerMerge = {
     }
     html += '</div>';
 
+    html += '</div></details>'; // fecha merge-explorar-corpo + merge-explorar
     html += '</div>';
     return html;
   },
@@ -434,7 +443,7 @@ const UI_MinerMerge = {
   // O pool usado é sempre UI_RoomPlanner.sim (garantido inicializado aqui se ainda não
   // estiver) — reflete o último estado que o usuário deixou no SmartRoom, seja a sala
   // real (espelhada automaticamente) ou uma simulação/otimização que ele tenha feito lá.
-  _calcularImpactoTroca: function(m, targetLabel, targetPowerHz, targetBonusPower, userData) {
+  _calcularImpactoTroca: function(m, targetLabel, targetPowerHz, targetBonusPower, userData, qtdDaSala) {
     const ctx = this._roomCalcContext(userData);
     if (!ctx) return null;
     const { poolOriginal, calcPoder, rackFactorMap } = ctx;
@@ -445,26 +454,32 @@ const UI_MinerMerge = {
     // (ordem arbitrária) podia acidentalmente sacrificar a cópia no seu MELHOR rack,
     // fazendo um merge claramente positivo (poder bruto sobe bastante) aparecer negativo
     // só porque a simulação perdeu um bônus de rack que na vida real você não perderia.
-    let idxRemover = -1;
-    let menorFatorRack = Infinity;
+    // Quantas cópias saem DA SALA. Antes era sempre 1, o que errava nos dois sentidos: se o
+    // merge consome 2 da sala, superestimava o ganho (só descontava uma); se consome tudo do
+    // inventário, desinstalava uma à toa e subestimava. `qtdDaSala` vem de quem chama, que
+    // sabe a receita e o estoque; sem ele, mantém o comportamento antigo de 1.
+    const quantasRemover = Math.max(0, qtdDaSala == null ? 1 : qtdDaSala);
+
+    // Entre várias cópias instaladas, sacrifica sempre as de MENOR bônus de rack primeiro,
+    // que é o que se faria na prática.
+    const candidatas = [];
     poolOriginal.forEach((mm, i) => {
       if (mm.name.toLowerCase() !== m.name.toLowerCase() || String(mm.level || '').toLowerCase() !== String(m.level).toLowerCase()) return;
-      const fator = rackFactorMap[mm._rackId] || 0;
-      if (fator < menorFatorRack) { menorFatorRack = fator; idxRemover = i; }
+      candidatas.push({ i, fator: rackFactorMap[mm._rackId] || 0 });
     });
+    candidatas.sort((a, b) => a.fator - b.fator);
+    const remover = candidatas.slice(0, quantasRemover);
 
-    const poolDepois = poolOriginal.slice();
-    // rackDaNova só recebe um rack se a miner atual JÁ estiver instalada em algum
-    // (idxRemover !== -1) — a nova unidade herda o rack de onde a antiga saiu, então o
-    // bônus de rack dela entra no cálculo. Se a miner só existe no inventário (nunca foi
-    // instalada), rackDaNova fica undefined: rackFactorMap[undefined] é undefined, o `||
-    // 0` em calcPoder zera esse termo, e o resultado usa só poder base + bônus de
-    // coleção — sem inventar bônus de rack pra uma miner sem rack definido.
+    // rackDaNova só recebe um rack se alguma cópia saiu da sala: a nova unidade herda o rack
+    // da melhor que saiu, então o bônus de rack dela entra no cálculo. Se nada saiu (consumiu
+    // só do inventário), rackDaNova fica undefined: rackFactorMap[undefined] é undefined, o
+    // `|| 0` em calcPoder zera esse termo, e o resultado usa só poder base + bônus de coleção.
     let rackDaNova;
-    if (idxRemover !== -1) {
-      rackDaNova = poolOriginal[idxRemover]._rackId;
-      poolDepois.splice(idxRemover, 1);
+    if (remover.length) {
+      rackDaNova = poolOriginal[remover[remover.length - 1].i]._rackId;
     }
+    const idxParaRemover = new Set(remover.map(r => r.i));
+    const poolDepois = poolOriginal.filter((_, i) => !idxParaRemover.has(i));
     poolDepois.push({
       name: m.name,
       level: targetLabel,
@@ -492,6 +507,13 @@ const UI_MinerMerge = {
     racks.forEach(r => rackFactorMap[r._id] = (r.bonus || 0) / 10000);
     const extras = (userData.powerData.games || 0) + (userData.powerData.temp || 0);
 
+    // Bônus de SET (ex: Royal Set) reaproveita a função do roomPlanner em vez de duplicar ,
+    // é tudo-ou-nada por faixa máxima e só conta peça instalada no rack temático do próprio
+    // set (ver comentário de _calcularBonusDeSetsNoPool). Sem isso, uma peça de set com
+    // poder base baixo (mas que seria a diferença entre o set completo e quebrado) aparecia
+    // com impacto real artificialmente pequeno em qualquer cálculo daqui, inclusive no piso
+    // do plano por orçamento, que chegou a escolher uma peça de set assim como "a mais fraca
+    // instalada" só porque a perda de bônus de set dela não estava sendo contada.
     const calcPoder = (pool) => {
       const base = pool.reduce((s, mm) => s + mm.power, 0);
       const chaves = new Set();
@@ -501,7 +523,8 @@ const UI_MinerMerge = {
         if (!chaves.has(key)) { chaves.add(key); bonusPct += (mm.bonus_percent || 0) / 10000; }
       });
       const rackBonus = pool.reduce((s, mm) => s + mm.power * (rackFactorMap[mm._rackId] || 0), 0);
-      return base + base * bonusPct + rackBonus + extras;
+      const bonusDeSets = UI_RoomPlanner._calcularBonusDeSetsNoPool(pool, base, racks);
+      return base + base * bonusPct + rackBonus + bonusDeSets.percent + bonusDeSets.flat + extras;
     };
 
     return { poolOriginal, calcPoder, rackFactorMap };
@@ -516,12 +539,91 @@ const UI_MinerMerge = {
     return ctx.calcPoder(ctx.poolOriginal) * 1e9;
   },
 
+  // Impacto real (H/s) da miner instalada mais fraca hoje, não o poder BRUTO dela, mas
+  // quanto a sala perde se essa cópia específica sair (mesma métrica de _calcularImpactoTroca,
+  // já descontando bônus de coleção/rack). Uma peça Legendary de bônus % alto pode ter poder
+  // bruto baixo mas impacto real relevante, então comparar bruto contra bruto (como a 1ª
+  // versão fazia) sub-representava peças assim, o piso certo é impacto contra impacto.
+  // Usado como "piso" real de uso: um merge cujo impacto real fica abaixo do que a pior peça
+  // já instalada hoje contribui não compete de verdade por espaço na sala, então tende a
+  // ficar encalhado no banco em vez de ser instalado de fato.
+  // Fração da mediana abaixo da qual uma miner instalada é tratada como LASTRO, não como
+  // piso de verdade. Vem de um caso real: o usuário instala miners propositalmente fraquíssimas
+  // pra ocupar célula sem empurrar o poder (evitando subir de liga sem querer). Usar o mínimo
+  // absoluto fazia essas peças definirem o piso, e o filtro parava de filtrar: numa conta real,
+  // 8 miners de 12 a 23 Ph/s derrubavam o piso pra 0,012 Eh/s enquanto o resto da sala vivia
+  // entre 9 e 24 Eh/s. O vão entre lastro e miner real é enorme (150x nesse caso), então um
+  // corte por fração da mediana separa os dois grupos com folga.
+  _FRACAO_LASTRO: 0.10,
+
+  _impactoMinimoInstalado: function(userData) {
+    const ctx = this._roomCalcContext(userData);
+    if (!ctx || !ctx.poolOriginal.length) return null;
+    const { poolOriginal, calcPoder } = ctx;
+    const poderComTudo = calcPoder(poolOriginal);
+    const impactos = poolOriginal
+      .map(mm => (poderComTudo - calcPoder(poolOriginal.filter(x => x !== mm))) * 1e9)
+      .sort((a, b) => a - b);
+    if (!impactos.length) return null;
+
+    const mediana = impactos[Math.floor(impactos.length / 2)];
+    const corteLastro = mediana * this._FRACAO_LASTRO;
+    // Piso = a mais fraca que NÃO é lastro. Se por acaso tudo cair abaixo do corte (sala só
+    // de peças fracas), cai no mínimo absoluto pra não devolver piso nulo.
+    const semLastro = impactos.filter(i => i >= corteLastro);
+    return semLastro.length ? semLastro[0] : impactos[0];
+  },
+
   // Impacto real específico do merge (m → nextTier), usado no card e na ordenação.
+  // Chips compactos de "quais níveis você já tem" (✅ inventário / 🏠 sala / ❌ nada), com
+  // tooltip de poder/bônus/custo/impacto por raridade. Extraído de buildRow pra reaproveitar
+  // no plano por orçamento: lá o modo "cadeia" só mostrava os ingredientes do 1º passo, sem
+  // deixar claro o que já estava pronto nos níveis seguintes até o alvo.
+  _levelsChipsHtml: function(entry, userData) {
+    const rarityMap = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
+    const rarityEmoji = { 'Common': '⚪', 'Uncommon': '🟢', 'Rare': '🔵', 'Epic': '🟣', 'Legendary': '🟡', 'Unreal': '🔴' };
+    const { m, info, impactoReal } = entry;
+    const { nextTier, tiers, userHasLevel } = info;
+
+    let html = '<div class="merge-row-levels">';
+    tiers.forEach(t => {
+      const lbl = t.type === 'merge' ? (rarityMap[t.level] || 'Lv' + t.level) : (t.rarityGroup?.title || 'Common');
+      const { status, count } = userHasLevel[t.id] || { status: null, count: 0 };
+      const isNext = t.id === nextTier.id;
+      const chipClass = status === 'both' ? 'has-both' : status === 'inv' ? 'has-inv' : status === 'room' ? 'has-room' : 'missing';
+      const statusIcon = status === 'both' ? '✅🏠' : status === 'inv' ? '✅' : status === 'room' ? '🏠' : '❌';
+      const rarityDot = rarityEmoji[lbl] || '';
+      const countBadge = count > 0 ? `×${count}` : '';
+      const statusTip = status === 'both' ? `No inventário e instalada na sala (${count}×)` : status === 'inv' ? `No inventário (${count}×)` : status === 'room' ? `Instalada na sala (${count}×)` : 'Não possui';
+      const powerVal = Utils.formatPower(t.power * 1e9);
+      const bonusVal = t.bonusPower ? `${(t.bonusPower / 100).toFixed(2)}%` : '';
+      const costVal = t.price ? `${(t.price / 1e6).toFixed(2)} RLT` : (t.level > 0 ? 'gratuito' : '');
+      const partsEncoded = (t.craftRecipe || []).map(r => `${r.name}|${r.rarity || ''}|${r.count}`).join('~');
+      const tierImpacto = isNext ? impactoReal : this._calcularImpactoTroca(m, lbl, t.power * 1e9, t.bonusPower, userData);
+      const impactAttr = tierImpacto != null
+        ? ` data-tip-impact="${Utils.formatPowerSigned(tierImpacto)} (estimado, sala/SmartRoom)"`
+        : '';
+      html += `<span class="merge-level-chip mini ${chipClass}${isNext ? ' next-tier' : ''}" data-tip-status="${statusTip}" data-tip-power="${powerVal}" data-tip-bonus="${bonusVal}" data-tip-cost="${costVal}" data-tip-parts="${partsEncoded}"${impactAttr}>${statusIcon}${rarityDot}${countBadge}</span>`;
+    });
+    html += '</div>';
+    return html;
+  },
+
   _calcularImpactoReal: function(m, info, userData) {
     const rarityMap = { 0: 'Common', 1: 'Uncommon', 2: 'Rare', 3: 'Epic', 4: 'Legendary', 5: 'Unreal' };
     const { nextTier, resultPowerHz } = info;
     const nextLabel = nextTier.type === 'merge' ? (rarityMap[nextTier.level] || 'Unknown') : (nextTier.rarityGroup?.title || 'Common');
-    return this._calcularImpactoTroca(m, nextLabel, resultPowerHz, nextTier.bonusPower, userData);
+    return this._calcularImpactoTroca(m, nextLabel, resultPowerHz, nextTier.bonusPower, userData, this._quantasSaemDaSala(m, info));
+  },
+
+  // Quantas cópias precisam ser DESINSTALADAS pra fazer o merge: o que a receita pede menos o
+  // que já está solto no inventário. Consumir do inventário não custa poder nenhum; só sai da
+  // sala o que faltar depois disso.
+  _quantasSaemDaSala: function(m, info) {
+    const minerIng = (info.ingredientes || []).find(i => i.tipo === 'miner');
+    if (!minerIng) return 0;
+    const noInventario = m.quantity || 0;
+    return Math.max(0, (minerIng.precisa || 0) - noInventario);
   },
 
   // Potencial da cadeia completa de merges a partir daqui (não só o próximo tier): soma o
@@ -542,7 +644,7 @@ const UI_MinerMerge = {
     const finalImpacto = this._calcularImpactoTroca(m, finalLabel, finalPowerHz, finalTier.bonusPower, userData);
     if (finalImpacto == null) return null;
 
-    return { totalCost, finalImpacto, stepsCount: futureTiers.length, finalLabel };
+    return { totalCost, finalImpacto, stepsCount: futureTiers.length, finalLabel, finalPowerHz };
   },
 
   // Alcance real: com a quantidade que você REALMENTE tem do nível atual (inventário + sala),
@@ -563,6 +665,7 @@ const UI_MinerMerge = {
     const scaleFactor = currentDbEntry.power > 0 ? currentPowerHz / currentDbEntry.power : 1;
     const futureTiers = tiers.filter(t => t.level > currentDbEntry.level).sort((a, b) => a.level - b.level);
     let available = startQty, totalCost = 0, steps = 0, reachedTier = null, qtyFinal = 0;
+    const passos = []; // detalhamento por etapa: de qual raridade pra qual, quantas fusões, custo
 
     for (const t of futureTiers) {
       if (!t.craftRecipe || !t.craftRecipe.length) break;
@@ -571,7 +674,17 @@ const UI_MinerMerge = {
       const need = minerIng.count || 1;
       const produced = Math.floor(available / need);
       if (produced < 1) break;
-      totalCost += produced * (t.price || 0);
+      const custoEtapa = produced * (t.price || 0);
+      totalCost += custoEtapa;
+      const deLabel = steps === 0 ? m.level : passos[passos.length - 1].paraLabel;
+      const paraLabel = t.type === 'merge' ? (rarityMap[t.level] || 'Unknown') : (t.rarityGroup?.title || 'Common');
+      // Receita de PEÇAS deste passo (ingrediente com rarity preenchida; o de rarity nula é a
+      // própria miner). Guardada aqui pra Etapa 2 conseguir cobrar as peças de todos os passos
+      // da cadeia, não só do primeiro.
+      const pecas = (t.craftRecipe || [])
+        .filter(ing => ing.rarity !== null && ing.rarity !== undefined)
+        .map(ing => ({ nome: ing.name, rarity: ing.rarity, count: ing.count || 0 }));
+      passos.push({ deLabel, paraLabel, fusoes: produced, custo: custoEtapa, pecas });
       const ownedAtTarget = userHasLevel[t.id]?.count || 0;
       available = produced + ownedAtTarget;
       qtyFinal = available;
@@ -581,8 +694,9 @@ const UI_MinerMerge = {
     if (!reachedTier) return null;
 
     const label = reachedTier.type === 'merge' ? (rarityMap[reachedTier.level] || 'Unknown') : (reachedTier.rarityGroup?.title || 'Common');
-    const impactoFinal = this._calcularImpactoTroca(m, label, reachedTier.power * scaleFactor, reachedTier.bonusPower, userData);
-    return { label, startQty, qtyFinal, totalCost, steps, impactoFinal };
+    const finalPowerHz = reachedTier.power * scaleFactor;
+    const impactoFinal = this._calcularImpactoTroca(m, label, finalPowerHz, reachedTier.bonusPower, userData);
+    return { label, startQty, qtyFinal, totalCost, steps, impactoFinal, finalPowerHz, passos };
   },
 
   // Custo-benefício considerando a cadeia completa (H/s reais por RLT até o tier máximo).
@@ -636,18 +750,674 @@ const UI_MinerMerge = {
     return `${Utils.formatPower(entry.gain / priceRlt)} / RLT`;
   },
 
+  // ===== Etapa 2: custo real das PEÇAS, não só a taxa de fusão da miner =====
+
+  _PART_ORDER: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'],
+
+  // Taxas de fusão de peça vêm do Parts Calculator (fonte única), se aquele arquivo mudar a
+  // tabela oficial, o plano acompanha sozinho. Fallback local só pra não quebrar se a aba
+  // ainda não carregou.
+  _taxasDePeca: function() {
+    if (typeof UI_MergeCalculator !== 'undefined' && UI_MergeCalculator.mergeCosts) {
+      return UI_MergeCalculator.mergeCosts;
+    }
+    return {
+      common:   { need: 50, cost: 0.002 },
+      uncommon: { need: 20, cost: 0.05 },
+      rare:     { need: 10, cost: 0.75 },
+      epic:     { need: 5,  cost: 1.6 },
+    };
+  },
+
+  // Quanto vale cada raridade em peças Common, derivado das próprias receitas de fusão
+  // (50 Common = 1 Uncommon, 20 Uncommon = 1 Rare, e assim por diante). Serve pra somar
+  // matéria-prima de raridades diferentes num número só: contar "526 peças" quando uma delas
+  // é Epic engana, porque aquele Epic sozinho vale 10.000 Common.
+  _equivalenciaEmCommon: function() {
+    const taxas = this._taxasDePeca();
+    const ordem = this._PART_ORDER;
+    const eq = { [ordem[0]]: 1 };
+    for (let i = 1; i < ordem.length; i++) {
+      const abaixo = ordem[i - 1];
+      const regra = taxas[abaixo.toLowerCase()];
+      eq[ordem[i]] = regra ? eq[abaixo] * regra.need : eq[abaixo];
+    }
+    return eq;
+  },
+
+  // Cascata de UMA peça: quanto custa (em RLT de taxa) obter `precisa` unidades de
+  // `nome`/`rarity`, partindo do que existe em `estoque` e fundindo de baixo pra cima.
+  //
+  // Trabalha de cima pra baixo convertendo falta em matéria-prima: faltam N do alvo → precisa
+  // de N×need do tier abaixo → o que não tiver lá vira falta naquele tier, e assim por diante
+  // até Common. Se o Common não fechar sozinho, tenta cobrir com RST antes de desistir
+  // (decisão do usuário: RST é mais fácil de conseguir que RLT, então usa sempre que der).
+  // `rstDisponivel` é só consultado, nunca alterado aqui, quem chama decide se confirma o
+  // gasto (mesmo motivo do estoque de peças: só compromete o que realmente entrar no plano).
+  //
+  // NÃO altera `estoque`: devolve `estoqueDepois` já com o consumo aplicado, pra quem chamou
+  // decidir se aceita o gasto (o plano só confirma o consumo se o merge entrar de fato).
+  _cascataDePeca: function(nome, rarity, precisa, estoque, rstDisponivel) {
+    const ordem = this._PART_ORDER;
+    const taxas = this._taxasDePeca();
+    const est = { ...estoque };
+    const chave = r => `${nome}|${r}`;
+    const idx = ordem.indexOf(rarity);
+    if (idx < 0) return { possivel: false, custoRLT: 0, estoqueDepois: est, passos: [], faltaQtd: precisa, faltaRarity: rarity, rstUsado: 0 };
+
+    // Primeiro gasta o que já existe no próprio tier alvo.
+    const temNoAlvo = est[chave(rarity)] || 0;
+    const usarDoAlvo = Math.min(temNoAlvo, precisa);
+    est[chave(rarity)] = temNoAlvo - usarDoAlvo;
+    let produzir = precisa - usarDoAlvo;
+    if (produzir <= 0) return { possivel: true, custoRLT: 0, estoqueDepois: est, passos: [], faltaQtd: 0, rstUsado: 0 };
+
+    const passos = [];
+    let custoRLT = 0;
+    let rstUsado = 0;
+    let rstSobra = rstDisponivel || 0;
+    for (let i = idx; i >= 1; i--) {
+      const abaixo = ordem[i - 1];
+      const regra = taxas[abaixo.toLowerCase()];
+      if (!regra) break;
+      const precisaAbaixo = produzir * regra.need;
+      custoRLT += produzir * regra.cost;
+      // unshift: a lista final fica na ordem de execução (Common→Uncommon primeiro).
+      passos.unshift({ de: abaixo, para: ordem[i], fusoes: produzir, custo: produzir * regra.cost });
+      let temAbaixo = est[chave(abaixo)] || 0;
+
+      // No tier mais baixo (Common), sem estoque suficiente, compra caixa antes de desistir.
+      // Conta pelo MÍNIMO da caixa (250), então o RST estimado nunca fica de menos.
+      if (abaixo === 'Common' && temAbaixo < precisaAbaixo && rstSobra > 0) {
+        const faltaCommon = precisaAbaixo - temAbaixo;
+        const caixas = Math.ceil(faltaCommon / this._CAIXA_TIPO.pecasMinimo);
+        const custoCaixas = caixas * this._CAIXA_TIPO.rst;
+        if (custoCaixas <= rstSobra) {
+          rstUsado += custoCaixas;
+          rstSobra -= custoCaixas;
+          temAbaixo += caixas * this._CAIXA_TIPO.pecasMinimo;
+        }
+      }
+
+      if (temAbaixo >= precisaAbaixo) {
+        est[chave(abaixo)] = temAbaixo - precisaAbaixo;
+        return { possivel: true, custoRLT, estoqueDepois: est, passos, faltaQtd: 0, rstUsado };
+      }
+      est[chave(abaixo)] = 0;
+      produzir = precisaAbaixo - temAbaixo;
+    }
+    // Esgotou até o Common (mesmo com RST) e ainda falta matéria-prima.
+    return { possivel: false, custoRLT, estoqueDepois: est, passos, faltaQtd: produzir, faltaRarity: ordem[0], rstUsado };
+  },
+
+  // Custo de TODAS as peças de um merge, consumindo de um estoque compartilhado. Consome
+  // também as peças que já estão ✅: se o merge A gasta 66 mil Common Wire, esse estoque não
+  // pode ser contado de novo pelo merge B do mesmo plano. `rstDisponivel` é o saldo de RST
+  // que ainda sobra pro PLANO inteiro nesse ponto (as peças anteriores do mesmo merge já
+  // descontam localmente antes da próxima).
+  _custoDePecasDoMerge: function(pecasNecessarias, estoque, precos, rstDisponivel) {
+    let est = { ...estoque };
+    let rstRestante = rstDisponivel || 0;
+    let custoRLT = 0;
+    let custoCompra = 0;
+    let rstGastoTotal = 0;
+    const faltas = [];
+    const detalhes = [];
+    const compras = [];
+    pecasNecessarias.forEach(p => {
+      const r = this._cascataDePeca(p.nome, p.rarity, p.precisa, est, rstRestante);
+      // O RST só é descontado se a fusão for MESMO o caminho escolhido (ver abaixo). Descontar
+      // aqui, antes de decidir, vazava saldo: o plano marcava RST como gasto e depois comprava
+      // a peça pronta, deixando menos RST pra quem viesse depois sem receber nada em troca.
+
+      const precoUnit = this._precoDaPeca(precos, p.nome, p.rarity);
+      const custoComprarTudo = precoUnit != null ? precoUnit * p.precisa : null;
+      const usouRST = (r.rstUsado || 0) > 0;
+
+      // Escolhe o caminho MAIS BARATO EM RLT (decisão do usuário). Quando existe alternativa
+      // viável pelo outro caminho, ela vai junto em `alternativa` pra ser exibida lado a lado
+      // no card, sem mudar o total do plano: quem decide caso a caso é o usuário na hora de
+      // executar.
+      const fundirViavel = r.possivel;
+      const podeComprar = custoComprarTudo != null;
+      const usaFundir = fundirViavel && (!podeComprar || r.custoRLT <= custoComprarTudo);
+
+      if (usaFundir) {
+        est = r.estoqueDepois;
+        custoRLT += r.custoRLT;
+        rstGastoTotal += r.rstUsado || 0;
+        rstRestante -= (r.rstUsado || 0); // só agora o RST sai do saldo, porque foi usado
+        if (r.passos.length || usouRST) {
+          detalhes.push({
+            nome: p.nome, rarity: p.rarity, precisa: p.precisa,
+            passos: r.passos, custo: r.custoRLT, rstUsado: r.rstUsado || 0,
+            // alternativa descartada: comprar pronta teria custado isso
+            alternativa: podeComprar ? { via: 'comprar', rlt: custoComprarTudo, rst: 0 } : null,
+          });
+        }
+        return;
+      }
+      if (podeComprar) {
+        custoCompra += custoComprarTudo;
+        compras.push({
+          nome: p.nome, rarity: p.rarity, qtd: p.precisa, precoUnit, total: custoComprarTudo,
+          motivo: fundirViavel ? 'mais barato' : 'fundir não fecha',
+          // alternativa descartada: fundir teria custado isso (só faz sentido se era viável)
+          alternativa: fundirViavel ? { via: 'fundir', rlt: r.custoRLT, rst: r.rstUsado || 0 } : null,
+        });
+        return; // não consome estoque nem RST: a peça vem do mercado
+      }
+      // Nem RST fechou, nem tem preço de mercado pra recorrer: falta mesmo.
+      est = r.estoqueDepois;
+      custoRLT += r.custoRLT;
+      rstGastoTotal += r.rstUsado || 0;
+      rstRestante -= (r.rstUsado || 0);
+      faltas.push({ nome: p.nome, rarity: r.faltaRarity, qtd: r.faltaQtd });
+    });
+    // Consumo real de matéria-prima: a diferença entre o estoque que entrou e o que sobrou.
+    // É o número que responde "quantas peças eu preciso ter pra fazer isso do começo ao fim",
+    // que não dava pra ver antes: o card mostrava só a receita do 1º passo (ex: 70 Common
+    // Wire) enquanto a cadeia inteira consumia 4.270, escondido dentro das linhas de fusão.
+    const consumo = {};
+    Object.keys(estoque).forEach(k => {
+      const gasto = (estoque[k] || 0) - (est[k] || 0);
+      if (gasto > 0) consumo[k] = gasto;
+    });
+
+    return {
+      possivel: faltas.length === 0,
+      custoRLT: custoRLT + custoCompra,
+      custoFusao: custoRLT, custoCompra, rstGasto: rstGastoTotal,
+      estoqueDepois: est, faltas, detalhes, compras, consumo,
+    };
+  },
+
+  // Preço unitário de uma peça no marketplace, se o usuário informou. `precos` vem no formato
+  // da aba vs Market: { common: { fan, wire, hashboard }, ... }, chaves minúsculas.
+  _precoDaPeca: function(precos, nome, rarity) {
+    // A RollerCoin tirou peça Common do marketplace, não dá mais pra comprar pronta.
+    // Ignora qualquer preço salvo (pode ser resquício de antes da mudança) e força fundir/RST.
+    if (String(rarity).toLowerCase() === 'common') return null;
+    if (!precos) return null;
+    const faixa = precos[String(rarity).toLowerCase()];
+    if (!faixa) return null;
+    const v = faixa[String(nome).toLowerCase()];
+    return (typeof v === 'number' && v > 0) ? v : null;
+  },
+
+  // Lista de peças que um candidato do plano consome. No modo "próximo passo" são os
+  // ingredientes do merge em si; no modo "cadeia" percorre todos os passos até o tier alvo,
+  // multiplicando a receita de cada tier pela quantidade de fusões daquele passo, é isso que
+  // fecha o buraco do "os demais passos não são conferidos" da Etapa 1.
+  _pecasDoCandidato: function(c) {
+    // Agrega por nome+raridade: uma cadeia pode pedir Common Fan em dois passos diferentes, e
+    // tratar como duas exigências separadas duplicaria a linha na tela e faria duas cascatas
+    // onde deveria ter uma só pelo total.
+    const acc = new Map();
+    const somar = (nome, rarity, precisa) => {
+      const k = `${nome}|${rarity}`;
+      acc.set(k, (acc.get(k) || 0) + precisa);
+    };
+    if (c.modo === 'cadeia' && c.entry.alcance && c.entry.alcance.passos) {
+      c.entry.alcance.passos.forEach(p => {
+        (p.pecas || []).forEach(pc => somar(pc.nome, pc.rarity, pc.count * p.fusoes));
+      });
+    } else {
+      (c.entry.info.ingredientes || []).forEach(i => {
+        if (i.tipo === 'parte') somar(i.nome, i.rarity, i.precisa);
+      });
+    }
+    return Array.from(acc.entries()).map(([k, precisa]) => {
+      const [nome, rarity] = k.split('|');
+      return { nome, rarity, precisa };
+    });
+  },
+
+  // RST serve pra uma coisa só neste plano: comprar caixa pra obter peça Common que falta.
+  //
+  // Usamos a **Parts Case** (100 RST) e contamos sempre o **mínimo** da tabela de sorteio
+  // (250 peças), a pedido do usuário: como a quantidade é sorteada, planejar pelo piso garante
+  // que o RST estimado é suficiente, nunca de menos.
+  //
+  // A Mega Parts Case (500 RST, 2 itens por caixa, mínimo 600 cada, tipo sorteado entre os 3)
+  // fica de fora de propósito: pelo mesmo critério do mínimo, ela rende 1.200 peças mas só
+  // ~1/3 é do tipo que você precisa (400 úteis), o que dá 1,25 RST por peça útil contra 0,40
+  // da Parts Case. Como a Parts Case deixa você escolher o tipo, ela ganha sempre nesse
+  // critério, e usar só uma caixa mantém a funcionalidade simples de entender.
+  _CAIXA_TIPO: { rst: 100, pecasMinimo: 250 },
+
+  // Quanto de RST as faltas custariam, via Parts Case do tipo que falta.
+  _custoRSTdasFaltas: function(faltas) {
+    const porTipo = {};
+    faltas.forEach(f => {
+      if (f.rarity !== 'Common') return; // caixa só entrega Common
+      porTipo[f.nome] = (porTipo[f.nome] || 0) + f.qtd;
+    });
+    const tipos = Object.keys(porTipo);
+    const totalCommon = tipos.reduce((s, t) => s + porTipo[t], 0);
+    if (totalCommon <= 0) return { caixas: 0, rst: 0, totalCommon: 0, porTipo };
+
+    const caixas = tipos.reduce((s, t) => s + Math.ceil(porTipo[t] / this._CAIXA_TIPO.pecasMinimo), 0);
+    return { caixas, rst: caixas * this._CAIXA_TIPO.rst, totalCommon, porTipo };
+  },
+
+  // Preço de mercado só é usado quando o usuário realmente colou dados do marketplace (aba
+  // Parts vs Market grava o timestamp). Sem isso, comparar "fundir x comprar pronto" seria
+  // recomendar compra com preço chutado, então o plano simplesmente não compara.
+  _precosDeMercado: function() {
+    try {
+      const salvos = localStorage.getItem('rollercoin_market_prices');
+      const quando = localStorage.getItem('rollercoin_prices_update');
+      if (!salvos || !quando) return null;
+      return { precos: JSON.parse(salvos), atualizadoEm: quando };
+    } catch (e) {
+      return null;
+    }
+  },
+
+  // Etapa 1 do planejador por orçamento: escolhe, pra cada merge pronto, entre fazer só o
+  // próximo passo ou ir pela cadeia completa (até onde as cópias que você já tem permitem),
+  // o que for melhor impacto/RLT, depois enche o orçamento em ordem de eficiência (guloso:
+  // pula o que não cabe e tenta o próximo, não para no primeiro que estourar).
+  // Garante que ter RST nunca piore o plano. O motivo: quando o RST viabiliza uma fusão, essa
+  // fusão CONSOME estoque de peça Common compartilhado, e merges seguintes chegam com menos
+  // estoque, tendo que comprar peça cara. Num caso real, 11.000 RST derrubavam o plano de 30
+  // merges (+256 Eh/s) para 25 (+188 Eh/s). Como o guloso decide peça a peça sem enxergar esse
+  // efeito adiante, a saída barata e robusta é rodar as duas hipóteses e ficar com a melhor.
+  _gerarPlanoOrcamento: function(prontos, budgetRLT, userData, budgetRST) {
+    const comRST = this._gerarPlanoInterno(prontos, budgetRLT, userData, budgetRST);
+    if (!budgetRST || budgetRST <= 0) return comRST;
+    const semRST = this._gerarPlanoInterno(prontos, budgetRLT, userData, 0);
+    // Critério: maior ganho de poder. Empatou, fica com o que gasta menos RST.
+    if (semRST.impactoTotal > comRST.impactoTotal) return semRST;
+    if (semRST.impactoTotal === comRST.impactoTotal && semRST.rstTotal < comRST.rstTotal) return semRST;
+    return comRST;
+  },
+
+  _gerarPlanoInterno: function(prontos, budgetRLT, userData, budgetRST) {
+    const budgetMicro = budgetRLT * 1e6;
+    const tetoRST = (budgetRST != null && budgetRST > 0) ? budgetRST : 0;
+    // Só considera merges 🟢 Ótimo ou 🟡 Ok (_tier 1/2), não faz sentido o plano sugerir
+    // gastar RLT num merge "🔴 Baixo valor" só porque ele cabe no orçamento; esses ficam de
+    // fora mesmo que sobre dinheiro.
+    const relevantes = prontos.filter(entry => !entry._tier || entry._tier <= 2);
+
+    // Piso de uso real: um merge cujo impacto real fica abaixo do que sua pior peça já
+    // instalada contribui hoje não compete de verdade por espaço, fica encalhado no banco.
+    // Comparação é impacto contra impacto (não poder bruto), porque peças Legendary/Epic de
+    // bônus % alto podem ter poder bruto baixo mas impacto real relevante.
+    const pisoImpactoHz = this._impactoMinimoInstalado(userData);
+
+    const candidatos = [];
+    relevantes.forEach(entry => {
+      const custoProximo = entry.info.nextTier.price || 0;
+      const impactoProximo = entry.impactoReal != null ? entry.impactoReal : entry.gain;
+      if (impactoProximo > 0 && (pisoImpactoHz == null || impactoProximo >= pisoImpactoHz)) {
+        candidatos.push({ entry, modo: 'proximo', custo: custoProximo, impacto: impactoProximo });
+      }
+      if (entry.alcance && entry.alcance.impactoFinal > 0 && (pisoImpactoHz == null || entry.alcance.impactoFinal >= pisoImpactoHz)) {
+        candidatos.push({ entry, modo: 'cadeia', custo: entry.alcance.totalCost, impacto: entry.alcance.impactoFinal, label: entry.alcance.label });
+      }
+    });
+
+    // Por miner, mantém só a melhor das duas opções (próximo passo OU cadeia completa) ,
+    // não faz sentido oferecer as duas pra mesma miner dentro do mesmo plano.
+    const porMiner = new Map();
+    candidatos.forEach(c => {
+      const key = c.entry.m.name.toLowerCase() + '|' + c.entry.m.level;
+      const eff = c.custo > 0 ? c.impacto / c.custo : Infinity;
+      const atual = porMiner.get(key);
+      if (!atual || eff > atual.eff) porMiner.set(key, { ...c, eff });
+    });
+
+    const lista = Array.from(porMiner.values()).sort((a, b) => b.eff - a.eff);
+
+    // ===== Etapa 2: custo real = taxa da miner + taxa de fusão das PEÇAS =====
+    // O estoque de peças é um pool ÚNICO consumido na ordem de eficiência: cada merge que
+    // entra no plano gasta de verdade, e o próximo já encontra o estoque menor. Sem isso, dois
+    // merges que precisam da mesma peça apareceriam ambos como viáveis quando na prática só um
+    // seria. `_custoDePecasDoMerge` devolve o estoque pós-consumo, mas só confirmamos (commit)
+    // quando o merge realmente entra no plano.
+    let estoquePecas = { ...((typeof UI_Inventario !== 'undefined' && UI_Inventario.partsCached) || {}) };
+    const temEstoqueDePecas = Object.keys(estoquePecas).length > 0;
+    // Preço de mercado só entra se o usuário informou de fato (decisão: não recomendar compra
+    // com preço chutado). Sem isso, o plano só considera produzir a peça fundindo.
+    const mercado = this._precosDeMercado();
+    const precos = mercado ? mercado.precos : null;
+
+    // RST é um pool compartilhado igual ao estoque de peças: só é confirmado (subtraído de
+    // verdade) quando o merge realmente entra no plano, senão um candidato que não coube no
+    // orçamento de RLT deixaria RST "gasto" por engano numa simulação que não aconteceu.
+    let rstDisponivel = tetoRST;
+
+    let custoTotal = 0, impactoTotal = 0, custoPecasTotal = 0, rstTotal = 0;
+    const escolhidos = [];
+    const bloqueados = [];
+    for (const c of lista) {
+      const pecas = this._pecasDoCandidato(c);
+      const analise = (temEstoqueDePecas || precos || rstDisponivel > 0) && pecas.length
+        ? this._custoDePecasDoMerge(pecas, estoquePecas, precos, rstDisponivel)
+        : { possivel: true, custoRLT: 0, custoFusao: 0, custoCompra: 0, rstGasto: 0, estoqueDepois: estoquePecas, faltas: [], detalhes: [], compras: [] };
+
+      if (!analise.possivel) {
+        // Mesmo usando todo o RST disponível a cascata não fechou: mostra quanto RST a MAIS
+        // seria preciso, só como informação (não é o que decide entrar ou não no plano).
+        const viaRST = this._custoRSTdasFaltas(analise.faltas);
+        bloqueados.push({ ...c, analisePecas: analise, viaRST, motivo: 'pecas' });
+        continue;
+      }
+
+      const custoPecasMicro = analise.custoRLT * 1e6;
+      const custoRealMicro = c.custo + custoPecasMicro;
+      if (custoTotal + custoRealMicro > budgetMicro) continue;
+
+      custoTotal += custoRealMicro;
+      custoPecasTotal += custoPecasMicro;
+      impactoTotal += c.impacto;
+      rstTotal += analise.rstGasto || 0;
+      rstDisponivel -= analise.rstGasto || 0; // commit do RST gasto por esse merge
+      estoquePecas = analise.estoqueDepois;   // commit do consumo de peças
+      escolhidos.push({ ...c, custoPecasMicro, custoRealMicro, analisePecas: analise, rstNecessario: analise.rstGasto || 0 });
+    }
+
+    const compraTotal = escolhidos.reduce((s, c) => s + ((c.analisePecas?.custoCompra || 0) * 1e6), 0);
+    return {
+      escolhidos, custoTotal, impactoTotal, custoPecasTotal, rstTotal, bloqueados,
+      temEstoqueDePecas, compraTotal,
+      mercado,
+      pisoAplicado: pisoImpactoHz != null, pisoImpactoHz,
+    };
+  },
+
+
+  // Campos de orçamento (RLT + RST). Extraído pra ficar no topo da aba, no bloco "1. Quanto
+  // você tem", em vez de espremido depois dos controles da lista de exploração.
+  _budgetControlsHtml: function() {
+    let html = '<div class="merge-budget-controls">';
+    html += '<span style="font-size:12px;opacity:.75;">💰 RLT</span>';
+    html += `<input type="number" id="merge-budget-input" min="0" step="0.01" value="${this.budgetRLT != null ? this.budgetRLT : ''}" placeholder="ex: 96" class="merge-budget-input" onkeydown="if(event.key==='Enter')UI_MinerMerge.setBudget(this.value)">`;
+    html += '<span style="font-size:12px;opacity:.75;margin-left:10px;">🪙 RST</span>';
+    html += `<input type="number" id="merge-budget-rst-input" min="0" step="1" value="${this.budgetRST != null ? this.budgetRST : ''}" placeholder="opcional" class="merge-budget-input" onkeydown="if(event.key==='Enter')UI_MinerMerge.setBudget(document.getElementById('merge-budget-input').value)">`;
+    html += `<button class="merge-btn-gerar" onclick="UI_MinerMerge.setBudget(document.getElementById('merge-budget-input').value)">Gerar plano</button>`;
+    if (this.budgetRLT != null) html += `<button class="merge-sort-btn" onclick="UI_MinerMerge.clearBudget()">✕ Limpar</button>`;
+    html += '</div>';
+    return html;
+  },
+
+  // Card de um candidato do plano: imagem, custo real (miner + peças), impacto, ingredientes
+  // e de onde sai cada peça que falta (fundir ou comprar pronta).
+  _planoItemHtml: function(c, userData) {
+    let html = '';
+    const modoLabel = c.modo === 'cadeia' ? `🔗 até ${c.label}` : '➡️ próximo passo';
+    const ingredientes = c.entry.info.ingredientes || [];
+    const imgUrl = c.entry.m.catalogData?.imageUrl || c.entry.info.nextTier?.imageUrl || '';
+    const imgHtml = imgUrl ? `<img src="${imgUrl}" alt="${c.entry.m.name}" class="merge-row-img">` : '<span class="merge-budget-item-img-placeholder"></span>';
+    html += '<details class="merge-budget-item">';
+    html += '<summary class="merge-budget-item-summary">';
+    html += '<span class="merge-row-caret">▸</span>';
+    html += imgHtml;
+    html += `<span class="merge-budget-item-name">${c.entry.m.name} <span class="dim">${c.entry.m.level}</span></span>`;
+    html += `<span class="dim">${modoLabel}</span>`;
+    const custoRealRlt = (c.custoRealMicro != null ? c.custoRealMicro : c.custo) / 1e6;
+    const custoPecasItemRlt = (c.custoPecasMicro || 0) / 1e6;
+    // Mostra o custo REAL (miner + peças). Quando peça pesa, abre a conta ao lado pra
+    // não parecer que a taxa da miner encareceu.
+    html += `<span>💰 ${custoRealRlt.toFixed(2)} RLT${custoPecasItemRlt > 0 ? ` <span class="dim">(${(c.custo / 1e6).toFixed(2)} + ${custoPecasItemRlt.toFixed(2)} peças)</span>` : ''}</span>`;
+    html += `<span style="color:#28a745;">${Utils.formatPowerSigned(c.impacto)}</span>`;
+    html += '</summary>';
+    // Chips de "quais níveis você já tem". No modo cadeia isso não aparecia em lugar
+    // nenhum, só os ingredientes do 1º passo, então não dava pra ver de relance quanto
+    // já está pronto até o alvo (ex: já tem Rare instalado, só falta o resto).
+    html += `<div style="margin:2px 0 6px 0;">${this._levelsChipsHtml(c.entry, userData)}</div>`;
+
+    // Matéria-prima total do caminho inteiro, somando TODOS os passos. Vem antes de
+    // tudo porque é a pergunta mais direta ("quanto eu preciso ter pra fazer isso?") e
+    // era justamente a que não dava pra responder olhando o card.
+    const consumo = c.analisePecas?.consumo || {};
+    const chavesConsumo = Object.keys(consumo);
+    if (chavesConsumo.length) {
+      const estoqueAtual = (typeof UI_Inventario !== 'undefined' && UI_Inventario.partsCached) || {};
+      const eq = this._equivalenciaEmCommon();
+      // Total em COMMON equivalente, não contagem simples de peças: uma peça Epic vale
+      // 10.000 Common, então somar "1 Epic + 520 Common = 521 peças" daria uma ideia
+      // completamente errada do esforço real.
+      let totalEmCommon = 0;
+      const itens = chavesConsumo.sort((a, b) => (consumo[b] * (eq[b.split('|')[1]] || 1)) - (consumo[a] * (eq[a.split('|')[1]] || 1))).map(k => {
+        const [nome, rar] = k.split('|');
+        const tem = estoqueAtual[k] || 0;
+        const precisa = consumo[k];
+        const emCommon = precisa * (eq[rar] || 1);
+        totalEmCommon += emCommon;
+        const ok = tem >= precisa;
+        const equivTxt = rar !== 'Common' ? ` <span class="dim">= ${emCommon.toLocaleString('pt-BR')} Common</span>` : '';
+        return `<span class="merge-materia-item ${ok ? 'ok' : 'nok'}">${ok ? '✅' : '⚠️'} ${precisa.toLocaleString('pt-BR')}× ${rar} ${nome}${equivTxt} <span class="dim">(tem ${tem.toLocaleString('pt-BR')})</span></span>`;
+      }).join('');
+      const alvoTxt = c.modo === 'cadeia' ? ` até ${c.label}` : '';
+      html += `<div class="merge-card-section-label">📦 Matéria-prima${alvoTxt}: <strong style="font-size:13px; text-transform:none;">${totalEmCommon.toLocaleString('pt-BR')} peças Common</strong> no total</div>`;
+      html += `<div class="merge-materia-lista">${itens}</div>`;
+    }
+
+    if (ingredientes.length) {
+      if (c.modo === 'cadeia') {
+        html += `<div class="merge-budget-item-note">🔗 Ingredientes só do 1º passo (o total acima já inclui todos os passos até ${c.label}):</div>`;
+      }
+      html += '<div class="merge-card-ingredients">';
+      ingredientes.forEach(ing => {
+        const label = ing.tipo === 'miner'
+          ? `${ing.precisa}× ${ing.nome} (${ing.rarity})`
+          : `${ing.precisa}× ${ing.rarity} ${ing.nome}`;
+        const pct = Math.min(100, ing.precisa > 0 ? Math.round((ing.tem / ing.precisa) * 100) : 0);
+        html += `<div class="merge-ingredient-chip ${ing.ok ? 'ok' : 'nok'}">`;
+        html += `<span class="ing-label">${ing.ok ? '✅' : '❌'} ${label}</span>`;
+        html += `<div class="ing-progress-wrap"><div class="ing-progress-fill" style="width:${pct}%"></div></div>`;
+        html += `<span class="ing-fraction">${ing.tem}/${ing.precisa}</span>`;
+        html += `</div>`;
+      });
+      html += '</div>';
+    }
+    // Cadeia completa: mostra quanto custa CADA fusão no caminho, não só o total ,
+    // senão "8,82 RLT até Legendary" esconde se é 1 fusão cara ou 4 fusões baratas.
+    if (c.modo === 'cadeia' && c.entry.alcance?.passos?.length) {
+      html += '<div class="merge-card-section-label" style="margin-top:8px;">🔗 Custo por fusão até ' + c.label + '</div>';
+      html += '<div class="merge-budget-passos">';
+      c.entry.alcance.passos.forEach(p => {
+        html += `<div class="merge-budget-passo">`;
+        html += `<span>${p.deLabel} → <strong>${p.paraLabel}</strong></span>`;
+        html += `<span class="dim">${p.fusoes}× fusão${p.fusoes !== 1 ? 'ões' : ''}</span>`;
+        html += `<span>💰 ${(p.custo / 1e6).toFixed(2)} RLT</span>`;
+        html += `</div>`;
+      });
+      html += '</div>';
+    }
+    // Etapa 2: de onde sai cada peça que esse merge consome, e a que custo.
+    const detalhesPecas = c.analisePecas?.detalhes || [];
+    // Mostra a alternativa descartada ao lado da escolhida, pra você poder decidir
+    // diferente na hora de executar (o plano escolhe o mais barato em RLT, mas às vezes
+    // vale trocar RLT por RST, ou vice-versa, conforme o que você tem sobrando).
+    const altTxt = (alt) => {
+      if (!alt) return '';
+      const rstTxt = alt.rst > 0 ? ` + ${alt.rst} RST` : '';
+      const label = alt.via === 'comprar' ? 'ou comprar pronta' : 'ou fundir';
+      return `<span class="merge-budget-alt">${label}: ${alt.rlt.toFixed(2)} RLT${rstTxt}</span>`;
+    };
+
+    if (detalhesPecas.length) {
+      html += '<div class="merge-card-section-label" style="margin-top:8px;">🔩 Produzindo por fusão</div>';
+      // Um bloco POR PEÇA: cabeçalho com o que se quer produzir, custo e alternativa, e
+      // os passos indentados abaixo. Numa lista corrida, os passos de peças diferentes
+      // se misturavam e só dava pra saber a qual pertenciam lendo o "pra Nx" no meio.
+      detalhesPecas.forEach(d => {
+        const rstTxt = d.rstUsado > 0 ? ` <strong>+ ${d.rstUsado} RST</strong> (${Math.round(d.rstUsado / this._CAIXA_TIPO.rst)}× Parts Case)` : '';
+        html += '<div class="merge-peca-grupo">';
+        html += '<div class="merge-peca-cabecalho">';
+        html += `<span><strong>${d.precisa}× ${d.rarity} ${d.nome}</strong></span>`;
+        html += `<span>💰 ${d.custo.toFixed(2)} RLT${rstTxt}</span>`;
+        html += altTxt(d.alternativa) || '<span></span>';
+        html += '</div>';
+        d.passos.forEach(p => {
+          html += `<div class="merge-peca-passo">`;
+          html += `<span>↳ ${p.fusoes}× fusão ${p.de} → ${p.para}</span>`;
+          html += `<span>${p.custo.toFixed(2)} RLT</span>`;
+          html += `</div>`;
+        });
+        html += '</div>';
+      });
+    }
+    const comprasItem = c.analisePecas?.compras || [];
+    if (comprasItem.length) {
+      html += '<div class="merge-card-section-label" style="margin-top:8px;">💲 Comprando pronta no mercado</div>';
+      comprasItem.forEach(cp => {
+        html += '<div class="merge-peca-grupo">';
+        html += '<div class="merge-peca-cabecalho">';
+        html += `<span><strong>${cp.qtd.toLocaleString('pt-BR')}× ${cp.rarity} ${cp.nome}</strong></span>`;
+        html += `<span>💰 ${cp.total.toFixed(2)} RLT</span>`;
+        html += altTxt(cp.alternativa) || '<span></span>';
+        html += '</div>';
+        html += `<div class="merge-peca-passo"><span>↳ ${cp.motivo}, a ${cp.precoUnit} RLT cada</span><span></span></div>`;
+        html += '</div>';
+      });
+    }
+    html += '</details>';
+    return html;
+  },
+
+  // Bloco "2. Seu plano". Recebe os candidatos e devolve o HTML pronto, pra o render principal
+  // poder posicioná-lo logo abaixo do orçamento.
+  _planoHtml: function(prontos, userData) {
+    let html = '';
+    if (this.budgetRLT != null) {
+      const plano = this._gerarPlanoOrcamento(prontos, this.budgetRLT, userData, this.budgetRST);
+      const custoTotalRlt = plano.custoTotal / 1e6;
+      const custoPecasRlt = plano.custoPecasTotal / 1e6;
+      html += '<div class="merge-budget-plan">';
+      html += `<h4 class="merge-budget-title">✅ Seu plano com ${this.budgetRLT.toFixed(2)} RLT${this.budgetRST ? ' + ' + this.budgetRST + ' RST' : ''}</h4>`;
+      if (!plano.temEstoqueDePecas) {
+        html += '<p class="merge-budget-summary dim">🔩 Você não colou o <strong>estoque de peças</strong> na aba Inventário, então o custo abaixo é só a taxa de fusão das miners, não inclui produzir as peças que faltam. Cole Storage › Parts pra ter o custo real.</p>';
+      }
+      if (plano.escolhidos.length === 0) {
+        html += '<p style="opacity:.6; font-size:13px;">Nenhum merge pronto cabe nesse orçamento.</p>';
+      } else {
+        html += `<p class="merge-budget-summary">💸 <strong>${custoTotalRlt.toFixed(2)} RLT</strong> gastos de ${this.budgetRLT.toFixed(2)} (sobram ${(this.budgetRLT - custoTotalRlt).toFixed(2)}) · 🏠 ganho total: <strong style="color:#28a745;">${Utils.formatPowerSigned(plano.impactoTotal)}</strong> · ${plano.escolhidos.length} merges</p>`;
+        if (custoPecasRlt > 0) {
+          const compraRlt = (plano.compraTotal || 0) / 1e6;
+          const fusaoRlt = custoPecasRlt - compraRlt;
+          let det = `🔩 Desse total, <strong>${custoPecasRlt.toFixed(2)} RLT</strong> são das <strong>peças</strong> (o resto é a taxa das miners)`;
+          if (compraRlt > 0) det += `: ${fusaoRlt.toFixed(2)} fundindo + <strong>${compraRlt.toFixed(2)} comprando pronta</strong> no marketplace, escolhendo o mais barato peça a peça`;
+          det += '. O estoque é consumido em conjunto: cada merge já desconta o que os anteriores gastaram.';
+          html += `<p class="merge-budget-summary dim">${det}</p>`;
+        }
+        if (!plano.mercado) {
+          html += '<p class="merge-budget-summary dim">💲 Sem <strong>preços do marketplace</strong> informados, o plano só considera <em>produzir</em> a peça fundindo, não compara com comprar pronta. Cole os preços na aba Inventário pra habilitar a comparação.</p>';
+        } else {
+          html += `<p class="merge-budget-summary dim">💲 Comparando com preços do marketplace de ${new Date(plano.mercado.atualizadoEm).toLocaleString('pt-BR')}.</p>`;
+        }
+        if (plano.rstTotal > 0) {
+          const caixasTotais = Math.round(plano.rstTotal / this._CAIXA_TIPO.rst);
+          html += `<p class="merge-budget-summary dim">🪙 <strong>${plano.rstTotal} RST</strong> (${caixasTotais}× Parts Case) pra completar peça Common que faltava. O RST só entra quando o estoque de peça acaba no meio da fusão: se suas peças já cobrem o merge, ele não é usado, então sobrar RST é normal.</p>`;
+        }
+        if (plano.bloqueados.length > 0) {
+          html += `<p class="merge-budget-summary dim">🚫 <strong>${plano.bloqueados.length} merges</strong> ficaram de fora por falta de matéria-prima, não por falta de RLT. Veja a lista abaixo do plano.</p>`;
+        }
+        if (plano.pisoAplicado) {
+          html += `<p class="merge-budget-summary dim">🚧 Merges com impacto real abaixo de ${Utils.formatPowerSigned(plano.pisoImpactoHz)} foram excluídos: é o que a sua miner instalada mais fraca contribui hoje, ignorando as de <strong>lastro</strong> (aquelas que você põe só pra ocupar célula sem somar poder). Abaixo disso o merge não compete de verdade por espaço na sala.</p>`;
+        }
+
+        // Ordenação só de exibição, não muda QUAIS merges entraram no plano (isso já foi
+        // decidido pelo guloso por eficiência), só a ordem que aparecem na lista.
+        const budgetSortOptions = [
+          { key: 'eficiencia', label: '⚡ Custo-benefício' },
+          { key: 'custo',      label: '💰 Maior custo' },
+          { key: 'poder',      label: '🏠 Maior poder' },
+        ];
+        html += '<div class="merge-budget-sort">';
+        html += '<span class="dim" style="font-size:11px;margin-right:6px;">Ordenar por:</span>';
+        budgetSortOptions.forEach(({ key, label }) => {
+          const active = this.budgetSortMode === key;
+          html += `<button class="merge-sort-btn mini${active ? ' active' : ''}" onclick="UI_MinerMerge.setBudgetSort('${key}')">${label}</button>`;
+        });
+        html += '</div>';
+
+        const escolhidosOrdenados = plano.escolhidos.slice().sort((a, b) => {
+          if (this.budgetSortMode === 'custo') return b.custo - a.custo;
+          if (this.budgetSortMode === 'poder') return b.impacto - a.impacto;
+          return b.eff - a.eff;
+        });
+
+        html += '<div class="merge-budget-list">';
+        escolhidosOrdenados.forEach(c => { html += this._planoItemHtml(c, userData); });
+        html += '</div>';
+
+        // Bloqueados por matéria-prima: não é falta de RLT, é falta de peça de base. Fica
+        // separado do plano pra deixar claro que RLT sozinho não resolve esses.
+        if (plano.bloqueados.length) {
+          html += '<div class="merge-card-section-label" style="margin-top:14px;">🚫 Fora do plano por falta de matéria-prima</div>';
+          html += '<div class="merge-budget-list">';
+          plano.bloqueados.slice(0, 12).forEach(b => {
+            const falta = (b.analisePecas?.faltas || [])
+              .map(f => `${f.qtd.toLocaleString('pt-BR')}× ${f.rarity} ${f.nome}`)
+              .join(', ');
+            html += '<div class="merge-budget-item" style="padding:6px 8px;">';
+            html += `<div style="font-size:12px;"><strong>${b.entry.m.name}</strong> <span class="dim">${b.entry.m.level}</span>, faltam ${falta}`;
+            if (b.viaRST && b.viaRST.rst > 0) {
+              html += ` <span class="dim">(~${b.viaRST.caixas}× Parts Case = ${b.viaRST.rst} RST)</span>`;
+            }
+            html += '</div></div>';
+          });
+          if (plano.bloqueados.length > 12) {
+            html += `<p class="dim" style="font-size:11px;margin:4px 0 0 0;">e mais ${plano.bloqueados.length - 12}...</p>`;
+          }
+          html += '</div>';
+        }
+      }
+      html += '</div>';
+    }
+    return html;
+  },
+
+  setBudget: function(value) {
+    const n = parseFloat(String(value).replace(',', '.'));
+    this.budgetRLT = (!isNaN(n) && n > 0) ? n : null;
+    // Lê o campo de RST junto: os dois orçamentos são aplicados na mesma geração do plano.
+    const elRST = document.getElementById('merge-budget-rst-input');
+    if (elRST) {
+      const r = parseFloat(String(elRST.value).replace(',', '.'));
+      this.budgetRST = (!isNaN(r) && r > 0) ? r : null;
+    }
+    this.mostrar();
+  },
+
+  clearBudget: function() {
+    this.budgetRLT = null;
+    this.budgetRST = null;
+    this.mostrar();
+  },
+
+  setBudgetRST: function(value) {
+    const n = parseFloat(String(value).replace(',', '.'));
+    this.budgetRST = (!isNaN(n) && n > 0) ? n : null;
+    this.mostrar();
+  },
+
+  setBudgetSort: function(mode) {
+    this.budgetSortMode = mode;
+    this.mostrar();
+  },
+
   setGroup: function(key) {
+    this._explorarAberto = true; // veio de dentro do bloco de exploração, mantém aberto
     this.activeGroup = key;
     this.mostrar();
   },
 
   setMergeSort: function(mode) {
+    this._explorarAberto = true; // veio de dentro do bloco de exploração, mantém aberto
     this.mergeSortMode = mode;
     if (typeof Analytics !== 'undefined') Analytics.mergeSortUsado(mode);
     this.mostrar();
   },
 
   setQualityFilter: function(filter) {
+    this._explorarAberto = true; // veio de dentro do bloco de exploração, mantém aberto
     this.qualityFilter = filter;
     this.mostrar();
   },

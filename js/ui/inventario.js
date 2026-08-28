@@ -71,6 +71,16 @@ const UI_Inventario = {
         </div>
       </div>
 
+      <!-- Preços de mercado: opcional. Só com isso o Plano de Merges consegue comparar
+           "produzir a peça fundindo" contra "comprar a peça pronta". Grava nas mesmas chaves
+           que a aba vs Market usa, então os dois pontos de entrada ficam sincronizados. -->
+      <div style="background: var(--bg-secondary); border-radius: 8px; padding: 20px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 6px; font-weight: 600; color: var(--text-primary);">💲 Preços do marketplace (opcional):</label>
+        <small style="display:block; margin-bottom:8px; color: var(--text-secondary);">Acesse <a href="https://rollercoin.com/marketplace/buy" target="_blank" style="color:#667eea;">Marketplace › Buy › Parts</a> (marque só <strong>Parts</strong> e mude para 24 por página), copie tudo e cole aqui. Sem isso, o Plano de Merges só considera <em>produzir</em> a peça fundindo, sem comparar com comprar pronta.</small>
+        <textarea id="marketPricesText" placeholder="Cole aqui a página de Parts do marketplace..." style="min-height:90px; width:100%; padding:12px; border:2px solid var(--border-color); border-radius:6px; font-family:monospace; font-size:12px; background:var(--bg-primary); color:var(--text-primary); resize:vertical;"></textarea>
+        <div id="invPrecosStatus" style="margin-top:8px; font-size:12px;"></div>
+      </div>
+
       <div style="display: flex; gap: 10px; justify-content: center;">
         <button onclick="UI_Inventario.analisar()" style="padding: 14px 32px; font-size: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">🔍 Analisar Inventário</button>
       </div>
@@ -79,10 +89,49 @@ const UI_Inventario = {
     `;
   },
   
+  // Preços do marketplace colados aqui alimentam a MESMA fonte que a aba vs Market usa
+  // (localStorage), então dá na mesma colar aqui ou lá, mas colar aqui é o que o Plano de
+  // Merges precisa pra comparar produzir x comprar pronta, então fica junto do resto.
+  _processarPrecosDeMercado: function() {
+    const el = document.getElementById('marketPricesText');
+    const status = document.getElementById('invPrecosStatus');
+    const texto = (el?.value || '').trim();
+    if (!texto) {
+      // Sem texto novo: só informa se já existe preço salvo de antes.
+      const quando = localStorage.getItem('rollercoin_prices_update');
+      if (status) {
+        status.innerHTML = quando
+          ? `<span style="color:#28a745;">✅ Usando preços salvos de ${new Date(quando).toLocaleString('pt-BR')}.</span>`
+          : '<span style="opacity:.6;">Nenhum preço informado, o Plano de Merges não vai comparar com comprar pronta.</span>';
+      }
+      return;
+    }
+    if (typeof UI_MergeCalculator === 'undefined' || !UI_MergeCalculator.parsearPrecos) {
+      if (status) status.innerHTML = '<span style="color:#dc3545;">❌ Módulo de preços não carregou.</span>';
+      return;
+    }
+    try {
+      const existentes = UI_MergeCalculator.marketPrices || JSON.parse(localStorage.getItem('rollercoin_market_prices') || 'null');
+      const precos = UI_MergeCalculator.parsearPrecos(texto, existentes);
+      const semPreco = precos._semPreco || [];
+      delete precos._semPreco;
+      UI_MergeCalculator.marketPrices = precos;
+      localStorage.setItem('rollercoin_market_prices', JSON.stringify(precos));
+      localStorage.setItem('rollercoin_prices_update', new Date().toISOString());
+      const aviso = semPreco.length > 0
+        ? ` <span style="opacity:.7;">(sem preço pra ${semPreco.join(', ')}, pode ser que a RollerCoin não venda mais)</span>`
+        : '';
+      if (status) status.innerHTML = `<span style="color:#28a745;">✅ Preços atualizados agora (${new Date().toLocaleString('pt-BR')}).</span>${aviso}`;
+    } catch (e) {
+      if (status) status.innerHTML = `<span style="color:#dc3545;">❌ Não consegui ler os preços: ${e.message}</span>`;
+    }
+  },
+
   analisar: function() {
     const texto = document.getElementById('inventarioText').value;
     const partsTexto = document.getElementById('partsText')?.value || '';
     const resultDiv = document.getElementById('resultadoInventario');
+    this._processarPrecosDeMercado();
 
     if (!texto) {
       resultDiv.innerHTML = '<p class="error">Cole o texto primeiro!</p>';

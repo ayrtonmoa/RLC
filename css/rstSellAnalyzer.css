@@ -285,6 +285,65 @@ body.dark-mode .rst-value-card {
   border-left-color: #4CAF50;
 }
 
+/* Lista de "até onde fundir antes de vender": uma linha por raridade alvo, com a melhor
+   destacada. Grid fixo pra taxa, líquido e lucro ficarem alinhados entre as linhas. */
+.rst-rota-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rst-rota-linha {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  background: rgba(108, 117, 125, 0.08);
+}
+
+body.dark-mode .rst-rota-linha {
+  background: rgba(108, 117, 125, 0.18);
+}
+
+.rst-rota-linha.melhor {
+  background: rgba(40, 167, 69, 0.14);
+  outline: 1px solid rgba(40, 167, 69, 0.45);
+}
+
+body.dark-mode .rst-rota-linha.melhor {
+  background: rgba(40, 167, 69, 0.22);
+}
+
+.rst-rota-qtd,
+.rst-rota-taxa,
+.rst-rota-liquido {
+  font-size: 12px;
+  opacity: .75;
+  white-space: nowrap;
+}
+
+.rst-rota-lucro {
+  white-space: nowrap;
+  min-width: 92px;
+  text-align: right;
+}
+
+.rst-rota-lucro.pos { color: #28a745; }
+.rst-rota-lucro.neg { color: #dc3545; }
+
+body.dark-mode .rst-rota-lucro.pos { color: #6fd68a; }
+body.dark-mode .rst-rota-lucro.neg { color: #ff8a95; }
+
+@media (max-width: 640px) {
+  .rst-rota-linha {
+    grid-template-columns: 1fr auto;
+    row-gap: 4px;
+  }
+}
+
 .rst-value-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
