@@ -4,6 +4,15 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '01 Set 2026', time: '21:53', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Farm Calculator: o tempo de bloco do DOGE estava bem errado, e o app trocou pra medir cada moeda no seu próprio ritmo.</strong>  Antes agrupava tudo em 3 categorias (padrão ~9:56, LTC+TRX ~10:02, USDT ~9:37), como se a maioria das moedas andasse junto.
+      <ul class="guia-tl-list">
+        <li><strong>DOGE: o bloco real demora entre ~27 e ~31 minutos, não ~10.</strong>  Confirmado em duas fontes diferentes (duas ligas do próprio jogo, e a API pública de um site externo), e as três leituras bateram na mesma faixa, bem longe do "padrão" que o app assumia.  Isso inflava a projeção de ganho de DOGE em até 3x, então quem calculava farm de DOGE via essa aba estava vendo um número bem otimista demais.</li>
+        <li><strong>As outras moedas variam pouco entre si</strong> (a maioria fica entre 10:00 e 10:42, uma diferença de 0% a 8% do "padrão" antigo); só o DOGE é o caso fora da curva.  RST é a que mais bate com o valor antigo (quase 0% de diferença).</li>
+        <li><strong>Trocado o agrupamento de 3 categorias por uma tabela com o ritmo de cada moeda.</strong>  Fonte principal: a API pública do <a href="https://minaryganar.com/rollercoin/calculator" target="_blank">minaryganar.com</a>, calculada a partir dos dados de rede de uma liga de referência (não é leitura manual pontual, nem uma média de várias ligas).  RLT e HMT não aparecem lá, então continuam vindo de uma amostra própria tirada do jogo, com menos confiança.</li>
+      </ul>`
+    },
+    {
       date: '27 Ago 2026', time: '22:53', tag: 'improved', label: 'MELHORIA',
       html: `<strong>A aba Parts agora monta a rota mais barata pra conseguir as peças que você quer, e a aba "vs Market" foi removida.</strong>
       <ul class="guia-tl-list">

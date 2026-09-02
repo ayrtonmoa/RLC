@@ -150,9 +150,30 @@ const UI_FarmCalculator = {
 
   // Configurações
   CONFIG: {
-    BLOCKS_PER_DAY: 144.9664, // 09:56 segundos por bloco (padrão)
-    BLOCKS_PER_DAY_LTC_TRX: 143.5215, // 10:02 segundos por bloco para LTC e TRX
-    BLOCKS_PER_DAY_USDT: 149.74, // 09:37 segundos por bloco para USDT ← ADICIONAR
+    // Blocos/dia por moeda. O agrupamento antigo (padrão / LTC+TRX / USDT) partia de que a
+    // maioria das moedas teria ritmo parecido; não tem mais: cada uma anda no seu próprio
+    // passo, e o DOGE é o caso extremo (~27-31min por bloco, não ~10min).
+    // Fonte: minaryganar.com/rollercoin/calculator, widget "Duração do bloco" (mede o tempo
+    // real entre blocos observados ao vivo, não é leitura única). Consultado em 01/09/2026.
+    // RLT e HMT não aparecem nesse widget; mantidos com 1 amostra própria do jogo (menos
+    // confiança, ajustar se destoar).
+    BLOCKS_PER_DAY_BY_COIN: {
+      RLT: 130.909,  // só 1 amostra do jogo (11:00)
+      RST: 144.966,  // 09:56
+      HMT: 116.129,  // só 1 amostra do jogo (12:24)
+      BTC: 143.046,  // 10:04
+      LTC: 144,      // 10:00
+      BNB: 134.579,  // 10:42
+      POL: 136.493,  // 10:33
+      XRP: 137.361,  // 10:29
+      DOGE: 46.628,  // 30:53, bem abaixo do valor antigo (144.9664)
+      ETH: 137.361,  // 10:29
+      TRX: 142.574,  // 10:06
+      SOL: 137.361,  // 10:29
+      ALGO: 141.408, // 10:11
+      USDT: 139.130, // 10:21
+    },
+    BLOCKS_PER_DAY: 144.9664, // fallback: usado só se a moeda não estiver na tabela acima
     GAME_COINS: ['RLT', 'RST', 'HMT'],
     NON_WITHDRAWABLE: ['ALGO', 'USDT'],
     WITHDRAW_MIN: {
@@ -409,11 +430,7 @@ const UI_FarmCalculator = {
       const blockReward = blockRewards[coin];
       const myRewardPerBlock = (contribution / 100) * blockReward;
       
-      const blocksPerDay = (coin === 'LTC' || coin === 'TRX') 
-        ? this.CONFIG.BLOCKS_PER_DAY_LTC_TRX 
-        : (coin === 'USDT')
-          ? this.CONFIG.BLOCKS_PER_DAY_USDT
-          : this.CONFIG.BLOCKS_PER_DAY;
+      const blocksPerDay = this.CONFIG.BLOCKS_PER_DAY_BY_COIN[coin] || this.CONFIG.BLOCKS_PER_DAY;
       const blocksPerWeek = blocksPerDay * 7;
       const blocksPerMonth = blocksPerDay * 30;
       
@@ -823,9 +840,11 @@ const UI_FarmCalculator = {
     
     html += '</div>';
     
-    // Info de blocos
+    // Info de blocos: cada moeda tem seu próprio ritmo agora (o DOGE sozinho é ~2,8x mais
+    // lento que o resto), então virou uma lista por moeda em vez de 3 grupos.
     html += '<div class="farm-blocks-info">';
-    html += `<span style="font-weight: 600; color: #007bff;">📊 Blocos/dia: ${this.CONFIG.BLOCKS_PER_DAY} (padrão) | LTC/TRX: ${this.CONFIG.BLOCKS_PER_DAY_LTC_TRX} | USDT: ${this.CONFIG.BLOCKS_PER_DAY_USDT}</span>`;
+    html += '<span style="font-weight: 600; color: #007bff;">📊 Blocos/dia por moeda: </span>';
+    html += `<span style="font-size: 12px;">${Object.entries(this.CONFIG.BLOCKS_PER_DAY_BY_COIN).map(([c, v]) => `${c} ${v}`).join(' · ')}</span>`;
     html += '</div>';
     
     // Campo Network Data
