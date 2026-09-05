@@ -131,6 +131,13 @@
   font-size: 13px;
   color: var(--text-primary);
   line-height: 1.5;
+  /* Item de flex (pai é .guia-tl-entry) sem isso não encolhe abaixo do conteúdo — uma
+     entrada com tabela larga (ex: block rewards por liga) então empurrava a página
+     inteira de lado no mobile em vez de rolar só a tabela dentro do próprio
+     overflow-x:auto dela. min-width:0 é o que permite o item encolher; flex:1 faz ele
+     ocupar o espaço que sobra ao lado de .guia-tl-date. */
+  min-width: 0;
+  flex: 1;
 }
 
 .guia-tl-list {

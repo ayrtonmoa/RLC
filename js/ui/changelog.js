@@ -4,6 +4,14 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '04 Set 2026', time: '22:52', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Changelog cortando o conteúdo de lado no celular.</strong>  Uma entrada com tabela larga (como a de block rewards por liga) empurrava a página inteira de lado numa tela de 375px, e como o app tem uma trava contra rolagem horizontal, o excesso simplesmente sumia da tela em vez de virar uma barra de rolagem.
+      <ul class="guia-tl-list">
+        <li><strong>Causa:</strong> o texto de cada item do histórico é filho de um container flex, e sem <code>min-width: 0</code> ele nunca encolhe abaixo do conteúdo mais largo lá dentro (a tabela). O <code>overflow-x:auto</code> que a tabela já tinha nunca chegava a agir por causa disso.</li>
+        <li><strong>Depois da correção,</strong> a página volta a ter exatamente a largura da tela (confirmado em 375px) e a tabela larga rola só dentro dela mesma, sem afetar o resto do layout.</li>
+      </ul>`
+    },
+    {
       date: '04 Set 2026', time: '22:52', tag: 'new', label: 'NOVO',
       html: `<strong>Farm Calculator reformulado: menos rolagem, e um comparador de liga de verdade.</strong>  A tela ficava grande demais (formulário de rede sempre aberto, card de melhor moeda ocupando bastante espaço, cotações em cards empilhados) e não existia nenhuma forma de simular subir de liga sem trocar tudo manualmente.
       <ul class="guia-tl-list">
@@ -604,8 +612,16 @@ const UI_Changelog = {
         </div>`).join('');
   },
 
+  // n é um mínimo, não um teto: quando várias entradas do mesmo push dividem
+  // data+hora (é o padrão aqui, sempre consolidadas no horário real do push antes de
+  // subir), cortar em n no meio do grupo escondia parte do que acabou de sair. Mostra
+  // o grupo mais recente inteiro, ou n itens, o que for maior.
   renderPreview: function(n) {
-    return this._renderEntries(this.updates.slice(0, n));
+    if (!this.updates.length) return this._renderEntries([]);
+    const chave = u => `${u.date}|${u.time}`;
+    const maisRecente = chave(this.updates[0]);
+    const doUltimoPush = this.updates.filter(u => chave(u) === maisRecente).length;
+    return this._renderEntries(this.updates.slice(0, Math.max(n, doUltimoPush)));
   },
 
   mostrar: function() {
