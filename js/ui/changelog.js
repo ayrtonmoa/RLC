@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '04 Set 2026', time: '22:52', tag: 'new', label: 'NOVO',
+      html: `<strong>MinerMerge: filtro por tipo de peça em "Explorar todos os merges".</strong>  Quem tem estoque concentrado numa peça só (por exemplo, só Wire) agora consegue ver direto os merges que usam justamente aquela peça, em vez de rolar a lista inteira procurando.`
+    },
+    {
       date: '04 Set 2026', time: '22:52', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.668 → 8.729 (61 novas, nenhuma removida). 10 receitas de craft mudaram de verdade (fora reordenação), todas de duas famílias de merge ficando mais baratas: Hamksy passou a pedir bem menos Hashboard em quase todo nível (o de Common caiu de 900 para 200, o de Uncommon de 320 para 200), e Flamy teve a mesma queda em todos os níveis de Wire (o de Common caiu de 800 para 150, o de Legendary de 13 para 5). As outras ~6.750 miners tiveram só a oferta de mercado ressincronizada, como sempre acontece a cada atualização.`
     },

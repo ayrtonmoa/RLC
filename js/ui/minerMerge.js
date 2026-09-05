@@ -3,6 +3,7 @@
 const UI_MinerMerge = {
   mergeSortMode: 'efficiency',
   qualityFilter: 'all',
+  pieceFilter: 'all',
   activeGroup: 'ready',
   budgetRLT: null,
   budgetRST: null,
@@ -197,10 +198,19 @@ const UI_MinerMerge = {
       if (this.qualityFilter === 'valid') return list.filter(e => e._tier <= 2);
       return list;
     };
-    const prontosVis        = filterByQuality(prontos);
-    const faltaPartesVis    = filterByQuality(faltaPartes);
-    const faltaMinersVis    = filterByQuality(faltaMiners);
-    const recuperaCadeiaVis = recuperaCadeia;
+    // Filtra por tipo de peça (Fan/Wire/Hashboard): mostra só merge que usa aquela peça como
+    // ingrediente do próximo passo, útil quando você tem muito de um tipo só e quer focar
+    // nele (ex: 300 mil Wire sobrando, sem nada de Fan/Hashboard).
+    const filterByPeca = (list) => {
+      if (this.pieceFilter === 'all') return list;
+      return list.filter(e => (e.info?.ingredientes || []).some(
+        ing => ing.tipo === 'parte' && ing.nome === this.pieceFilter
+      ));
+    };
+    const prontosVis        = filterByPeca(filterByQuality(prontos));
+    const faltaPartesVis    = filterByPeca(filterByQuality(faltaPartes));
+    const faltaMinersVis    = filterByPeca(filterByQuality(faltaMiners));
+    const recuperaCadeiaVis = filterByPeca(recuperaCadeia);
 
     const rarityEmoji = { 'Common': '⚪', 'Uncommon': '🟢', 'Rare': '🔵', 'Epic': '🟣', 'Legendary': '🟡', 'Unreal': '🔴' };
     const tierMeta = { 1: { cls: 'tier-good', label: '🟢 Ótimo' }, 2: { cls: 'tier-ok', label: '🟡 Ok' }, 3: { cls: 'tier-low', label: '🔴 Baixo valor' }, 4: { cls: 'tier-low', label: '⛔ Prejudica a sala' }, 5: { cls: 'tier-ok', label: '↩️ Recupera depois' } };
@@ -403,6 +413,18 @@ const UI_MinerMerge = {
     ].forEach(({ key, label, desc }) => {
       const active = filterMode === key;
       html += `<button class="merge-sort-btn${active ? ' active' : ''}" title="${desc}" onclick="UI_MinerMerge.setQualityFilter('${key}')">${label}</button>`;
+    });
+    html += '</div>';
+    html += '<div class="merge-sort-controls">';
+    html += '<span style="font-size:12px;opacity:.6;margin-right:6px;">Peça:</span>';
+    [
+      { key: 'all',       label: 'Todas', desc: 'Mostra merge de qualquer peça.' },
+      { key: 'Fan',       label: '🌀 Fan', desc: 'Só merges que usam Fan como ingrediente do próximo passo.' },
+      { key: 'Wire',      label: '🔌 Wire', desc: 'Só merges que usam Wire como ingrediente do próximo passo.' },
+      { key: 'Hashboard', label: '💾 Hashboard', desc: 'Só merges que usam Hashboard como ingrediente do próximo passo.' },
+    ].forEach(({ key, label, desc }) => {
+      const active = this.pieceFilter === key;
+      html += `<button class="merge-sort-btn${active ? ' active' : ''}" title="${desc}" onclick="UI_MinerMerge.setPieceFilter('${key}')">${label}</button>`;
     });
     html += '</div></div></div>';
 
@@ -1419,6 +1441,12 @@ const UI_MinerMerge = {
   setQualityFilter: function(filter) {
     this._explorarAberto = true; // veio de dentro do bloco de exploração, mantém aberto
     this.qualityFilter = filter;
+    this.mostrar();
+  },
+
+  setPieceFilter: function(filter) {
+    this._explorarAberto = true; // veio de dentro do bloco de exploração, mantém aberto
+    this.pieceFilter = filter;
     this.mostrar();
   },
 };
