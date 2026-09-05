@@ -28,6 +28,53 @@ body.dark-mode #farmcalculator button {
   font-weight: bold;
 }
 
+/* Modal do exemplo (print da página League Power). Usa o .modal-overlay já existente em
+   styles.css (fundo escuro, centraliza), mas .modal-content é feito pra texto (padding
+   grande, max-width 600px) — a imagem precisa de mais espaço e menos preenchimento. */
+.farm-exemplo-modal-content {
+  position: relative;
+  background: var(--bg-secondary, #fff);
+  border-radius: 10px;
+  padding: 16px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.farm-exemplo-modal-content img {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+}
+
+.farm-exemplo-modal-content p {
+  margin: 10px 0 0;
+  font-size: 12px;
+  opacity: 0.75;
+  text-align: center;
+}
+
+.farm-exemplo-modal-fechar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.farm-exemplo-modal-fechar:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
 body.dark-mode .farm-network-notice {
   background: #2d2600;
   border-color: #997a00;
@@ -38,118 +85,141 @@ body.dark-mode .farm-network-notice a {
   color: #7db8f7;
 }
 
-/* Input Section */
-.farm-input-section {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-body.dark-mode .farm-input-section {
-  background: var(--bg-secondary);
+/* ===== Etapa — mesmo bloco numerado/rotulado que o MinerMerge usa (.merge-etapa) ===== */
+.farm-etapa {
   border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: #f8f9fa;
 }
-
-.farm-input-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 15px;
-  align-items: end;
+body.dark-mode .farm-etapa {
+  background: var(--bg-secondary);
+}
+.farm-etapa-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  margin-bottom: 10px;
 }
 
 .farm-input-label {
   font-weight: 600;
-  margin-bottom: 8px;
-  display: block;
-  font-size: 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+body.dark-mode .farm-input-label {
+  color: var(--text-secondary);
 }
 
-/* Input fields - MELHORADO */
+/* Input fields */
 #farmcalculator input[type="text"],
 #farmcalculator input[type="number"] {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
+  padding: 7px 10px;
+  font-size: 14px;
   border: 1px solid var(--border-color);
-  border-radius: 5px;
-  background: var(--bg-secondary);
+  border-radius: 20px;
+  background: var(--bg-primary);
   color: var(--text-primary);
+  width: 100px;
+}
+
+#farmcalculator select {
+  border-radius: 20px;
 }
 
 #farmcalculator textarea {
   width: 100%;
-  padding: 12px;
-  font-size: 14px;
+  padding: 10px;
+  font-size: 13px;
   font-family: monospace;
   border: 1px solid var(--border-color);
-  border-radius: 5px;
-  background: var(--bg-secondary);
+  border-radius: 8px;
+  background: var(--bg-primary);
   color: var(--text-primary);
   resize: vertical;
-  min-height: 150px;
+  min-height: 130px;
 }
 
 #farmcalculator button {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
+}
+
+/* ===== Toolbar: poder + chip de rede + calcular, tudo numa linha ===== */
+.farm-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.farm-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.farm-btn-gerar {
+  margin-left: auto;
+  padding: 8px 20px !important;
+  border-radius: 20px !important;
+  border: none;
+  background: #667eea;
+  color: #fff !important;
+  cursor: pointer;
+  width: auto !important;
+}
+.farm-btn-gerar:hover { background: #5566d6; }
+.farm-btn-text {
+  background: none;
+  border: none;
+  color: #667eea !important;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 !important;
+  width: auto !important;
+  margin-top: 8px;
+}
+.farm-btn-text:hover { color: #5566d6; }
+
+.farm-chip-rede {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-color);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex: 1 1 200px;
+}
+.farm-chip-rede strong { color: #28a745; }
+.farm-chip-rede .edit { margin-left: auto; color: #667eea; font-weight: 600; white-space: nowrap; }
+.farm-chip-rede.small { flex: none; padding: 4px 10px; font-size: 11px; }
+
+.farm-rede-panel > summary { display: none; }
+.farm-rede-panel[open] { margin-top: 10px; }
+
+.farm-liga-atual {
+  margin-top: 10px;
+  font-size: 12.5px;
 }
 
 .farm-blocks-info {
-  text-align: center;
-  margin-bottom: 15px;
-  padding: 12px;
-  background: #e3f2fd;
-  border-radius: 6px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
 }
 
 body.dark-mode .farm-blocks-info {
-  background: #2a2a3a;
-}
-
-/* League Section */
-.farm-league-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  color: white;
-}
-
-.farm-league-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.farm-league-name {
-  font-size: 24px;
-  font-weight: bold;
-  margin-top: 5px;
-}
-
-.farm-league-rewards {
-  background: rgba(255,255,255,0.15);
-  padding: 15px;
-  border-radius: 6px;
-  backdrop-filter: blur(10px);
-}
-
-.farm-rewards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
-}
-
-.farm-reward-item {
-  background: rgba(255,255,255,0.2);
-  padding: 10px;
-  border-radius: 6px;
-  text-align: center;
+  background: rgba(102,126,234,0.10);
+  border-color: var(--border-color);
 }
 
 /* Comparison Box */
@@ -181,87 +251,137 @@ body.dark-mode .farm-comparison-box {
   margin-top: 4px;
 }
 
-/* Best Crypto Section */
-.farm-best-crypto {
-  background: #fff3cd;
-  border-left: 4px solid #ffc107;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 5px;
-}
-
-body.dark-mode .farm-best-crypto {
-  background: #3a3a2a;
-}
-
-.farm-best-card {
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border: 2px solid #ffc107;
-}
-
-body.dark-mode .farm-best-card {
-  background: var(--bg-secondary);
-  border-color: #ffc107;
-}
-
-.farm-best-name {
-  font-size: 24px;
-  color: #ff9800;
-  font-weight: bold;
-}
-
-.farm-stats-grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-}
-
-.farm-stat-box {
+/* ===== Faixa "melhor pra farmar" — resumo de uma linha só ===== */
+.farm-top-strip {
   background: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-}
-
-body.dark-mode .farm-stat-box {
-  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
-
-.farm-stat-value {
-  font-size: 20px;
-  color: #ff9800;
-  font-weight: bold;
-}
-
-/* Top 3 Cryptos */
-/* Hoje recebe os 2 vice-campeões (o 1o lugar tem card próprio), mas o auto-fit evita
-   deixar uma coluna vazia caso o número de cards mude. */
-.farm-top3-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 15px;
-}
-
-.farm-top3-card {
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-
-body.dark-mode .farm-top3-card {
+body.dark-mode .farm-top-strip {
   background: var(--bg-secondary);
-  border-color: var(--border-color);
+}
+.farm-top-strip .medal { font-size: 18px; }
+.farm-top-strip .coin { font-weight: 700; font-size: 15px; }
+.farm-top-strip .figure { font-weight: 700; color: #667eea; margin-left: auto; font-size: 15px; }
+.farm-top-strip .others { font-size: 12px; opacity: 0.7; }
+.farm-top-strip .others b { opacity: 1; }
+
+/* ===== Comparador de liga — mesmo componente colapsável do "Explorar todos os merges" ===== */
+.farm-explorar {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+.farm-explorar-summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.farm-explorar-summary::-webkit-details-marker { display: none; }
+.farm-explorar-summary:hover { color: #667eea; }
+.farm-explorar[open] .farm-explorar-summary {
+  border-bottom: 1px solid var(--border-color);
+  color: #667eea;
+}
+.farm-explorar-caret { font-size: 10px; opacity: 0.6; transition: transform 0.15s; }
+.farm-explorar[open] .farm-explorar-caret { transform: rotate(90deg); }
+.farm-explorar-corpo { padding: 14px 16px; }
+
+.farm-cols {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 10px;
+}
+.farm-league-col {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+body.dark-mode .farm-league-col {
+  background: rgba(102,126,234,0.06);
+}
+.farm-eyebrow {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: #667eea;
+  opacity: 0.9;
+}
+.farm-league-title { font-weight: bold; font-size: 16px; }
+.farm-league-col select {
+  font-weight: bold;
+  font-size: 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 0;
+  cursor: pointer;
+  width: auto;
+}
+.farm-league-meta { font-size: 12px; opacity: 0.7; }
+.farm-league-earn .label {
+  font-size: 10.5px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.farm-league-earn .value { font-weight: bold; font-size: 19px; }
+.farm-league-earn .sub { font-size: 11.5px; opacity: 0.7; }
+.farm-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.farm-delta-banner {
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 10px 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.farm-delta-banner.bad {
+  background: rgba(220,53,69,0.08);
+  border: 1px solid rgba(220,53,69,0.3);
+}
+.farm-delta-banner.good {
+  background: rgba(40,167,69,0.08);
+  border: 1px solid rgba(40,167,69,0.3);
+}
+.farm-delta-banner strong { font-weight: 700; }
+
+@media (max-width: 620px) {
+  .farm-cols { grid-template-columns: 1fr; }
 }
 
 /* Prices Panel */
 .farm-prices-panel {
   background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
   margin-bottom: 20px;
 }
 
@@ -274,46 +394,41 @@ body.dark-mode .farm-prices-panel {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .farm-prices-info {
-  background: #e3f2fd;
-  padding: 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 6px 10px;
   border-radius: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-size: 11px;
   color: #666;
 }
 
 body.dark-mode .farm-prices-info {
-  background: #2a2a3a;
   color: var(--text-secondary);
 }
 
-.farm-prices-scroll {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.farm-price-item {
-  background: white;
-  padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-}
-
-body.dark-mode .farm-price-item {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
-}
-
-.farm-price-row {
+/* Uma pílula por moeda em vez de um card empilhado com USD/BRL/EUR cada um numa linha —
+   R$ e € ficam no title (hover), o painel é só uma referência rápida. */
+.farm-prices-grid {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
+
+.farm-price-chip {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 5px 11px;
+  font-size: 12px;
+  cursor: help;
+}
+
+.farm-price-chip strong { margin-right: 4px; }
 
 /* Chart Container */
 .farm-chart-container {
@@ -406,13 +521,15 @@ body.dark-mode .farm-row-highlight {
   background: #3a3a2a;
 }
 
-/* Badge styles */
+/* Badge styles — pílula translúcida, mesmo padrão dos .merge-quality-badge do MinerMerge */
 .farm-badge-game {
-  background: #e3f2fd;
-  color: #007bff;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
+  background: rgba(40,167,69,0.15);
+  color: #28a745;
+  border: 1px solid rgba(40,167,69,0.4);
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
   margin-left: 8px;
 }
 
@@ -420,50 +537,55 @@ body.dark-mode .farm-row-highlight {
    carrega um ID — vence qualquer seletor de classe. Por isso as variantes dark abaixo
    precisam do #farmcalculator: sem ele a cor do badge é engolida e todos saem cinza. */
 body.dark-mode #farmcalculator .farm-badge-game {
-  background: #2a2a3a;
-  color: #6ea8fe;
+  background: rgba(40,167,69,0.15);
+  color: #5fff5f;
 }
 
 .farm-badge-crypto {
-  background: #f3e5f5;
-  color: #6f42c1;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
+  background: rgba(102,126,234,0.15);
+  color: #667eea;
+  border: 1px solid rgba(102,126,234,0.4);
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
   margin-left: 8px;
 }
 
 body.dark-mode #farmcalculator .farm-badge-crypto {
-  background: #3a2a3a;
-  color: #c9a3f5;
+  background: rgba(102,126,234,0.20);
+  color: #a9b6f7;
 }
 
 .farm-badge-top {
-  background: #fff3cd;
-  color: #8a5200;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
+  background: rgba(255,193,7,0.15);
+  color: #a07800;
+  border: 1px solid rgba(255,193,7,0.4);
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
   margin-left: 8px;
 }
 
 body.dark-mode #farmcalculator .farm-badge-top {
-  background: #4a3a15;
+  background: rgba(255,193,7,0.15);
   color: #ffc107;
 }
 
 .farm-badge-no-withdraw {
-  background: #ffebee;
-  color: #c62828;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
+  background: rgba(220,53,69,0.10);
+  color: #dc3545;
+  border: 1px solid rgba(220,53,69,0.3);
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
   margin-left: 8px;
 }
 
 body.dark-mode #farmcalculator .farm-badge-no-withdraw {
-  background: #3a2a2a;
+  background: rgba(220,53,69,0.15);
   color: #ff6b6b;
 }
 
@@ -667,14 +789,7 @@ body.dark-mode #farmcalculator table td {
 
 /* Responsive */
 @media (max-width: 900px) {
-  .farm-input-grid,
-  .farm-comparison-grid,
-  .farm-stats-grid-3,
-  .farm-top3-grid {
+  .farm-comparison-grid {
     grid-template-columns: 1fr;
-  }
-
-  .farm-rewards-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
 }

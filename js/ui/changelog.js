@@ -5,6 +5,18 @@ const UI_Changelog = {
   updates: [
     {
       date: '04 Set 2026', time: '22:52', tag: 'new', label: 'NOVO',
+      html: `<strong>Farm Calculator reformulado: menos rolagem, e um comparador de liga de verdade.</strong>  A tela ficava grande demais (formulário de rede sempre aberto, card de melhor moeda ocupando bastante espaço, cotações em cards empilhados) e não existia nenhuma forma de simular subir de liga sem trocar tudo manualmente.
+      <ul class="guia-tl-list">
+        <li><strong>Tela mais enxuta:</strong> a rede colada virou um resumo de uma linha que só expande quando você quer editar, e o "melhor pra farmar hoje" virou uma faixa só, no lugar do card grande com grid de vice-campeões.</li>
+        <li><strong>Comparador de liga novo, colapsado por padrão.</strong>  Escolhe a liga alvo, cola a rede de lá, e o app compara <strong>todas as moedas</strong> da sua tabela contra essa liga, não só a que já é a melhor hoje, porque a melhor opção pode ser outra lá.  Mostra pra cada moeda o poder necessário pra igualar o ganho de hoje, e destaca se isso já passa do próprio goal de promoção da liga.</li>
+        <li><strong>Poder hipotético:</strong> dá pra simular "e se eu tivesse mais poder antes de subir?" sem mexer no poder real usado no cálculo principal.</li>
+        <li><strong>Exemplo visual de onde copiar a rede</strong>, direto na instrução, pra quem nunca achou a tela "League Power" do jogo.</li>
+        <li><strong>Cotações em pílulas</strong> (uma linha por moeda) no lugar dos cards empilhados, e removidos os botões de Exportar CSV e Atualizar cotações, que praticamente ninguém usava.</li>
+        <li><strong>🐛 Corrigido:</strong> toda vez que a aba Farm reabria, um novo timer de busca de cotação era criado sem cancelar o anterior.  Depois de algumas trocas de aba, várias buscas concorrentes rodavam ao mesmo tempo na API da CoinGecko bem mais rápido que os 5 minutos pretendidos, arriscando estourar o rate limit.</li>
+      </ul>`
+    },
+    {
+      date: '04 Set 2026', time: '22:52', tag: 'new', label: 'NOVO',
       html: `<strong>MinerMerge: filtro por tipo de peça em "Explorar todos os merges".</strong>  Quem tem estoque concentrado numa peça só (por exemplo, só Wire) agora consegue ver direto os merges que usam justamente aquela peça, em vez de rolar a lista inteira procurando.`
     },
     {
