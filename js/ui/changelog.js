@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '04 Set 2026', time: '22:52', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.668 → 8.729 (61 novas, nenhuma removida). 10 receitas de craft mudaram de verdade (fora reordenação), todas de duas famílias de merge ficando mais baratas: Hamksy passou a pedir bem menos Hashboard em quase todo nível (o de Common caiu de 900 para 200, o de Uncommon de 320 para 200), e Flamy teve a mesma queda em todos os níveis de Wire (o de Common caiu de 800 para 150, o de Legendary de 13 para 5). As outras ~6.750 miners tiveram só a oferta de mercado ressincronizada, como sempre acontece a cada atualização.`
+    },
+    {
       date: '01 Set 2026', time: '21:53', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>Farm Calculator: o tempo de bloco do DOGE estava bem errado, e o app trocou pra medir cada moeda no seu próprio ritmo.</strong>  Antes agrupava tudo em 3 categorias (padrão ~9:56, LTC+TRX ~10:02, USDT ~9:37), como se a maioria das moedas andasse junto.
       <ul class="guia-tl-list">
