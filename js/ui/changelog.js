@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '07 Set 2026', time: '10:21', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.729 → 8.741 (12 novas, nenhuma removida). Nenhuma receita de craft mudou de verdade dessa vez; as outras ~5.839 miners tiveram só a oferta de mercado ressincronizada, como sempre acontece a cada atualização.`
+    },
+    {
       date: '04 Set 2026', time: '22:52', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>Changelog cortando o conteúdo de lado no celular.</strong>  Uma entrada com tabela larga (como a de block rewards por liga) empurrava a página inteira de lado numa tela de 375px, e como o app tem uma trava contra rolagem horizontal, o excesso simplesmente sumia da tela em vez de virar uma barra de rolagem.
       <ul class="guia-tl-list">
