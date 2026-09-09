@@ -539,6 +539,15 @@ const UI_FarmCalculator = {
     return `${(valorEh / fator).toFixed(casas)} ${this._rotuloUnidade()}`;
   },
 
+  // Converte blocos/dia pra "mm:ss", que é a mesma unidade que o jogo mostra em
+  // "Last Block Time". Blocos/dia sozinho não dá pra comparar de olho com o jogo.
+  _formatarTempoDeBloco(blocksPerDay) {
+    const segundos = 86400 / blocksPerDay;
+    const min = Math.floor(segundos / 60);
+    const seg = Math.round(segundos % 60);
+    return `${min}:${String(seg).padStart(2, '0')}`;
+  },
+
   _rotuloUnidade() {
     // "EH" -> "Eh/s", pra bater com a grafia que o jogo usa.
     const u = this.state.powerUnit || 'EH';
@@ -1132,6 +1141,12 @@ const UI_FarmCalculator = {
       html += '<div class="farm-blocks-info" style="margin-top:6px;">';
       html += `<span style="font-weight: 600;">💎 Reward por bloco (${minhaLigaInfo.name}): </span>`;
       html += `<span style="font-size: 12px;">${Object.entries(minhaLigaInfo.rewards).map(([c, v]) => `${c} ${v}`).join(' · ')}</span>`;
+      html += '</div>';
+      // Tempo de bloco na mesma unidade que o jogo mostra em "Last Block Time" (mm:ss),
+      // não blocos/dia. É global do jogo, não muda por liga.
+      html += '<div class="farm-blocks-info" style="margin-top:6px;">';
+      html += '<span style="font-weight: 600;">⏱️ Tempo de bloco: </span>';
+      html += `<span style="font-size: 12px;">${Object.entries(this.CONFIG.BLOCKS_PER_DAY_BY_COIN).map(([c, v]) => `${c} ${this._formatarTempoDeBloco(v)}`).join(' · ')}</span>`;
       html += '</div>';
     }
     html += '</div>'; // farm-etapa

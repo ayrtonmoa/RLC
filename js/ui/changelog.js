@@ -4,8 +4,12 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '09 Set 2026', time: '23:57', tag: 'new', label: 'NOVO',
+      html: `<strong>Farm Calculator: tempo de bloco por moeda, do lado do reward por bloco.</strong>  Nova linha "⏱️ Tempo de bloco" mostra cada moeda em minuto:segundo (RST 9:56, DOGE 10:11...), a mesma unidade que o jogo usa em "Last Block Time".  Antes só tinha blocos/dia, que não dá pra comparar de olho direto com a tela do jogo. É global do jogo, não muda por liga.`
+    },
+    {
       date: '09 Set 2026', time: '23:56', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Catálogo de miners atualizado:</strong> 8.741 → 8.751 (10 novas, nenhuma removida). Nenhuma receita de craft mudou de verdade dessa vez.`
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.741 → 8.751 (10 novas, nenhuma removida). Uma família de merge completa, <strong>Nomad Mangal</strong> (os 6 tiers, do Common ao Legendary), e 4 miners novas da coleção <strong>Piero's Eurotrip</strong>: Paris Croissant, Rome Espresso, Madrid Fiesta e Lima Llama. Nenhuma receita de craft mudou de verdade dessa vez.`
     },
     {
       date: '09 Set 2026', time: '23:55', tag: 'improved', label: 'MELHORIA',
