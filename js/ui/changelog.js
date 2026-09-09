@@ -8,7 +8,7 @@ const UI_Changelog = {
       html: `<strong>Catálogo de miners atualizado:</strong> 8.741 → 8.751 (10 novas, nenhuma removida). Nenhuma receita de craft mudou de verdade dessa vez.`
     },
     {
-      date: '09 Set 2026', time: '23:55', tag: 'fix', label: 'CORREÇÃO',
+      date: '09 Set 2026', time: '23:55', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Farm Calculator estava assumindo 100% do seu poder em toda moeda ao mesmo tempo, mesmo quando o poder está dividido.</strong>  O jogo deixa escolher farmar 100% numa moeda só, ou espalhar o poder em várias (na página "My Power"); quem faz isso via o cálculo aplicando o poder inteiro em cada moeda, inflando a contribuição de tudo que não é 100% da alocação.
       <ul class="guia-tl-list">
         <li><strong>Novo campo "poder dividido":</strong> cola o texto da página My Power do jogo (mesmo formato da rede), e cada moeda passa a usar só a fatia de poder que você realmente dedicou a ela.  Deixando em branco, continua calculando como sempre foi (100% em toda moeda).</li>
@@ -19,11 +19,11 @@ const UI_Changelog = {
     },
     {
       date: '09 Set 2026', time: '23:03', tag: 'fix', label: 'CORREÇÃO',
-      html: `<strong>Farm Calculator: o DOGE voltou ao ritmo normal de bloco, e o app ainda estava tratando ele como o caso lento.</strong>  Desde 01/09/2026 o app usava ~30:53 por bloco de DOGE (bem mais lento que as outras moedas); hoje ele anda em ~10:11, igual ao resto.
+      html: `<strong>Farm Calculator: o jogo mudou o ritmo de bloco do DOGE de um dia pro outro, e o app acompanhou.</strong>  Até 08/09/2026 o DOGE andava em ~30:53 por bloco (bem mais lento que as outras moedas); em 09/09/2026 já estava em ~10:11, igual ao resto. Não foi um erro nosso passando despercebido: era o valor certo até o jogo mudar.
       <ul class="guia-tl-list">
-        <li><strong>Confirmado em duas fontes.</strong>  Uma leitura fresca de "Last Block Time" direto do jogo mostrou 00:10:48; a API pública do <a href="https://minaryganar.com/rollercoin/calculator" target="_blank">minaryganar.com</a> deu 611 segundos (~10:11) pro DOGE no mesmo momento.  As duas bateram, então não era só uma variação de um bloco isolado.</li>
+        <li><strong>Confirmado em duas fontes no mesmo momento.</strong>  Uma leitura fresca de "Last Block Time" direto do jogo mostrou 00:10:48; a API pública do <a href="https://minaryganar.com/rollercoin/calculator" target="_blank">minaryganar.com</a> deu 611 segundos (~10:11) pro DOGE.  As duas bateram, então era mesmo o jogo tendo mudado, não uma variação de um bloco isolado.</li>
         <li><strong>A tabela inteira foi atualizada</strong> com esse snapshot novo da API, não só o DOGE.  As outras moedas mudaram pouco (2 a 8%), dentro do esperado de uma atualização de rotina.  RLT e HMT passaram a vir da própria API também, em vez de uma amostra manual do jogo com menos confiança.</li>
-        <li><strong>Isso estava subestimando o ganho de DOGE em ~3x</strong> desde a correção anterior: quem calculava farm de DOGE via essa aba via um número bem pessimista demais, o oposto do problema original (que era otimista demais).</li>
+        <li><strong>Enquanto o app não acompanhava essa mudança do jogo,</strong> o ganho de DOGE aparecia ~3x subestimado: quem calculava farm de DOGE via essa aba via um número bem pessimista demais, o oposto do problema original (que era otimista demais).</li>
       </ul>`
     },
     {
