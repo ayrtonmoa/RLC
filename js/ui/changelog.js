@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '09 Set 2026', time: '23:56', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.741 → 8.751 (10 novas, nenhuma removida). Nenhuma receita de craft mudou de verdade dessa vez.`
+    },
+    {
       date: '09 Set 2026', time: '23:55', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>Farm Calculator estava assumindo 100% do seu poder em toda moeda ao mesmo tempo, mesmo quando o poder está dividido.</strong>  O jogo deixa escolher farmar 100% numa moeda só, ou espalhar o poder em várias (na página "My Power"); quem faz isso via o cálculo aplicando o poder inteiro em cada moeda, inflando a contribuição de tudo que não é 100% da alocação.
       <ul class="guia-tl-list">
