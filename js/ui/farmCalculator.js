@@ -162,28 +162,28 @@ const UI_FarmCalculator = {
 
   // Configurações
   CONFIG: {
-    // Blocos/dia por moeda. O agrupamento antigo (padrão / LTC+TRX / USDT) partia de que a
-    // maioria das moedas teria ritmo parecido; não tem mais: cada uma anda no seu próprio
-    // passo, e o DOGE é o caso extremo (~27-31min por bloco, não ~10min).
-    // Fonte: minaryganar.com/rollercoin/calculator, widget "Duração do bloco" (mede o tempo
-    // real entre blocos observados ao vivo, não é leitura única). Consultado em 01/09/2026.
-    // RLT e HMT não aparecem nesse widget; mantidos com 1 amostra própria do jogo (menos
-    // confiança, ajustar se destoar).
+    // Blocos/dia por moeda. Cada uma anda no seu próprio passo; o DOGE já foi o caso extremo
+    // (~30:53 por bloco em 01/09/2026), mas voltou ao ritmo normal (~10min).  Confirmado em
+    // 09/09/2026 batendo a API do minaryganar.com contra uma leitura fresca no próprio jogo
+    // (611s vs 648s, praticamente a mesma coisa). Fonte: api.minaryganar.com/api/public/
+    // rollercoin/calculator/block-durations (snapshot calculado a partir da rede de uma liga
+    // de referência). RLT e HMT passaram a aparecer nessa API também; antes vinham de 1
+    // amostra própria do jogo, com menos confiança.
     BLOCKS_PER_DAY_BY_COIN: {
-      RLT: 130.909,  // só 1 amostra do jogo (11:00)
-      RST: 144.966,  // 09:56
-      HMT: 116.129,  // só 1 amostra do jogo (12:24)
-      BTC: 143.046,  // 10:04
-      LTC: 144,      // 10:00
-      BNB: 134.579,  // 10:42
-      POL: 136.493,  // 10:33
-      XRP: 137.361,  // 10:29
-      DOGE: 46.628,  // 30:53, bem abaixo do valor antigo (144.9664)
-      ETH: 137.361,  // 10:29
-      TRX: 142.574,  // 10:06
-      SOL: 137.361,  // 10:29
-      ALGO: 141.408, // 10:11
-      USDT: 139.130, // 10:21
+      RLT: 141.206,  // 10:12
+      RST: 145.014,  // 09:56
+      HMT: 142.694,  // 10:05
+      BTC: 139.619,  // 10:19
+      LTC: 143.418,  // 10:02
+      BNB: 143.304,  // 10:03
+      POL: 139.590,  // 10:19
+      XRP: 140.178,  // 10:16
+      DOGE: 141.374, // 10:11, voltou ao normal (era 46.628, ~30:53)
+      ETH: 140.849,  // 10:13
+      TRX: 142.534,  // 10:06
+      SOL: 144.171,  // 09:59
+      ALGO: 144.799, // 09:57
+      USDT: 144.790, // 09:57
     },
     BLOCKS_PER_DAY: 144.9664, // fallback: usado só se a moeda não estiver na tabela acima
     GAME_COINS: ['RLT', 'RST', 'HMT'],

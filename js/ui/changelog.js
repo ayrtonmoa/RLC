@@ -4,6 +4,15 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '09 Set 2026', time: '23:03', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Farm Calculator: o DOGE voltou ao ritmo normal de bloco, e o app ainda estava tratando ele como o caso lento.</strong>  Desde 01/09/2026 o app usava ~30:53 por bloco de DOGE (bem mais lento que as outras moedas); hoje ele anda em ~10:11, igual ao resto.
+      <ul class="guia-tl-list">
+        <li><strong>Confirmado em duas fontes.</strong>  Uma leitura fresca de "Last Block Time" direto do jogo mostrou 00:10:48; a API pública do <a href="https://minaryganar.com/rollercoin/calculator" target="_blank">minaryganar.com</a> deu 611 segundos (~10:11) pro DOGE no mesmo momento.  As duas bateram, então não era só uma variação de um bloco isolado.</li>
+        <li><strong>A tabela inteira foi atualizada</strong> com esse snapshot novo da API, não só o DOGE.  As outras moedas mudaram pouco (2 a 8%), dentro do esperado de uma atualização de rotina.  RLT e HMT passaram a vir da própria API também, em vez de uma amostra manual do jogo com menos confiança.</li>
+        <li><strong>Isso estava subestimando o ganho de DOGE em ~3x</strong> desde a correção anterior: quem calculava farm de DOGE via essa aba via um número bem pessimista demais, o oposto do problema original (que era otimista demais).</li>
+      </ul>`
+    },
+    {
       date: '07 Set 2026', time: '10:21', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.729 → 8.741 (12 novas, nenhuma removida). Nenhuma receita de craft mudou de verdade dessa vez; as outras ~5.839 miners tiveram só a oferta de mercado ressincronizada, como sempre acontece a cada atualização.`
     },
