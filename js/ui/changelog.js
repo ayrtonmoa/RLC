@@ -4,6 +4,16 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '09 Set 2026', time: '23:55', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Farm Calculator estava assumindo 100% do seu poder em toda moeda ao mesmo tempo, mesmo quando o poder está dividido.</strong>  O jogo deixa escolher farmar 100% numa moeda só, ou espalhar o poder em várias (na página "My Power"); quem faz isso via o cálculo aplicando o poder inteiro em cada moeda, inflando a contribuição de tudo que não é 100% da alocação.
+      <ul class="guia-tl-list">
+        <li><strong>Novo campo "poder dividido":</strong> cola o texto da página My Power do jogo (mesmo formato da rede), e cada moeda passa a usar só a fatia de poder que você realmente dedicou a ela.  Deixando em branco, continua calculando como sempre foi (100% em toda moeda).</li>
+        <li><strong>🐛 Corrigido de quebra:</strong> o parser de rede (e agora também o de poder) só aceitava valores em Zh/s ou Eh/s.  Ligas menores, ou alocações de poder pequenas, aparecem em Gh/Th/Ph/s e eram simplesmente ignoradas, sem nenhum aviso.</li>
+        <li><strong>Reward por bloco da liga de volta na tela</strong> (tinha sumido no redesign), logo abaixo da liga atual.  Serve pra conferir de olho contra a coluna "Per block" do jogo se algum valor mudou.</li>
+        <li><strong>Seletor de liga do comparador mais visível:</strong> sem fundo nem borda, ele ficava idêntico ao texto estático ao lado e ninguém notava que dava pra clicar. Agora é uma pílula com borda, igual aos outros controles da aba.</li>
+      </ul>`
+    },
+    {
       date: '09 Set 2026', time: '23:03', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>Farm Calculator: o DOGE voltou ao ritmo normal de bloco, e o app ainda estava tratando ele como o caso lento.</strong>  Desde 01/09/2026 o app usava ~30:53 por bloco de DOGE (bem mais lento que as outras moedas); hoje ele anda em ~10:11, igual ao resto.
       <ul class="guia-tl-list">

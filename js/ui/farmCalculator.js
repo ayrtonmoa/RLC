@@ -6,6 +6,12 @@ const UI_FarmCalculator = {
   state: {
     miningPower: '',
     networkData: '',
+    // Como o poder do usuário está dividido entre as moedas (página "My Power" do jogo).
+    // O jogo deixa escolher farmar 100% numa moeda só, ou espalhar em várias.  O card de
+    // cada moeda mostra o % dedicado a ela. Vazio = assume 100% do poder em toda moeda
+    // (comportamento antigo, que já era errado pra quem divide o poder de verdade).
+    myPowerData: '',
+    myPowerPanelOpen: false,
     results: null,
     prices: {},
     loading: false,
@@ -380,32 +386,29 @@ const UI_FarmCalculator = {
   },
 
   // Parser de dados da rede
+  // Também usado pra ler a página "My Power" (poder já dividido por moeda), não só a
+  // rede da liga.  Mesmo formato de texto nas duas. Aceita qualquer unidade (Gh a Yh):
+  // ligas baixas têm rede/poder na casa de Ph/s ou menos, e antes só Zh/Eh eram aceitos,
+  // então colar a rede de uma conta pequena silenciosamente não achava nenhuma moeda.
   parseNetworkData(text) {
     const network = {};
     let match;
 
-    // Formato novo: SYMBOL\n\nX%\n\nPower\n\nVALOR Zh/s (cole da página da rede)
-    const regexNovoZh = /([A-Z]{2,6})\s+\d+%\s+Power\s+([\d.]+)\s+Zh\/s/gi;
-    while ((match = regexNovoZh.exec(text)) !== null) {
-      network[match[1].toUpperCase()] = parseFloat(match[2]) * 1000;
-    }
-
-    const regexNovoEh = /([A-Z]{2,6})\s+\d+%\s+Power\s+([\d.]+)\s+Eh\/s/gi;
-    while ((match = regexNovoEh.exec(text)) !== null) {
-      network[match[1].toUpperCase()] = parseFloat(match[2]);
+    // Formato novo: SYMBOL\n\nX%\n\nPower\n\nVALOR Xh/s (cole da página da rede ou do My Power).
+    // A unidade é só 1 letra + "h/s" (Zh/s, Eh/s, Gh/s...), então o grupo captura 1 char e
+    // vira chave de duas letras (G -> GH) pra bater com _UNIDADES_POWER.
+    const regexNovo = /([A-Z]{2,6})\s+\d+%\s+Power\s+([\d.]+)\s+([A-Za-z])h\/s/gi;
+    while ((match = regexNovo.exec(text)) !== null) {
+      const fator = this._UNIDADES_POWER[match[3].toUpperCase() + 'H'];
+      if (fator) network[match[1].toUpperCase()] = parseFloat(match[2]) * fator;
     }
 
     // Formato antigo: rlt RLT 2.823 Zh/s (mantido para compatibilidade)
-    const regexZh = /([a-z]+)\s+([A-Z]+)\s+([\d.]+)\s+Zh\/s/gi;
-    while ((match = regexZh.exec(text)) !== null) {
+    const regexAntigo = /([a-z]+)\s+([A-Z]+)\s+([\d.]+)\s+([A-Za-z])h\/s/gi;
+    while ((match = regexAntigo.exec(text)) !== null) {
       const symbol = match[2].toUpperCase();
-      if (!network[symbol]) network[symbol] = parseFloat(match[3]) * 1000;
-    }
-
-    const regexEh = /([a-z]+)\s+([A-Z]+)\s+([\d.]+)\s+Eh\/s/gi;
-    while ((match = regexEh.exec(text)) !== null) {
-      const symbol = match[2].toUpperCase();
-      if (!network[symbol]) network[symbol] = parseFloat(match[3]);
+      const fator = this._UNIDADES_POWER[match[4].toUpperCase() + 'H'];
+      if (fator && !network[symbol]) network[symbol] = parseFloat(match[3]) * fator;
     }
 
     return network;
@@ -427,17 +430,22 @@ const UI_FarmCalculator = {
     
     const myPowerEh = this._poderEmEh();
     const network = this.parseNetworkData(networkData);
-    
+    // Se o usuário colou o "My Power" (poder já dividido entre moedas), usa o poder
+    // específico de cada uma em vez do total.  Do contrário o cálculo assume, errado,
+    // que 100% do poder mina toda moeda ao mesmo tempo.
+    const myPowerByCoin = this.state.myPowerData ? this.parseNetworkData(this.state.myPowerData) : null;
+
     const userData = State.getUserData();
     const blockRewards = this.getBlockRewards(userData);
-    
+
     const calculations = [];
-    
+
     Object.keys(blockRewards).forEach(coin => {
       if (!network[coin]) return;
-      
+
       const networkPowerEh = network[coin];
-      const contribution = (myPowerEh / networkPowerEh) * 100;
+      const meuPoderNaMoeda = myPowerByCoin ? (myPowerByCoin[coin] ?? 0) : myPowerEh;
+      const contribution = (meuPoderNaMoeda / networkPowerEh) * 100;
       const blockReward = blockRewards[coin];
       const myRewardPerBlock = (contribution / 100) * blockReward;
       
@@ -572,6 +580,10 @@ const UI_FarmCalculator = {
   // reconstrói o HTML a cada chamada (ver comentário no state lá em cima).
   toggleRedePanel() {
     this.state.redePanelOpen = !this.state.redePanelOpen;
+    this.render();
+  },
+  toggleMyPowerPanel() {
+    this.state.myPowerPanelOpen = !this.state.myPowerPanelOpen;
     this.render();
   },
   toggleExplorar() {
@@ -1047,6 +1059,7 @@ const UI_FarmCalculator = {
     const ligaPerfil = this._ligaDoPerfil();
     const minhaLigaInfo = ligaPerfil ? this.leagueData[ligaPerfil] : null;
     const qtdMoedasRede = this.state.networkData ? Object.keys(this.parseNetworkData(this.state.networkData)).length : 0;
+    const qtdMoedasPoder = this.state.myPowerData ? Object.keys(this.parseNetworkData(this.state.myPowerData)).length : 0;
 
     html += '<div class="farm-etapa">';
     html += '<div class="farm-etapa-titulo">Sua situação</div>';
@@ -1072,6 +1085,13 @@ const UI_FarmCalculator = {
     html += '<span class="edit">editar ✎</span>';
     html += '</div>';
 
+    html += `<div class="farm-chip-rede" onclick="UI_FarmCalculator.toggleMyPowerPanel()">`;
+    html += qtdMoedasPoder
+      ? `<span>🔀 poder dividido em <strong>${qtdMoedasPoder} moedas</strong></span>`
+      : '<span>🔀 poder é igual em toda moeda</span>';
+    html += '<span class="edit">editar ✎</span>';
+    html += '</div>';
+
     html += '<button onclick="UI_FarmCalculator.calculate()" class="farm-btn-gerar">💰 Calcular</button>';
     html += '</div>'; // farm-toolbar-row
 
@@ -1094,8 +1114,25 @@ const UI_FarmCalculator = {
     html += '</div>';
     html += '</details>';
 
+    html += `<details id="farmMyPowerPanel" class="farm-rede-panel"${this.state.myPowerPanelOpen ? ' open' : ''}>`;
+    html += '<summary></summary>';
+    html += '<div class="farm-network-notice">';
+    html += '🔀 <strong>Seu poder está dividido entre moedas?</strong> O jogo deixa escolher farmar 100% numa moeda só, ou espalhar em várias.  Se for esse o seu caso, o cálculo usando só o total fica errado pra cada moeda individualmente. ';
+    html += 'Acesse <a href="https://rollercoin.com/game/league" target="_blank">rollercoin.com/game/league</a>, ';
+    html += 'clique na aba <strong>My Power</strong>, e copie o texto de todas as moedas de lá (cada uma mostra o % do seu poder dedicado a ela). ';
+    html += 'Cole abaixo. Deixe em branco se você não divide o poder (o cálculo então assume 100% em toda moeda, como sempre foi).';
+    html += '</div>';
+    html += `<textarea id="farmMyPowerData" rows="6" placeholder="Cole os dados de My Power. Mesmo formato da rede:\nRST\n0%\nPower\n0 Gh/s\n\nBNB\n15%\nPower\n748.175 Eh/s">${this.state.myPowerData}</textarea>`;
+    html += '</details>';
+
     if (this.state.results && minhaLigaInfo) {
       html += `<div class="farm-liga-atual">📍 Liga atual: <strong>${minhaLigaInfo.name}</strong> <span class="dim">· goal ${minhaLigaInfo.powerGoal}</span></div>`;
+      // Reward por bloco da liga, do jeito que o jogo mostra na coluna "Per block".  Serve
+      // pra conferir de olho se o jogo mudou algum valor sem a gente ter percebido.
+      html += '<div class="farm-blocks-info" style="margin-top:6px;">';
+      html += `<span style="font-weight: 600;">💎 Reward por bloco (${minhaLigaInfo.name}): </span>`;
+      html += `<span style="font-size: 12px;">${Object.entries(minhaLigaInfo.rewards).map(([c, v]) => `${c} ${v}`).join(' · ')}</span>`;
+      html += '</div>';
     }
     html += '</div>'; // farm-etapa
 
@@ -1360,6 +1397,13 @@ const UI_FarmCalculator = {
     if (networkInput) {
       networkInput.addEventListener('input', (e) => {
         this.state.networkData = e.target.value;
+      });
+    }
+
+    const myPowerInput = document.getElementById('farmMyPowerData');
+    if (myPowerInput) {
+      myPowerInput.addEventListener('input', (e) => {
+        this.state.myPowerData = e.target.value;
       });
     }
 
