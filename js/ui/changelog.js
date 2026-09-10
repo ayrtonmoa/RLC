@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '10 Set 2026', time: '20:27', tag: 'new', label: 'NOVO',
+      html: `<strong>Enquete rápida: você gostaria de um vídeo no YouTube explicando a ferramenta?</strong>  Aparece um banner discreto no canto da tela depois que você analisa um perfil (não antes, e nunca em forma de formulário solto). Responde Sim ou Não, ou fecha sem responder.  Se já respondeu com aquele perfil, não aparece de novo.`
+    },
+    {
       date: '09 Set 2026', time: '23:57', tag: 'new', label: 'NOVO',
       html: `<strong>Farm Calculator: tempo de bloco por moeda, do lado do reward por bloco.</strong>  Nova linha "⏱️ Tempo de bloco" mostra cada moeda em minuto:segundo (RST 9:56, DOGE 10:11...), a mesma unidade que o jogo usa em "Last Block Time".  Antes só tinha blocos/dia, que não dá pra comparar de olho direto com a tela do jogo. É global do jogo, não muda por liga.`
     },

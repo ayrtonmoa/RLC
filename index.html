@@ -32,6 +32,7 @@
 <link rel="stylesheet" href="css/roomPlanner.css">
 <link rel="stylesheet" href="css/racks.css">
 <link rel="stylesheet" href="css/guia.css">
+<link rel="stylesheet" href="css/enquete.css">
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-YY4HR4G1LV"></script>
@@ -173,6 +174,7 @@
   <script src="js/ui/debug.js"></script>
   <script src="js/ui/racks.js"></script>
   <script src="js/ui/rstSellAnalyzer.js"></script>
+  <script src="js/ui/enquete.js"></script>
   <script src="js/apiData.js"></script>
 
 
@@ -197,6 +199,7 @@
 
         Utils.hideProgress();
         document.getElementById('status').innerHTML = '<span class="success">Análise concluída com sucesso!</span>';
+        UI_Enquete.mostrar(username);
       } catch (err) {
         Utils.hideProgress();
         document.getElementById('status').innerHTML = '<span class="error">Erro: ' + err.message + '</span>';

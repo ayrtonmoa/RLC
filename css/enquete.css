@@ -1,0 +1,66 @@
+/* ========== Enquete "vídeo no YouTube?" ========== */
+.enquete-banner {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  max-width: 320px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  animation: enquete-entrar 0.2s ease-out;
+}
+
+@keyframes enquete-entrar {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.enquete-texto {
+  line-height: 1.4;
+}
+
+.enquete-botoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.enquete-botoes button {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  background: #667eea;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.enquete-botoes button:hover {
+  background: #5566d6;
+}
+
+.enquete-fechar {
+  margin-left: auto;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  padding: 4px 8px !important;
+  font-size: 14px !important;
+}
+
+@media (max-width: 480px) {
+  .enquete-banner {
+    left: 12px;
+    right: 12px;
+    max-width: none;
+    bottom: 12px;
+  }
+}
