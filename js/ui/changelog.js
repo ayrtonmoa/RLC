@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '13 Set 2026', time: '23:48', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.751 → 8.781 (30 novas, nenhuma removida). Cinco famílias de merge completas (os 6 tiers, do Common ao Legendary): <strong>Celestial Dome</strong>, <strong>Mirage Plate</strong>, <strong>Bazaar Bags</strong>, <strong>Djinn Lamp</strong> e <strong>Bazaar Bite</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
+    },
+    {
       date: '10 Set 2026', time: '20:27', tag: 'new', label: 'NOVO',
       html: `<strong>Enquete rápida: você gostaria de um vídeo no YouTube explicando a ferramenta?</strong>  Aparece um banner discreto no canto da tela depois que você analisa um perfil (não antes, e nunca em forma de formulário solto). Responde Sim ou Não, ou fecha sem responder.  Se já respondeu com aquele perfil, não aparece de novo.`
     },
