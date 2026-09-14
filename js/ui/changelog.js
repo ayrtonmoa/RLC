@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '14 Set 2026', time: '01:01', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Removido o banner da enquete sobre o vídeo no YouTube.</strong>  Já cumpriu o papel (78,6% disseram sim), então saiu do site pra não ficar incomodando quem já respondeu.`
+    },
+    {
       date: '13 Set 2026', time: '23:48', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.751 → 8.781 (30 novas, nenhuma removida). Cinco famílias de merge completas (os 6 tiers, do Common ao Legendary): <strong>Celestial Dome</strong>, <strong>Mirage Plate</strong>, <strong>Bazaar Bags</strong>, <strong>Djinn Lamp</strong> e <strong>Bazaar Bite</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
     },
