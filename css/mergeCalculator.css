@@ -15,6 +15,71 @@
   margin-bottom: 20px;
 }
 
+/* Busca com sugestões (miner nível a nível) */
+.busca-select-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.busca-select-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.busca-select-row .btn-calc-normal {
+  width: auto;
+  white-space: nowrap;
+  padding: 8px 20px;
+}
+
+.busca-select-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.busca-select-dropdown.aberto {
+  display: block;
+}
+
+.busca-select-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.busca-select-item-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.busca-select-item:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.busca-select-vazio {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 /* Section Separator */
 .merge-separator {
   margin: 40px 0;
@@ -177,6 +242,23 @@ body.dark-mode .merge-result-card {
   white-space: nowrap;
 }
 
+.rota-passo-badge {
+  display: block;
+  width: fit-content;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 3px;
+  color: white;
+}
+
+.rota-passo-badge-estoque { background: #6c757d; }
+.rota-passo-badge-comprar { background: #FF9800; }
+.rota-passo-badge-fundir { background: #28a745; }
+
 .rota-passo.rota-estoque {
   background: rgba(108, 117, 125, 0.1);
   border-left-color: #6c757d;
@@ -196,6 +278,13 @@ body.dark-mode .rota-passo.rota-estoque { background: rgba(108, 117, 125, 0.2); 
 body.dark-mode .rota-passo.rota-comprar { background: rgba(255, 152, 0, 0.18); }
 body.dark-mode .rota-passo.rota-fundir { background: rgba(40, 167, 69, 0.18); }
 
+.rota-passo-porque {
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 2px 10px 6px 34px;
+  margin-top: -4px;
+}
+
 .rota-economia {
   font-size: 12px;
   margin: 8px 0 0 0;
@@ -206,6 +295,8 @@ body.dark-mode .rota-economia { color: #6fd68a; }
 
 .rota-economia.pior { color: #dc3545; }
 body.dark-mode .rota-economia.pior { color: #ff8a95; }
+
+.rota-economia.neutro { color: var(--text-secondary); }
 
 .merge-market-compare {
   font-size: 13px;
@@ -285,6 +376,63 @@ body.dark-mode .merge-market-compare.melhor {
 .merge-leftover {
   color: #999;
   font-size: 11px;
+}
+
+/* Cards de nível lado a lado (receita de merge nível a nível) */
+.nivel-max-seletor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.nivel-max-seletor label {
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.nivel-max-seletor select {
+  width: auto;
+  min-width: 70px;
+}
+
+.nivel-max-dica {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-basis: 100%;
+}
+
+.nivel-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 15px 0;
+}
+
+.nivel-card {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  text-align: center;
+  transition: opacity 0.15s;
+}
+
+.nivel-card-desativado {
+  opacity: 0.4;
+}
+
+.nivel-card-titulo {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.nivel-card-peca {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
 }
 
 /* Total Box */
@@ -427,6 +575,18 @@ body.dark-mode .reverse-requirement-value {
   .merge-step-grid {
     grid-template-columns: 1fr;
     gap: 5px;
+  }
+
+  .nivel-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .busca-select-row {
+    flex-direction: column;
+  }
+
+  .busca-select-row .btn-calc-normal {
+    width: 100%;
   }
 
   .merge-step-arrow {

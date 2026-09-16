@@ -203,6 +203,38 @@ const UI_MergeCalculator = {
     return custo;
   },
 
+  // Quantas peças Common a cascata de fundir `qtd` de `tierAlvo` do zero realmente consome.
+  // Serve pra tornar concreto o aviso de "fundir do zero assume Common ilimitado": em vez de
+  // só dizer isso em abstrato, mostra o número exato que faltaria, o que deixa claro por que
+  // a rota de fundir não é uma opção de verdade sem esse estoque.
+  _qtdCommonParaFundir: function(tierAlvo, qtd) {
+    const alvoIdx = this.TIERS.indexOf(tierAlvo);
+    if (alvoIdx <= 0 || qtd <= 0) return 0;
+    let n = qtd;
+    for (let i = alvoIdx; i > 0; i--) {
+      n *= this.mergeCosts[this.TIERS[i - 1]].need;
+    }
+    return n;
+  },
+
+  // Frase curta explicando POR QUE valeu a pena fundir esse passo, comparando o custo real da
+  // fusão (custoCadeia: taxa + tudo que foi gasto pra conseguir o material de baixo) contra
+  // comprar essa mesma quantidade pronta ali no marketplace.  Sem essa comparação, o passo
+  // "Faça fusão" fica sem contexto: não dá pra saber se era a única opção ou se realmente
+  // compensou.  Quando o tier não está à venda (ex: Uncommon fundido a partir de Common),
+  // não tem com o que comparar, então não mostra nada.
+  _explicacaoFusao: function(a, nome) {
+    const precoUnit = this._precoMercado(a.tier, nome);
+    if (precoUnit == null) return '';
+    const custoComprar = precoUnit * a.qtd;
+    const custoReal = a.custoCadeia != null ? a.custoCadeia : a.custo;
+    const dif = custoComprar - custoReal;
+    if (dif > 0.0001) {
+      return `<div class="rota-passo-porque">💡 Comprar essas ${a.qtd.toLocaleString('pt-BR')}× prontas custaria ${custoComprar.toFixed(4)} RLT; fundindo saiu ${custoReal.toFixed(4)} RLT, economia de <strong>${dif.toFixed(4)} RLT</strong>.</div>`;
+    }
+    return '';
+  },
+
   _rotaMaisBarata: function(nome, tierAlvo, qtd, estoque) {
     const alvoIdx = this.TIERS.indexOf(tierAlvo);
     if (alvoIdx < 0 || qtd <= 0) return null;
@@ -247,9 +279,14 @@ const UI_MergeCalculator = {
         const abaixo = resolver(idx - 1, n * regra.need, estAtual);
         if (!abaixo.possivel) return { possivel: false, custo: Infinity, faltou: abaixo.faltou };
         const taxa = n * regra.cost;
+        // custoCadeia é o custo REAL de chegar a essas `n` peças por esse caminho: a taxa de
+        // fusão mais tudo que foi gasto pra conseguir as peças de baixo que ela consome (que
+        // pode ser grátis do estoque, outra fusão, ou compra).  É o número certo pra comparar
+        // com "comprar pronta aqui": comparar só a taxa (sem o custo do material) faria fundir
+        // parecer sempre mais barato do que realmente é.
         return {
           possivel: true, custo: abaixo.custo + taxa, est: abaixo.est,
-          acoes: abaixo.acoes.concat([{ tier, tipo: 'fundir', qtd: n, custo: taxa, de: this.TIERS[idx - 1], consome: n * regra.need }])
+          acoes: abaixo.acoes.concat([{ tier, tipo: 'fundir', qtd: n, custo: taxa, custoCadeia: abaixo.custo + taxa, de: this.TIERS[idx - 1], consome: n * regra.need }])
         };
       };
 
@@ -294,7 +331,9 @@ const UI_MergeCalculator = {
       </div>
 
       <!-- SEÇÃO 1: CALCULADORA NORMAL -->
-      <h3>📈 Calculadora Normal (O que consigo fazer?)</h3>
+      <details class="merge-explorar">
+      <summary class="merge-explorar-summary">📈 Calculadora Normal (O que consigo fazer?)</summary>
+      <div class="merge-explorar-corpo">
       <div class="info-box-orange">
         <h4>💡 Sugestão do SilverGuns</h4>
         <p>Você tem peças e quer saber <strong>até onde consegue chegar</strong>? Digite quantas peças você tem e veja!</p>
@@ -374,11 +413,13 @@ const UI_MergeCalculator = {
       </div>
 
       <div id="resultadoMergeCalc"></div>
-
-      <hr class="merge-separator">
+      </div>
+      </details>
 
       <!-- SEÇÃO 2: ROTA MAIS BARATA -->
-      <h3>🎯 Quero N peças, qual o jeito mais barato?</h3>
+      <details class="merge-explorar">
+      <summary class="merge-explorar-summary">🎯 Quero N peças, qual o jeito mais barato?</summary>
+      <div class="merge-explorar-corpo">
       <div class="info-box-blue">
         <p>
           Compara <strong>usar o que você já tem</strong>, <strong>fundir de baixo pra cima</strong> e <strong>comprar pronta no marketplace</strong>, degrau por degrau, e monta a rota mais barata.  Pode misturar: se compensar, ele diz pra fundir uma parte e comprar o resto.
@@ -430,6 +471,8 @@ const UI_MergeCalculator = {
       </div>
 
       <div id="resultadoReverso"></div>
+      </div>
+      </details>
     `;
   },
 
@@ -748,7 +791,7 @@ const UI_MergeCalculator = {
             html += `
               <div class="rota-passo rota-estoque">
                 <span class="rota-passo-icone">📦</span>
-                <span class="rota-passo-texto">Use <strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${this.getTierName(a.tier)}</strong> que você já tem</span>
+                <span class="rota-passo-texto"><span class="rota-passo-badge rota-passo-badge-estoque">Use o que você tem</span><strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${this.getTierName(a.tier)}</strong> do estoque</span>
                 <span class="rota-passo-custo">grátis</span>
               </div>
             `;
@@ -756,7 +799,7 @@ const UI_MergeCalculator = {
             html += `
               <div class="rota-passo rota-comprar">
                 <span class="rota-passo-icone">🛒</span>
-                <span class="rota-passo-texto">Compre <strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${this.getTierName(a.tier)}</strong> no marketplace <span class="dim">(${a.precoUnit} RLT cada)</span></span>
+                <span class="rota-passo-texto"><span class="rota-passo-badge rota-passo-badge-comprar">Compre no market</span><strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${this.getTierName(a.tier)}</strong> <span class="dim">(${a.precoUnit} RLT cada)</span></span>
                 <span class="rota-passo-custo">${a.custo.toFixed(4)} RLT</span>
               </div>
             `;
@@ -764,9 +807,10 @@ const UI_MergeCalculator = {
             html += `
               <div class="rota-passo rota-fundir">
                 <span class="rota-passo-icone">🔩</span>
-                <span class="rota-passo-texto">Funda <strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${this.getTierName(a.tier)}</strong> <span class="dim">(consome ${a.consome.toLocaleString('pt-BR')}× ${this.getTierName(a.de)})</span></span>
+                <span class="rota-passo-texto"><span class="rota-passo-badge rota-passo-badge-fundir">Faça fusão</span><strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${this.getTierName(a.tier)}</strong> <span class="dim">(consome ${a.consome.toLocaleString('pt-BR')}× ${this.getTierName(a.de)})</span></span>
                 <span class="rota-passo-custo">${a.custo.toFixed(4)} RLT</span>
               </div>
+              ${this._explicacaoFusao(a, r.name)}
             `;
           }
         });
@@ -785,13 +829,19 @@ const UI_MergeCalculator = {
             html += `<p class="rota-economia pior">⚠️ Comprar tudo pronto seria mais barato: ${custoSoComprar.toFixed(2)} RLT, <strong>${Math.abs(dif).toFixed(2)} RLT</strong> a menos que essa rota.</p>`;
           }
         }
+        // custoFundirTudo é só a soma das taxas de fusão descendo até Common, sem checar se
+        // dá pra chegar lá: Common não está à venda, então esse número assume que você já
+        // tem (ou minera de graça) todo o Common necessário.  Quando a rota real não bateu
+        // com esse valor, quase sempre é porque faltou Common mesmo, não porque o app errou
+        // a conta, então esse caso vira um aviso neutro em vez de "essa rota está errada".
         const custoFundirTudo = this._custoFundirPuro(r.targetTier, r.quantity);
         if (custoFundirTudo > 0) {
           const difF = custoFundirTudo - rota.custoTotal;
           if (difF > 0.0001) {
             html += `<p class="rota-economia">💡 Fundir tudo do zero custaria ${custoFundirTudo.toFixed(2)} RLT, essa rota economiza <strong>${difF.toFixed(2)} RLT</strong>.</p>`;
           } else if (difF < -0.0001) {
-            html += `<p class="rota-economia pior">⚠️ Fundir tudo do zero seria mais barato: ${custoFundirTudo.toFixed(2)} RLT, <strong>${Math.abs(difF).toFixed(2)} RLT</strong> a menos que essa rota.</p>`;
+            const commonNecessario = this._qtdCommonParaFundir(r.targetTier, r.quantity);
+            html += `<p class="rota-economia neutro">ℹ️ Fundindo do zero, só as taxas de fusão sairiam por ${custoFundirTudo.toFixed(2)} RLT. Mas isso exigiria <strong>${commonNecessario.toLocaleString('pt-BR')}× Common</strong> que você não tem, e Common não é vendido no marketplace: só vem jogando (minerando, expedição, missões diárias) ou abrindo caixa de peças com RST. Por isso não é uma opção disponível agora: a rota acima (comprar/fundir o que dá) é a mais barata que dá pra fazer de verdade com o que você tem hoje.</p>`;
           }
         }
       }
@@ -813,8 +863,6 @@ const UI_MergeCalculator = {
     resultDiv.innerHTML = html;
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
-
-
 
   getTierName(tier) {
     const names = {

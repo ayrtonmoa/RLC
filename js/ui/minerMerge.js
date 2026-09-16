@@ -12,18 +12,26 @@ const UI_MinerMerge = {
   // aberto: qualquer clique em ordenar/filtrar/aba re-renderiza tudo, e sem isso ele fecharia
   // na cara do usuário no meio do uso.
   _explorarAberto: false,
+  // Mesma lógica pro bloco "Merge completo de uma miner (nível a nível)".
+  _nivelANivelAberto: false,
 
+  // O plano de merges (renderMergePlanner) depende do inventário calculado, mas a busca de
+  // receita nível a nível não: ela só consulta o catálogo estático de miners e, opcionalmente,
+  // estoque/preços do Inventário se já existirem.  Por isso ela sempre renderiza, mesmo sem
+  // inventário, em vez de ficar escondida atrás do aviso "calcule seu inventário primeiro".
   mostrar: function(user) {
     const div = document.getElementById('minermerge');
     if (!div) return;
 
+    let html = this._nivelANivelSecaoHtml();
+
     if (!UI_Inventario.minersCached) {
-      div.innerHTML = '<div class="inv-box-yellow" style="margin-top:20px;">📦 Calcule seu inventário na aba <strong>Inventário</strong> primeiro para ver o plano de merges aqui.</div>';
-      return;
+      html += '<div class="inv-box-yellow" style="margin-top:20px;">📦 Calcule seu inventário na aba <strong>Inventário</strong> primeiro para ver o plano de merges aqui.</div>';
+    } else {
+      html += this.renderMergePlanner() || '<div class="inv-box-blue" style="margin-top:20px;">Nenhum merge disponível com o inventário atual.</div>';
     }
 
-    const html = this.renderMergePlanner();
-    div.innerHTML = html || '<div class="inv-box-blue" style="margin-top:20px;">Nenhum merge disponível com o inventário atual.</div>';
+    div.innerHTML = html;
     ChipTooltip.init();
   },
 
@@ -454,6 +462,346 @@ const UI_MinerMerge = {
     html += '</div></details>'; // fecha merge-explorar-corpo + merge-explorar
     html += '</div>';
     return html;
+  },
+
+  // ========== MERGE COMPLETO DE UMA MINER, NÍVEL A NÍVEL ==========
+  // Movido de mergeCalculator.js: conceitualmente é uma pergunta sobre UMA MINER específica
+  // ("quanto custa evoluir essa miner"), o que combina mais com esta aba do que com o Parts
+  // (que é agnóstico de miner, só sabe de peça/tier). O motor de cálculo (rota mais barata,
+  // estoque, preço de mercado) continua no Parts, e aqui só chama UI_MergeCalculator.*, pra
+  // não duplicar a mesma lógica em dois arquivos.
+
+  _nivelANivelSecaoHtml() {
+    return `
+      <details class="merge-explorar"${this._nivelANivelAberto ? ' open' : ''} ontoggle="UI_MinerMerge._nivelANivelAberto = this.open">
+      <summary class="merge-explorar-summary"><span class="guia-tag tag-new">novo</span>🧬 Merge completo de uma miner (nível a nível)</summary>
+      <div class="merge-explorar-corpo">
+      <div class="info-box-blue">
+        <p>
+          Busca a receita real de cada nível de merge de uma miner (as peças, não as cópias da própria miner) e calcula o custo mais barato pra cada nível, somando o total.  Ajuste as quantidades se quiser simular um cenário diferente da receita padrão.
+        </p>
+        ${UI_MergeCalculator._avisoFontesHtml()}
+      </div>
+
+      <div class="summary-item">
+        <h4>🔎 Qual miner?</h4>
+        <div class="busca-select-row">
+          <div class="busca-select-wrap">
+            <input type="text" id="nivelANivelBusca" placeholder="🔎 Digite pra buscar (ex: Celestial Dome)..." class="part-input busca-select-input" autocomplete="off"
+              oninput="UI_MinerMerge._filtrarSugestoesMiner(this.value)"
+              onfocus="UI_MinerMerge._filtrarSugestoesMiner(this.value)"
+              onblur="setTimeout(() => UI_MinerMerge._esconderSugestoesMiner(), 150)"
+              onkeydown="if (event.key === 'Enter') UI_MinerMerge.buscarReceitaMiner();">
+            <div id="nivelANivelSugestoes" class="busca-select-dropdown"></div>
+          </div>
+          <button onclick="UI_MinerMerge.buscarReceitaMiner()" class="btn-calc-normal">🔍 Buscar receita</button>
+        </div>
+      </div>
+
+      <div id="resultadoNivelANivel"></div>
+      </div>
+      </details>
+    `;
+  },
+
+  // Nomes de miners que têm pelo menos um nível de merge (level > 0), sem repetir, cada um
+  // com a imageUrl do primeiro nível encontrado (pra mostrar a miniatura na sugestão).
+  _nomesComMerge() {
+    const porNome = new Map();
+    (typeof MINERS_DATABASE !== 'undefined' ? MINERS_DATABASE : []).forEach(m => {
+      if (m.level > 0 && !porNome.has(m.name)) porNome.set(m.name, m.imageUrl || '');
+    });
+    return Array.from(porNome.entries())
+      .map(([nome, imageUrl]) => ({ nome, imageUrl }))
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  },
+
+  // Dropdown de sugestões customizado (em vez do <datalist> nativo, que no Chrome mostra um
+  // popup genérico do navegador e não deixa claro que é busca + seleção junto).  Filtra pelo
+  // texto digitado em qualquer posição do nome, não só no começo, e mostra até 8 resultados
+  // com a miniatura da miner, pra reconhecer mais rápido do que só pelo nome.
+  _filtrarSugestoesMiner(texto) {
+    const dropdown = document.getElementById('nivelANivelSugestoes');
+    if (!dropdown) return;
+
+    const busca = texto.trim().toLowerCase();
+    const todos = this._nomesComMerge();
+    const filtrados = (busca ? todos.filter(m => m.nome.toLowerCase().includes(busca)) : todos).slice(0, 8);
+
+    if (filtrados.length === 0) {
+      dropdown.innerHTML = `<div class="busca-select-vazio">Nenhuma miner com merge encontrada</div>`;
+      dropdown.classList.add('aberto');
+      return;
+    }
+
+    dropdown.innerHTML = filtrados.map(m => {
+      const img = m.imageUrl ? `<img src="${m.imageUrl}" alt="${m.nome}" class="busca-select-item-img">` : '';
+      return `<div class="busca-select-item" onmousedown="UI_MinerMerge._selecionarMinerSugestao('${m.nome.replace(/'/g, "\\'")}')">${img}<span>${m.nome}</span></div>`;
+    }).join('');
+    dropdown.classList.add('aberto');
+  },
+
+  _esconderSugestoesMiner() {
+    const dropdown = document.getElementById('nivelANivelSugestoes');
+    if (dropdown) dropdown.classList.remove('aberto');
+  },
+
+  _selecionarMinerSugestao(nome) {
+    document.getElementById('nivelANivelBusca').value = nome;
+    this._esconderSugestoesMiner();
+    this.buscarReceitaMiner();
+  },
+
+  // Busca todos os níveis de merge de uma miner (level 1 em diante) e extrai, de cada um,
+  // só o ingrediente que é PEÇA (Fan/Wire/Hashboard).  O ingrediente que é a própria miner
+  // (rarity null, "2x Celestial Dome") fica de fora, porque isso é custo de miner (o resto
+  // dessa aba já trata disso), não de peça.
+  buscarReceitaMiner() {
+    const nomeBuscado = document.getElementById('nivelANivelBusca').value.trim();
+    const resultDiv = document.getElementById('resultadoNivelANivel');
+    if (!nomeBuscado) {
+      resultDiv.innerHTML = `<div class="info-box-red"><h4>⚠️ Digite o nome de uma miner</h4></div>`;
+      return;
+    }
+
+    const base = (typeof MINERS_DATABASE !== 'undefined' ? MINERS_DATABASE : []);
+    const niveis = base
+      .filter(m => m.name.toLowerCase() === nomeBuscado.toLowerCase() && m.level > 0)
+      .sort((a, b) => a.level - b.level);
+
+    if (niveis.length === 0) {
+      resultDiv.innerHTML = `<div class="info-box-red"><h4>⚠️ Miner não encontrada</h4><p>Não achei "${nomeBuscado}" com nenhum nível de merge no catálogo. Confira o nome (o autocomplete só sugere quem tem merge).</p></div>`;
+      return;
+    }
+
+    const partesValidas = ['fan', 'wire', 'hashboard'];
+    this._receitaAtual = {
+      nome: niveis[0].name,
+      imageUrl: niveis[0].imageUrl || '',
+      niveis: niveis.map(m => {
+        const ingredientePeca = (m.craftRecipe || []).find(i => i.rarity && partesValidas.includes(String(i.name).toLowerCase()));
+        return {
+          level: m.level,
+          parte: ingredientePeca ? String(ingredientePeca.name).toLowerCase() : null,
+          rarity: ingredientePeca ? String(ingredientePeca.rarity).toLowerCase() : null,
+          qtd: ingredientePeca ? ingredientePeca.count : 0
+        };
+      })
+    };
+
+    this._renderizarNiveis();
+  },
+
+  _renderizarNiveis() {
+    const resultDiv = document.getElementById('resultadoNivelANivel');
+    const r = this._receitaAtual;
+    const emo = UI_MergeCalculator.TIER_EMOJI;
+    const emojiParte = { fan: '🌀', wire: '🔌', hashboard: '💾' };
+
+    const imgHtml = r.imageUrl ? `<img src="${r.imageUrl}" alt="${r.nome}" class="merge-row-img" style="width:40px;height:40px;">` : '';
+    const nivelMinimo = r.niveis[0].level;
+    const nivelMaximo = r.niveis[r.niveis.length - 1].level;
+    let html = `<div class="summary-item"><h4 style="display:flex;align-items:center;gap:8px;">${imgHtml}📋 Receita de ${r.nome} (peças por nível)</h4>`;
+    html += `
+      <div class="nivel-max-seletor">
+        <label for="nivelMinSelect">Calcular do nível</label>
+        <select id="nivelMinSelect" class="part-select" onchange="UI_MinerMerge._aplicarNivelMaximo()">
+          ${r.niveis.map(n => `<option value="${n.level}" ${n.level === nivelMinimo ? 'selected' : ''}>${n.level}</option>`).join('')}
+        </select>
+        <label for="nivelMaxSelect">até o nível</label>
+        <select id="nivelMaxSelect" class="part-select" onchange="UI_MinerMerge._aplicarNivelMaximo()">
+          ${r.niveis.map(n => `<option value="${n.level}" ${n.level === nivelMaximo ? 'selected' : ''}>${n.level}</option>`).join('')}
+        </select>
+        <span class="nivel-max-dica">💡 Já fundiu os primeiros níveis? Selecione só o que falta.</span>
+      </div>
+    `;
+    html += '<div class="nivel-cards-grid">';
+    r.niveis.forEach((n, i) => {
+      if (!n.parte) {
+        html += `<div class="nivel-card" data-level="${n.level}"><div class="nivel-card-titulo">Nível ${n.level}</div><div class="nivel-card-peca">Sem peça, só cópias da própria miner</div></div>`;
+        return;
+      }
+      html += `
+        <div class="nivel-card" data-level="${n.level}">
+          <div class="nivel-card-titulo">Nível ${n.level}</div>
+          <div class="nivel-card-peca">${emojiParte[n.parte]} ${UI_MergeCalculator.capitalize(n.parte)}<br>${emo[n.rarity]} ${UI_MergeCalculator.getTierName(n.rarity)}</div>
+          <input type="number" min="0" value="${n.qtd}" id="nivelQtd_${i}" class="part-input">
+        </div>
+      `;
+    });
+    html += '</div>';
+    html += `
+      <div class="merge-step-grid" style="margin-top:12px; gap:10px;">
+        <button onclick="UI_MinerMerge.calcularNivelANivel()" class="btn-calc-reverse">💰 Calcular custo total</button>
+        <button onclick="UI_MinerMerge.calcularEquivalenciaComum()" class="btn-calc-normal">🧮 Ver total em peças Common</button>
+      </div>
+    `;
+    html += `</div><div id="resultadoNivelANivelEquivalencia"></div><div id="resultadoNivelANivelCusto"></div>`;
+
+    resultDiv.innerHTML = html;
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  },
+
+  // Desativa visualmente (e no cálculo) os cards de nível fora do intervalo escolhido, tanto
+  // pra quem não vai fundir até o Unreal (limita o "até") quanto pra quem já fundiu os
+  // primeiros níveis e só precisa calcular o que falta (limita o "de").  Não apaga as
+  // quantidades: só ignora esses níveis enquanto estiverem desativados.
+  _aplicarNivelMaximo() {
+    const nivelMinimo = parseInt(document.getElementById('nivelMinSelect')?.value) || -Infinity;
+    const nivelMaximo = parseInt(document.getElementById('nivelMaxSelect')?.value) || Infinity;
+    document.querySelectorAll('#resultadoNivelANivel .nivel-card').forEach(card => {
+      const level = parseInt(card.dataset.level);
+      const desativado = level > nivelMaximo || level < nivelMinimo;
+      card.classList.toggle('nivel-card-desativado', desativado);
+      const input = card.querySelector('input');
+      if (input) input.disabled = desativado;
+    });
+  },
+
+  // Quantas peças do tier mais baixo (Common) equivalem a 1 peça do tier informado, seguindo
+  // a corrente de fusão oficial (50 Common = 1 Uncommon, 20 Uncommon = 1 Rare, etc).
+  _multiplicadorEquivalente(tier) {
+    const idx = UI_MergeCalculator.TIERS.indexOf(tier);
+    let mult = 1;
+    for (let i = 0; i < idx; i++) {
+      mult *= UI_MergeCalculator.mergeCosts[UI_MergeCalculator.TIERS[i]].need;
+    }
+    return mult;
+  },
+
+  // Traduz a receita inteira (misturando Common, Uncommon, Rare etc) pra um único número por
+  // peça: quantas Common seriam necessárias fundindo tudo do zero.  Como o marketplace não
+  // vende Common, mostra também o equivalente em Uncommon, que é o menor tier comprável.
+  calcularEquivalenciaComum() {
+    const r = this._receitaAtual;
+    const resultDiv = document.getElementById('resultadoNivelANivelEquivalencia');
+    if (!r || !resultDiv) return;
+
+    const emojiParte = { fan: '🌀', wire: '🔌', hashboard: '💾' };
+    const multUncommon = UI_MergeCalculator.mergeCosts.common.need;
+    const totaisPorParte = {};
+
+    r.niveis.forEach((n, i) => {
+      if (!n.parte) return;
+      const input = document.getElementById(`nivelQtd_${i}`);
+      if (input?.disabled) return;
+      const qtd = parseInt(input?.value) || 0;
+      const equivalenteComum = qtd * this._multiplicadorEquivalente(n.rarity);
+      totaisPorParte[n.parte] = (totaisPorParte[n.parte] || 0) + equivalenteComum;
+    });
+
+    const partes = Object.keys(totaisPorParte);
+    if (partes.length === 0) {
+      resultDiv.innerHTML = `<div class="info-box-red"><h4>⚠️ Preencha as quantidades primeiro</h4></div>`;
+      return;
+    }
+
+    let html = '<div class="info-box-blue"><h4>🧮 Toda a receita convertida pra um único tier</h4>';
+    partes.forEach(parte => {
+      const totalComum = totaisPorParte[parte];
+      const totalUncommon = totalComum / multUncommon;
+      html += `
+        <div class="merge-step">
+          <div class="merge-step-grid">
+            <div>${emojiParte[parte]} <strong>${UI_MergeCalculator.capitalize(parte)}</strong></div>
+            <div>${totalComum.toLocaleString('pt-BR')}× Common</div>
+            <div>${totalUncommon.toLocaleString('pt-BR')}× Uncommon</div>
+          </div>
+        </div>
+      `;
+    });
+    html += `<p class="rates-note">Common é só referência (não dá pra comprar no marketplace).  Uncommon é o menor tier comprável, então é o número que importa se você for comprar em vez de fundir.</p>`;
+    html += '</div>';
+
+    resultDiv.innerHTML = html;
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  },
+
+  // Roda cada nível na ordem, e o estoque que sobra de um nível passa pro próximo.  Assim
+  // uma peça que a receita usa em dois níveis diferentes (ex: Wire aparece em quase todos)
+  // não é contada duas vezes a partir do mesmo estoque original.
+  calcularNivelANivel() {
+    UI_MergeCalculator._carregarPrecos();
+    const r = this._receitaAtual;
+    if (!r) return;
+
+    const estoquePorParte = {};
+    let total = 0;
+    let algumImpossivel = false;
+    const linhas = [];
+
+    r.niveis.forEach((n, i) => {
+      const input = document.getElementById(`nivelQtd_${i}`);
+      const qtd = parseInt(input?.value) || 0;
+      if (!n.parte || qtd <= 0 || input?.disabled) {
+        linhas.push({ level: n.level, semPeca: true });
+        return;
+      }
+      if (!estoquePorParte[n.parte]) estoquePorParte[n.parte] = UI_MergeCalculator._estoqueDe(UI_MergeCalculator.capitalize(n.parte));
+
+      const rota = UI_MergeCalculator._rotaMaisBarata(UI_MergeCalculator.capitalize(n.parte), n.rarity, qtd, estoquePorParte[n.parte]);
+      if (rota.possivel) {
+        total += rota.custoTotal;
+        estoquePorParte[n.parte] = rota.estoqueDepois;
+      } else {
+        algumImpossivel = true;
+      }
+      linhas.push({ level: n.level, parte: n.parte, rarity: n.rarity, qtd, rota });
+    });
+
+    this._mostrarNivelANivel(linhas, total, algumImpossivel);
+  },
+
+  _mostrarNivelANivel(linhas, total, algumImpossivel) {
+    const resultDiv = document.getElementById('resultadoNivelANivelCusto');
+    const emo = UI_MergeCalculator.TIER_EMOJI;
+    const emojiParte = { fan: '🌀', wire: '🔌', hashboard: '💾' };
+
+    let html = '<div class="info-box-green"><h3>💰 Custo por nível</h3>';
+
+    linhas.forEach(l => {
+      if (l.semPeca) {
+        html += `<div class="reverse-result-card"><div class="merge-result-header"><h4 class="merge-result-title">Nível ${l.level}</h4><span class="merge-cost-badge">sem peça</span></div></div>`;
+        return;
+      }
+      const rota = l.rota;
+      html += `
+        <div class="reverse-result-card">
+          <div class="merge-result-header">
+            <div><h4 class="merge-result-title">Nível ${l.level}: ${l.qtd}× ${emojiParte[l.parte]} ${UI_MergeCalculator.capitalize(l.parte)} ${emo[l.rarity]} ${UI_MergeCalculator.getTierName(l.rarity)}</h4></div>
+            <div><span class="merge-cost-badge">${rota.possivel ? rota.custoTotal.toFixed(4) + ' RLT' : 'não dá'}</span></div>
+          </div>
+      `;
+      if (!rota.possivel) {
+        const f = rota.faltou;
+        html += `<div class="merge-market-compare pior">⚠️ Faltam <strong>${f ? f.qtd.toLocaleString('pt-BR') + '× ' + UI_MergeCalculator.getTierName(f.tier) : 'peças'}</strong> e não dá pra comprar nem fundir o suficiente.</div>`;
+      } else {
+        html += '<div class="rota-passos">';
+        rota.acoes.forEach(a => {
+          if (a.tipo === 'estoque') {
+            html += `<div class="rota-passo rota-estoque"><span class="rota-passo-icone">📦</span><span class="rota-passo-texto"><span class="rota-passo-badge rota-passo-badge-estoque">Use o que você tem</span><strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${UI_MergeCalculator.getTierName(a.tier)}</strong> do estoque</span><span class="rota-passo-custo">grátis</span></div>`;
+          } else if (a.tipo === 'comprar') {
+            html += `<div class="rota-passo rota-comprar"><span class="rota-passo-icone">🛒</span><span class="rota-passo-texto"><span class="rota-passo-badge rota-passo-badge-comprar">Compre no market</span><strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${UI_MergeCalculator.getTierName(a.tier)}</strong> <span class="dim">(${a.precoUnit} RLT cada)</span></span><span class="rota-passo-custo">${a.custo.toFixed(4)} RLT</span></div>`;
+          } else {
+            html += `<div class="rota-passo rota-fundir"><span class="rota-passo-icone">🔩</span><span class="rota-passo-texto"><span class="rota-passo-badge rota-passo-badge-fundir">Faça fusão</span><strong>${a.qtd.toLocaleString('pt-BR')}× ${emo[a.tier]} ${UI_MergeCalculator.getTierName(a.tier)}</strong> <span class="dim">(consome ${a.consome.toLocaleString('pt-BR')}× ${UI_MergeCalculator.getTierName(a.de)})</span></span><span class="rota-passo-custo">${a.custo.toFixed(4)} RLT</span></div>${UI_MergeCalculator._explicacaoFusao(a, UI_MergeCalculator.capitalize(l.parte))}`;
+          }
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+
+    html += `
+        <div class="merge-total-box merge-total-box-reverse">
+          <h3>💰 CUSTO TOTAL (todos os níveis)</h3>
+          <p class="merge-total-value">${total.toFixed(4)} RLT</p>
+          <p class="merge-total-subtitle">${algumImpossivel ? 'Considerando só os níveis possíveis' : 'Peças de todos os níveis, pelo caminho mais barato em cada um'}</p>
+        </div>
+      </div>
+    `;
+
+    resultDiv.innerHTML = html;
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 
   // Impacto real de "trocar" a miner atual por outro nível/tier no poder total da sala:
