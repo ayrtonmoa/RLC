@@ -4,12 +4,13 @@ const UI_Racks = {
   currentFilter: 'all',
   
   mostrar(user) {
-    if (!user.roomData || !user.powerData) {
-      document.getElementById('racks').innerHTML = '<p class="error">Dados de racks não disponíveis.</p>';
+    const userData = user || State.getUserData();
+    if (!userData || !userData.roomData || !userData.powerData) {
+      document.getElementById('racks').innerHTML = '<p class="error">Dados de racks não disponíveis. Analise seu perfil primeiro.</p>';
       return;
     }
 
-    const impactosRacks = this.calcularImpactosRacks(user);
+    const impactosRacks = this.calcularImpactosRacks(userData);
     
     const div = document.getElementById('racks');
     let html = `
