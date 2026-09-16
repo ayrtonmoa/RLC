@@ -1011,7 +1011,15 @@ const UI_Inventario = {
     const comBanco = alocadas.concat(bancoRelevante);
     const novoPoderTotal = UI_RoomPlanner._calcularPoderEstimado(comBanco, racks, userData);
 
-    const celulasOcupadas = alocadas.reduce((s, m) => s + this.sim._cellsOf(m), 0);
+    // Espaço ocupado: quem já está num rack de verdade, mais quem foi ADICIONADO agora no
+    // Inventário (_origemKey).  Essas ainda vão ocupar uma célula quando o usuário de fato
+    // instalar, então já entram na conta.  Miners REMOVIDAS (_minerIndexOriginal) também
+    // caem no banco, mas não devem contar aqui: elas já saíram de `alocadas`, e contá-las de
+    // novo faria a sala parecer cheia mesmo depois de abrir espaço removendo algo.  Antes
+    // isso usava só `alocadas`, então adicionar peças no Inventário nunca mexia no contador
+    // de espaço nem disparava o aviso de sala cheia, embora o poder já atualizasse.
+    const adicionadasNoBanco = this.sim.banco.filter(m => m._origemKey);
+    const celulasOcupadas = alocadas.concat(adicionadasNoBanco).reduce((s, m) => s + this.sim._cellsOf(m), 0);
 
     let capacidadeTotal = 0;
     if (userData.roomData.room_levels && Array.isArray(userData.roomData.room_levels)) {
