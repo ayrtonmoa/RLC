@@ -4,7 +4,7 @@
 const UI_Changelog = {
   updates: [
     {
-      date: '16 Set 2026', time: '01:17', tag: 'new', label: 'NOVO',
+      date: '16 Set 2026', time: '07:50', tag: 'new', label: 'NOVO',
       html: `<strong>MinerMerge: custo de merge de uma miner inteira até o Unreal, nível a nível.</strong>  Digite o nome da miner (ex: Celestial Dome), escolha na lista com a imagem, e o app busca a receita real de peças de cada nível no catálogo, deixando editar as quantidades se quiser simular outro cenário.
       <ul class="guia-tl-list">
         <li>Cada nível usa o mesmo motor de "rota mais barata" do Parts: mistura estoque, fusão e compra no marketplace, mostra o custo separado por nível e o total somado, e agora explica cada passo de fusão (quanto custaria comprar pronto vs. o que saiu fundindo).</li>
@@ -14,7 +14,7 @@ const UI_Changelog = {
       </ul>`
     },
     {
-      date: '16 Set 2026', time: '01:17', tag: 'improved', label: 'MELHORIA',
+      date: '16 Set 2026', time: '07:50', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Listas mais fáceis de seguir no SmartRoom e no Parts.</strong>
       <ul class="guia-tl-list">
         <li><strong>SmartRoom:</strong> a "lista de ações pra montar isso no jogo" agora vem em duas etapas: primeiro tira TUDO que precisa sair, depois bota tudo nas vagas abertas. Antes cada linha misturava os dois momentos ("tira a X e bota a Y no lugar"), e como a Y só saía de outro rack lá embaixo na lista, não existia ordem que funcionasse de verdade com a sala cheia. Cada etapa ainda vem agrupada por sala e rack, pra você mexer num rack de cada vez.</li>
@@ -22,7 +22,7 @@ const UI_Changelog = {
       </ul>`
     },
     {
-      date: '16 Set 2026', time: '01:17', tag: 'fix', label: 'CORREÇÃO',
+      date: '16 Set 2026', time: '07:50', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>Dois bugs corrigidos: Racks e Inventário.</strong>
       <ul class="guia-tl-list">
         <li><strong>Racks</strong> travava com erro ao abrir a aba sem ter analisado um perfil ainda. Agora mostra um aviso pedindo pra analisar primeiro.</li>
