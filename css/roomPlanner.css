@@ -1042,6 +1042,17 @@ body.dark-mode .room-planner-comparison-liga .comparison-value {
 .checklist-remover { border-left-color: #dc3545; background: rgba(220,53,69,0.06); }
 .checklist-adicionar { border-left-color: #28a745; background: rgba(40,167,69,0.06); }
 
+.checklist-fase {
+  margin: 14px 0 8px 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 6px;
+}
+
+.checklist-fase:first-child { margin-top: 0; }
+
 .checklist-feito {
   opacity: 0.45;
   text-decoration: line-through;

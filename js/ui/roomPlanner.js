@@ -1957,7 +1957,45 @@ const UI_RoomPlanner = {
       });
     });
 
-    return acoes;
+    return this._separarEmFases(acoes);
+  },
+
+  // Quebra as ações em DUAS fases: tira tudo primeiro, só depois bota tudo de volta.
+  //
+  // As versões anteriores misturavam os dois momentos numa linha só ("tira a X e bota a Y no
+  // lugar dela, a Y vem do rack Z"), o que criava dependência circular: pra executar a linha 1
+  // você precisava ter executado a linha 8 antes, que por sua vez dependia da linha 3. Com a
+  // sala cheia não existe ordem que funcione linha a linha, porque não sobra célula livre pra
+  // encaixar nada até alguma coisa sair.
+  //
+  // Esvaziando tudo primeiro o problema some: quando começa a fase 2, todas as vagas já
+  // existem, e cada linha vira uma instrução independente, executável na ordem em que está.
+  // Uma miner que só muda de rack ('mover') aparece nas duas fases: sai na 1, volta na 2.
+  _separarEmFases: function(acoes) {
+    // Ordena por sala/rack (extraídos do rótulo) pra agrupar o que acontece no mesmo rack:
+    // no jogo você mexe num rack de cada vez, então pular de rack em rack a cada linha é o
+    // que mais custa tempo.
+    const chaveDeOrdem = (label) => {
+      const m = /\(Sala (\d+), rack (\d+)\)/.exec(label || '');
+      return m ? (parseInt(m[1]) * 1000 + parseInt(m[2])) : 999999;
+    };
+
+    const saidas = [];
+    const entradas = [];
+    acoes.forEach(a => {
+      if (a.tipo === 'remover') {
+        saidas.push({ nome: a.nome, nivel: a.nivel, de: a.de, voltaDepois: false });
+      } else if (a.tipo === 'mover') {
+        saidas.push({ nome: a.nome, nivel: a.nivel, de: a.de, voltaDepois: true });
+        entradas.push({ nome: a.nome, nivel: a.nivel, para: a.para });
+      } else if (a.tipo === 'adicionar') {
+        entradas.push({ nome: a.nome, nivel: a.nivel, para: a.para });
+      }
+    });
+
+    saidas.sort((x, y) => chaveDeOrdem(x.de) - chaveDeOrdem(y.de));
+    entradas.sort((x, y) => chaveDeOrdem(x.para) - chaveDeOrdem(y.para));
+    return { saidas, entradas };
   },
 
   toggleListaDeAcoes: function() {
@@ -1971,28 +2009,38 @@ const UI_RoomPlanner = {
   // inteiro é re-renderizado via innerHTML a cada ação (mover miner, etc.) — um <details>
   // perderia o "open" nesse replace; guardando o estado à parte, ele sobrevive ao re-render.
   _renderListaDeAcoes: function(userData) {
-    const acoes = this._gerarListaDeAcoes(userData);
+    const { saidas, entradas } = this._gerarListaDeAcoes(userData);
+    const total = saidas.length + entradas.length;
     const aberto = this._acoesExpandido;
     let html = '<div class="room-planner-checklist">';
     html += '<div class="checklist-title" onclick="UI_RoomPlanner.toggleListaDeAcoes()">';
-    html += '📋 Lista de ações pra montar isso no jogo <span class="checklist-count">' + acoes.length + '</span>';
+    html += '📋 Lista de ações pra montar isso no jogo <span class="checklist-count">' + total + '</span>';
     html += '<span class="checklist-toggle-icon">' + (aberto ? '▲' : '▼') + '</span>';
     html += '</div>';
     if (aberto) {
-      if (acoes.length === 0) {
-        html += '<p class="checklist-empty">Nada mudou de lugar — o estado simulado é igual ao real.</p>';
+      if (total === 0) {
+        html += '<p class="checklist-empty">Nada mudou de lugar, o estado simulado é igual ao real.</p>';
       } else {
+        const item = (classe, texto) => '<label class="checklist-item ' + classe + '">'
+          + '<input type="checkbox" onchange="this.parentElement.classList.toggle(\'checklist-feito\', this.checked)">'
+          + '<span>' + texto + '</span></label>';
+
         html += '<div class="checklist-items">';
-        acoes.forEach((a, i) => {
-          let texto;
-          if (a.tipo === 'mover') texto = 'Tira <strong>' + a.nome + '</strong> (' + a.nivel + ') do <strong>' + a.de + '</strong> → bota no <strong>' + a.para + '</strong>';
-          else if (a.tipo === 'remover') texto = 'Tira <strong>' + a.nome + '</strong> (' + a.nivel + ') do <strong>' + a.de + '</strong> e guarda no armazém';
-          else texto = 'Instala <strong>' + a.nome + '</strong> (' + a.nivel + ') no <strong>' + a.para + '</strong>';
-          html += '<label class="checklist-item checklist-' + a.tipo + '">';
-          html += '<input type="checkbox" onchange="this.parentElement.classList.toggle(\'checklist-feito\', this.checked)">';
-          html += '<span>' + texto + '</span>';
-          html += '</label>';
-        });
+        if (saidas.length) {
+          html += '<p class="checklist-fase">1️⃣ Tire TODAS estas da sala primeiro <span class="checklist-count">' + saidas.length + '</span></p>';
+          saidas.forEach(s => {
+            const nota = s.voltaDepois
+              ? ' <span class="dim">(volta pra outro rack na etapa 2)</span>'
+              : ' <span class="dim">(essa não volta, fica guardada)</span>';
+            html += item('checklist-remover', 'Tira <strong>' + s.nome + '</strong> (' + s.nivel + ') do <strong>' + s.de + '</strong>' + nota);
+          });
+        }
+        if (entradas.length) {
+          html += '<p class="checklist-fase">2️⃣ Agora coloque estas nas vagas abertas <span class="checklist-count">' + entradas.length + '</span></p>';
+          entradas.forEach(e => {
+            html += item('checklist-adicionar', 'Bota <strong>' + e.nome + '</strong> (' + e.nivel + ') no <strong>' + e.para + '</strong>');
+          });
+        }
         html += '</div>';
       }
     }
