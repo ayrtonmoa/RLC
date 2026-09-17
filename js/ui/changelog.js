@@ -4,6 +4,14 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '17 Set 2026', time: '00:05', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Inventário: mais dois ajustes na simulação.</strong>
+      <ul class="guia-tl-list">
+        <li><strong>Poder ao remover:</strong> remover uma miner instalada na simulação não abaixava o poder mostrado. Ela só trocava de lista internamente (saía dos racks e caía num controle interno pra permitir desfazer depois), mas continuava sendo somada como se ainda estivesse instalada.</li>
+        <li><strong>Tabelas:</strong> as duas tabelas de miners (instaladas e disponíveis) precisavam de rolagem horizontal pra ver a coluna de Ação, mesmo lado a lado numa tela normal. O texto das células não quebrava linha, então cada coluna crescia pelo tamanho do conteúdo em vez de caber no espaço disponível.</li>
+      </ul>`
+    },
+    {
       date: '16 Set 2026', time: '07:50', tag: 'new', label: 'NOVO',
       html: `<strong>MinerMerge: custo de merge de uma miner inteira até o Unreal, nível a nível.</strong>  Digite o nome da miner (ex: Celestial Dome), escolha na lista com a imagem, e o app busca a receita real de peças de cada nível no catálogo, deixando editar as quantidades se quiser simular outro cenário.
       <ul class="guia-tl-list">
