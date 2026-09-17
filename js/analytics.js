@@ -20,14 +20,17 @@ const Analytics = {
   },
 
   // ── Perfil ─────────────────────────────────────────────
+  // current_power vem da API em GH/s (ver api.js), não em Hz cru, daí o /1e9 pra virar Eh/s
+  // (1 Eh = 1e9 GH). Os campos originais aqui (userData.total_power, userData.league.name)
+  // não existem na resposta da API, então esse evento sempre mandou power_eh e league_name
+  // nulos desde que foi escrito.
   perfilAnalisado(username, userData) {
-    const powerEh = userData?.total_power
-      ? (userData.total_power / 1e18).toFixed(2)
-      : null;
+    const currentPowerGh = userData?.powerData?.current_power;
+    const powerEh = currentPowerGh ? (currentPowerGh / 1e9).toFixed(2) : null;
     this.track('perfil_analisado', {
       username,
       league_id:  userData?.league_id  ?? null,
-      league_name: userData?.league?.name ?? null,
+      league_name: userData?.league?.title?.pt || userData?.league?.title?.en || null,
       power_eh:   powerEh,
     });
   },
@@ -42,10 +45,6 @@ const Analytics = {
       best_crypto:  bestCrypto ?? null,
       crypto_count: cryptoCount ?? null,
     });
-  },
-
-  farmCsvExportado() {
-    this.track('farm_csv_exportado');
   },
 
   // ── Parts Calculator ───────────────────────────────────
