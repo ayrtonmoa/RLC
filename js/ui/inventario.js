@@ -993,21 +993,24 @@ const UI_Inventario = {
     const poderAtual = userData.powerData.current_power;
 
     // this.sim.poderEstimado só soma quem está em rackAssignments (rack definido) — o que é
-    // certo pro SmartRoom, mas aqui no Inventário as miners adicionadas/removidas
-    // ficam sempre no banco (essa aba não tem grid pra escolher rack), então usar só
-    // poderEstimado sempre dava +0. Por isso o poder simulado do Inventário soma banco +
-    // rackAssignments direto: as do banco entram com poder base + bônus de coleção, mas
-    // SEM bônus de rack (não tem rack escolhido) — ver aviso na tela, isso é intencional,
-    // não um bug, e o número aqui é só uma estimativa conservadora, não a precisão que o
-    // SmartRoom dá quando você define o rack de verdade.
+    // certo pro SmartRoom, mas aqui no Inventário as miners ADICIONADAS ficam sempre no banco
+    // (essa aba não tem grid pra escolher rack), então usar só poderEstimado sempre dava +0.
+    // Por isso o poder simulado do Inventário soma banco + rackAssignments direto: as do
+    // banco entram com poder base + bônus de coleção, mas SEM bônus de rack (não tem rack
+    // escolhido, ver aviso na tela). Isso é intencional, não um bug: o número aqui é só
+    // uma estimativa conservadora, não a precisão que o SmartRoom dá quando você define o
+    // rack de verdade.
     // this.sim.banco começa com TODO o inventário disponível por padrão (_disponivelPadrao),
     // não só o que o usuário explicitamente adicionou — sem filtrar isso, o cálculo somava
     // o poder do inventário inteiro toda vez que a simulação ficava ativa, inflando o
-    // "Mudança" absurdamente. Só entra aqui quem foi de fato adicionado (_origemKey) ou
-    // removida de um rack real (_minerIndexOriginal) — ambos mudanças reais da simulação.
+    // "Mudança" absurdamente. Só entra aqui quem foi de fato ADICIONADO (_origemKey): miner
+    // removida (_minerIndexOriginal) já saiu de `alocadas` e cai no banco só pra poder ser
+    // desfeita depois, mas ela voltou pro armazém de verdade e não contribui poder nenhum lá.
+    // Incluí-la aqui também fazia a remoção nunca abaixar o poder simulado, porque ela só
+    // trocava de lista (alocadas -> banco) sem nunca deixar de ser somada.
     const racks = userData.roomData.racks || [];
     const alocadas = Object.values(this.sim.rackAssignments).flat();
-    const bancoRelevante = this.sim.banco.filter(m => !m._disponivelPadrao);
+    const bancoRelevante = this.sim.banco.filter(m => m._origemKey);
     const comBanco = alocadas.concat(bancoRelevante);
     const novoPoderTotal = UI_RoomPlanner._calcularPoderEstimado(comBanco, racks, userData);
 
