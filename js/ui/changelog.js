@@ -4,8 +4,29 @@
 const UI_Changelog = {
   updates: [
     {
-      date: '21 Set 2026', time: '16:15', tag: 'improved', label: 'MELHORIA',
+      date: '21 Set 2026', time: '19:46', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.781 → 8.829 (48 novas, nenhuma removida). Oito famílias de merge completas (os 6 tiers, do Common ao Legendary): <strong>Santoku</strong>, <strong>Snack Tin</strong>, <strong>Sweet Cart</strong>, <strong>Grand Builder</strong>, <strong>One HamForce</strong>, <strong>Hell's Burner</strong>, <strong>AdamantiX</strong> e <strong>Totem</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
+    },
+    {
+      date: '21 Set 2026', time: '19:46', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Farm Calculator: block rewards das ligas Emerald atualizados.</strong>  As três Emerald dobraram em relação ao que o app tinha (cerca de +100% em quase todas as moedas), então quem está nelas via o ganho do Farm pela metade do real.
+      <ul class="guia-tl-list">
+        <li><strong>Emerald I:</strong> todas as moedas dobraram, menos o RST, que ficou em 254,8733.  Exemplos: BTC 0,00000324 → 0,00000648, LTC 0,004837 → 0,009674, USDT 0,9175 → 1,835.</li>
+        <li><strong>Emerald II:</strong> tudo dobrou, inclusive o RST (204,3251 → 410).</li>
+        <li><strong>Emerald III:</strong> tudo dobrou, inclusive o RST (102,521 → 205).</li>
+        <li>As outras 19 ligas (Bronze I até Diamond III, Titan I a III e Legend) foram conferidas de novo e seguem iguais.  Não há confirmação se o dobro nas Emerald é permanente ou temporário.</li>
+      </ul>`
+    },
+    {
+      date: '21 Set 2026', time: '19:46', tag: 'new', label: 'NOVO',
+      html: `<strong>Farm Calculator: tempo de bloco por liga, a partir das suas leituras.</strong>  Em testes com uma conta na Titan III, o BNB apareceu em ~12 min por bloco (leituras de 12:06, 12:00 e 11:48) contra ~10 min da tabela geral, e o LTC em ~11:50, enquanto as outras moedas seguiam em ~10 min.  Nessa liga o ganho de BNB estava sendo superestimado em uns 16%.  Só a Titan III foi observada, então não dá pra afirmar que vale pra outras ligas.
+      <ul class="guia-tl-list">
+        <li><strong>Média das suas leituras.</strong>  O "Last Block Time" do jogo é o tempo do último bloco e oscila, então o app guarda cada leitura por liga e usa a <strong>média</strong> a partir de 3 leituras da moeda.  Antes disso continua na tabela geral.  Um resumo das leituras aparece no campo da rede, com botão pra apagar.</li>
+        <li><strong>Sem campo novo.</strong>  A rede, o poder dividido e a rede da liga alvo do comparador viram leituras automaticamente ao calcular.  Pra outras ligas, use o comparador: o seletor de liga dele define de qual liga é a leitura.  Colar a mesma página duas vezes seguidas, sem bloco novo, não duplica.</li>
+        <li><strong>Aviso de reward.</strong>  Se o "Per block" colado for diferente do reward que o app tem mapeado pra liga, o resumo mostra os dois valores.</li>
+        <li><strong>Mudança de comportamento:</strong> colar o My Power não aplica mais a divisão de poder sozinho.  Com 100% do poder numa moeda, todas as outras ficavam zeradas e só ela aparecia.  Agora existe a opção "Usar essa divisão no cálculo do farm", desligada por padrão.  Quem já usava a divisão precisa marcar a opção uma vez.</li>
+        <li><strong>Campos na ordem do jogo e instruções em passos.</strong>  O jogo abre na aba My Power e a League Power vem depois, então o campo do poder dividido (opcional) agora vem primeiro e o da rede (obrigatório) em seguida.  Cada texto diz se o "Power" ali é o seu ou o da rede.</li>
+      </ul>`
     },
     {
       date: '17 Set 2026', time: '00:05', tag: 'fix', label: 'CORREÇÃO',
