@@ -52,7 +52,8 @@ const UI_FarmCalculator = {
   // Block rewards por liga (fonte estática oficial).
   // Não há API pública de ligas e a captura via rede exige login,
   // portanto estes valores são mantidos manualmente.
-  // Última sincronização manual: 2026-08-26 (Gold I a Diamond III: BTC/LTC/DOGE subiram ~1%, POL/ETH/SOL caíram ~3,5%; Bronze, Silver, Titan, Emerald e Legend seguem iguais)
+  // Última sincronização manual: 2026-09-21 (Emerald I, II e III dobraram, ~+100% em quase todas as moedas; Emerald I manteve o RST; as outras 19 ligas seguem iguais).
+  // Anterior: 2026-08-26 (Gold I a Diamond III: BTC/LTC/DOGE subiram ~1%, POL/ETH/SOL caíram ~3,5%)
   leagueData: {
     '6a846d84d4be9e1aa9a15591': {
       name: 'Bronze I',
@@ -147,17 +148,17 @@ const UI_FarmCalculator = {
     '6a846d84d4be9e1aa9a155a3': {
       name: 'Emerald I',
       powerGoal: '13 ZH/s',
-      rewards: { RST: 254.8733, BTC: 0.00000324, LTC: 0.004837, BNB: 0.000194, POL: 1.9348, XRP: 0.2322, DOGE: 3.3859, ETH: 0.000097, TRX: 0.8707, SOL: 0.003289, ALGO: 4.8936, USDT: 0.9175 }
+      rewards: { RST: 254.8733, BTC: 0.00000648, LTC: 0.009674, BNB: 0.000387, POL: 3.8696, XRP: 0.4644, DOGE: 6.7718, ETH: 0.000193, TRX: 1.7414, SOL: 0.006578, ALGO: 9.7872, USDT: 1.835 }
     },
     '6a846d84d4be9e1aa9a155a4': {
       name: 'Emerald II',
       powerGoal: '25 ZH/s',
-      rewards: { RST: 204.3251, BTC: 0.00000266, LTC: 0.004836, BNB: 0.000232, POL: 1.6828, XRP: 0.1934, DOGE: 2.9015, ETH: 0.000097, TRX: 0.7737, SOL: 0.002902, ALGO: 4.0865, USDT: 0.7662 }
+      rewards: { RST: 410, BTC: 0.00000532, LTC: 0.009672, BNB: 0.000464, POL: 3.3656, XRP: 0.3868, DOGE: 5.803, ETH: 0.000194, TRX: 1.5474, SOL: 0.005803, ALGO: 8.173, USDT: 1.5324 }
     },
     '6a846d84d4be9e1aa9a155a5': {
       name: 'Emerald III',
       powerGoal: '70 ZH/s',
-      rewards: { RST: 102.521, BTC: 0.00000146, LTC: 0.001653, BNB: 0.000117, POL: 0.9235, XRP: 0.0826, DOGE: 1.4581, ETH: 0.000058, TRX: 0.418, SOL: 0.001458, ALGO: 2.563, USDT: 0.4101 }
+      rewards: { RST: 205, BTC: 0.00000292, LTC: 0.003305, BNB: 0.000233, POL: 1.847, XRP: 0.1652, DOGE: 2.9162, ETH: 0.000117, TRX: 0.836, SOL: 0.002916, ALGO: 5.126, USDT: 0.8202 }
     },
     '6a846d84d4be9e1aa9a155a6': {
       name: 'Legend',
