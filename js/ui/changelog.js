@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '21 Set 2026', time: '16:15', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.781 → 8.829 (48 novas, nenhuma removida). Oito famílias de merge completas (os 6 tiers, do Common ao Legendary): <strong>Santoku</strong>, <strong>Snack Tin</strong>, <strong>Sweet Cart</strong>, <strong>Grand Builder</strong>, <strong>One HamForce</strong>, <strong>Hell's Burner</strong>, <strong>AdamantiX</strong> e <strong>Totem</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
+    },
+    {
       date: '17 Set 2026', time: '00:05', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>Inventário: mais dois ajustes na simulação.</strong>
       <ul class="guia-tl-list">
