@@ -12,6 +12,12 @@ const UI_FarmCalculator = {
     // (comportamento antigo, que já era errado pra quem divide o poder de verdade).
     myPowerData: '',
     myPowerPanelOpen: false,
+    // Colar o My Power NÃO muda o cálculo por si só: a página também serve pra alimentar o
+    // tempo de bloco, e usar a divisão zera toda moeda em que você não tem poder alocado
+    // (quem está 100% no BNB via só o BNB, sem conseguir comparar as outras).  Só aplica
+    // quando o usuário liga essa opção.
+    usarPoderDividido: false,
+    leiturasOpen: false,
     results: null,
     prices: {},
     loading: false,
@@ -267,6 +273,7 @@ const UI_FarmCalculator = {
 
       if (savedNetwork) this.state.networkData = savedNetwork;
 
+      this.state.usarPoderDividido = localStorage.getItem('farm_use_split_power') === '1';
       const savedUnit = localStorage.getItem('farm_power_unit');
       if (savedUnit && this._UNIDADES_POWER[savedUnit]) this.state.powerUnit = savedUnit;
       
@@ -415,6 +422,147 @@ const UI_FarmCalculator = {
     return network;
   },
 
+  // ===== Tempo de bloco por liga =====
+  // O "Last Block Time" do jogo é o tempo do ÚLTIMO bloco, não uma média: varia bastante de
+  // uma leitura pra outra, e pode variar de uma liga pra outra (numa mesma hora, o BNB estava
+  // em 12:06 na Titan III e 10:12 na Platinum I).  Uma leitura só engana, então cada colagem
+  // vira UMA amostra guardada por liga+moeda, e o cálculo só troca a tabela geral pela média
+  // da liga quando já existem amostras suficientes dessa moeda.
+  _MIN_AMOSTRAS_BLOCO: 3,
+  _MAX_AMOSTRAS_BLOCO: 24,
+
+  _carregarAmostrasBloco() {
+    if (this._amostrasBloco) return this._amostrasBloco;
+    try { this._amostrasBloco = JSON.parse(localStorage.getItem('farm_block_samples')) || {}; }
+    catch { this._amostrasBloco = {}; }
+    return this._amostrasBloco;
+  },
+
+  _salvarAmostrasBloco() {
+    try { localStorage.setItem('farm_block_samples', JSON.stringify(this._amostrasBloco || {})); } catch {}
+  },
+
+  // Lê, do texto da página League Power, o "Per block" e o "Last Block Time" de cada moeda.
+  // Devolve { BTC: { seconds: 600, reward: 0.0000253 }, ... }.
+  parseBlockStats(text) {
+    const stats = {};
+    const regex = /([A-Z]{2,6})\s+\d+(?:\.\d+)?%\s+Power\s+[\d.]+\s+[A-Za-z]h\/s[\s\S]{0,80}?Per block\s+([\d.]+)\s+[A-Z]{2,6}\s+Last Block Time\s+(\d+):(\d{2}):(\d{2})/gi;
+    let m;
+    while ((m = regex.exec(text || '')) !== null) {
+      stats[m[1].toUpperCase()] = {
+        reward: parseFloat(m[2]),
+        seconds: parseInt(m[3]) * 3600 + parseInt(m[4]) * 60 + parseInt(m[5])
+      };
+    }
+    return stats;
+  },
+
+  // Guarda uma leitura por moeda pra liga. Colar a mesma página duas vezes seguidas (mesmo
+  // bloco ainda) não deve contar como duas amostras, então uma leitura idêntica à última
+  // registrada daquela liga é ignorada.
+  _registrarAmostrasBloco(ligaId, texto) {
+    const stats = this.parseBlockStats(texto);
+    const coins = Object.keys(stats).sort();
+    if (!ligaId || !coins.length) return { coins: [], novo: false };
+
+    const db = this._carregarAmostrasBloco();
+    const liga = db[ligaId] || (db[ligaId] = { coins: {}, assinatura: '' });
+    const assinatura = coins.map(c => c + ':' + stats[c].seconds).join('|');
+    if (liga.assinatura === assinatura) return { coins, novo: false };
+
+    liga.assinatura = assinatura;
+    coins.forEach(c => {
+      const arr = liga.coins[c] || (liga.coins[c] = []);
+      arr.push(stats[c].seconds);
+      if (arr.length > this._MAX_AMOSTRAS_BLOCO) arr.splice(0, arr.length - this._MAX_AMOSTRAS_BLOCO);
+    });
+    this._salvarAmostrasBloco();
+    return { coins, novo: true };
+  },
+
+  // Moedas cujo "Per block" colado difere do reward que o app tem mapeado pra essa liga.
+  _divergenciasDeReward(ligaId, texto) {
+    const liga = this.leagueData[ligaId];
+    if (!liga) return [];
+    const stats = this.parseBlockStats(texto);
+    return Object.keys(stats)
+      .filter(c => liga.rewards[c] != null && Math.abs(stats[c].reward - liga.rewards[c]) / liga.rewards[c] > 0.005)
+      .map(c => ({ coin: c, jogo: stats[c].reward, app: liga.rewards[c] }));
+  },
+
+  // Blocos por dia de uma moeda numa liga: média das amostras daquela liga quando já tem o
+  // mínimo, senão a tabela geral.
+  _blocksPorDia(coin, ligaId) {
+    const amostras = this._carregarAmostrasBloco()[ligaId]?.coins?.[coin];
+    if (amostras && amostras.length >= this._MIN_AMOSTRAS_BLOCO) {
+      const media = amostras.reduce((a, b) => a + b, 0) / amostras.length;
+      if (media > 0) return 86400 / media;
+    }
+    return this.CONFIG.BLOCKS_PER_DAY_BY_COIN[coin] || this.CONFIG.BLOCKS_PER_DAY;
+  },
+
+  _temAmostrasSuficientes(coin, ligaId) {
+    const amostras = this._carregarAmostrasBloco()[ligaId]?.coins?.[coin];
+    return !!amostras && amostras.length >= this._MIN_AMOSTRAS_BLOCO;
+  },
+
+  limparAmostrasBloco(ligaId) {
+    const db = this._carregarAmostrasBloco();
+    if (!db[ligaId]) return;
+    delete db[ligaId];
+    this._salvarAmostrasBloco();
+    if (this.state.results) this.calculate(false); else this.render();
+  },
+
+  // Resumo das leituras guardadas da liga, dentro do painel da rede (não tem campo próprio:
+  // as leituras vêm das colagens que já existem, ver calculate e o comparador).  Fica numa
+  // linha só, fechada; os detalhes por moeda só aparecem se o usuário abrir, porque na
+  // maioria das ligas quase toda moeda é 10:00 e listar todas era ruído.
+  _resumoAmostrasBloco(ligaId) {
+    const liga = this.leagueData[ligaId];
+    const dados = this._carregarAmostrasBloco()[ligaId];
+    const seg = v => `${Math.floor(v / 60)}:${String(Math.round(v % 60)).padStart(2, '0')}`;
+    const coins = dados ? Object.entries(dados.coins) : [];
+    const emUso = coins.filter(([, arr]) => arr.length >= this._MIN_AMOSTRAS_BLOCO).length;
+    const aberto = this.state.leiturasOpen;
+
+    let html = '<div class="farm-blocks-info" style="margin-top:6px;">';
+    html += '<div style="cursor:pointer;" onclick="UI_FarmCalculator.toggleLeituras()">';
+    html += '<span style="font-weight:600;">⏱️ Leituras de tempo de bloco' + (liga ? ' (' + liga.name + ')' : '') + ':</span> ';
+    html += coins.length
+      ? `<span style="font-size:12px;">${emUso} de ${coins.length} moedas com média própria</span>`
+      : '<span class="dim" style="font-size:12px;">nenhuma ainda</span>';
+    html += ` <span class="edit" style="color:#667eea; font-size:12px;">${aberto ? '▲ fechar' : '▼ detalhes'}</span>`;
+    html += '</div>';
+
+    if (aberto) {
+      html += '<div class="dim" style="font-size:11px; margin:4px 0;">O "Last Block Time" do jogo é o do último bloco e oscila.  Cada cálculo guarda uma leitura; com ' + this._MIN_AMOSTRAS_BLOCO + ' de uma moeda, o app usa a média dela.  Cole de novo em outros horários (uns 10 min entre leituras).  Outras ligas: use o comparador.</div>';
+      if (coins.length) {
+        html += '<div style="font-size:12px; line-height:1.8;">' + coins.map(([c, arr]) => {
+          const media = arr.reduce((x, y) => x + y, 0) / arr.length;
+          const oscila = Math.max(...arr) - Math.min(...arr) >= 60;
+          const faixa = oscila ? ` <span class="dim">(${seg(Math.min(...arr))} a ${seg(Math.max(...arr))})</span>` : '';
+          const falta = this._MIN_AMOSTRAS_BLOCO - arr.length;
+          const estado = falta > 0 ? ` <span class="dim">⏳ falta ${falta}</span>` : '';
+          return `<span style="white-space:nowrap;">${c} <strong>${seg(media)}</strong>${faixa} <span class="dim">${arr.length}x</span>${estado}</span>`;
+        }).join(' · ') + '</div>';
+        html += ` <button onclick="UI_FarmCalculator.limparAmostrasBloco('${ligaId}')" class="farm-btn-text">🗑️ apagar leituras desta liga</button>`;
+      }
+    }
+
+    const div = this._divergenciasDeReward(ligaId, this.state.networkData);
+    if (div.length) {
+      html += '<div style="font-size:11px; margin-top:4px;">⚠️ O "Per block" colado difere do reward que o app tem pra essa liga em: ' + div.map(d => `${d.coin} (jogo ${d.jogo}, app ${d.app})`).join(', ') + '.</div>';
+    }
+    html += '</div>';
+    return html;
+  },
+
+  toggleLeituras() {
+    this.state.leiturasOpen = !this.state.leiturasOpen;
+    this.render();
+  },
+
   // Cálculo principal
   // salvar=false ao apenas re-simular (troca de liga/moeda): o histórico registra
   // pesquisas de verdade, não cada ajuste de simulação.
@@ -434,7 +582,7 @@ const UI_FarmCalculator = {
     // Se o usuário colou o "My Power" (poder já dividido entre moedas), usa o poder
     // específico de cada uma em vez do total.  Do contrário o cálculo assume, errado,
     // que 100% do poder mina toda moeda ao mesmo tempo.
-    const myPowerByCoin = this.state.myPowerData ? this.parseNetworkData(this.state.myPowerData) : null;
+    const myPowerByCoin = (this.state.myPowerData && this.state.usarPoderDividido) ? this.parseNetworkData(this.state.myPowerData) : null;
 
     const userData = State.getUserData();
     const blockRewards = this.getBlockRewards(userData);
@@ -450,7 +598,7 @@ const UI_FarmCalculator = {
       const blockReward = blockRewards[coin];
       const myRewardPerBlock = (contribution / 100) * blockReward;
       
-      const blocksPerDay = this.CONFIG.BLOCKS_PER_DAY_BY_COIN[coin] || this.CONFIG.BLOCKS_PER_DAY;
+      const blocksPerDay = this._blocksPorDia(coin, this._ligaDoPerfil());
       const blocksPerWeek = blocksPerDay * 7;
       const blocksPerMonth = blocksPerDay * 30;
       
@@ -479,7 +627,13 @@ const UI_FarmCalculator = {
     const username = userData?.name || 'unknown';
     // Grava em Eh/s, não o número digitado: o histórico é comparado entre pesquisas e
     // plotado no gráfico, então precisa de uma unidade só, independente do seletor.
-    if (salvar) this.saveToStorage(myPowerEh, networkData, calculations, username);
+    if (salvar) {
+      this.saveToStorage(myPowerEh, networkData, calculations, username);
+      // A rede colada é a página League Power da liga do perfil, então já traz um "Last
+      // Block Time" por moeda: aproveita como mais uma amostra sem o usuário fazer nada.
+      this._registrarAmostrasBloco(this._ligaDoPerfil(), networkData);
+      if (this.state.myPowerData) this._registrarAmostrasBloco(this._ligaDoPerfil(), this.state.myPowerData);
+    }
 
     if (typeof Analytics !== 'undefined') {
       const best = calculations.find(c => !c.nonWithdrawable);
@@ -592,6 +746,11 @@ const UI_FarmCalculator = {
     this.state.redePanelOpen = !this.state.redePanelOpen;
     this.render();
   },
+  toggleUsarPoderDividido(ligado) {
+    this.state.usarPoderDividido = !!ligado;
+    try { localStorage.setItem('farm_use_split_power', ligado ? '1' : '0'); } catch {}
+    if (this.state.results) this.calculate(false); else this.render();
+  },
   toggleMyPowerPanel() {
     this.state.myPowerPanelOpen = !this.state.myPowerPanelOpen;
     this.render();
@@ -666,7 +825,7 @@ const UI_FarmCalculator = {
     const myPowerEh = this._poderComparadorEmEh();
     const contribuicao2 = (myPowerEh / networkPowerAlvo) * 100;
     const rewardPerBlock2 = (contribuicao2 / 100) * rewardAlvo;
-    const blocksPerDay = this.CONFIG.BLOCKS_PER_DAY_BY_COIN[coin] || this.CONFIG.BLOCKS_PER_DAY;
+    const blocksPerDay = this._blocksPorDia(coin, this.state.compareLeagueId);
     const isGameCoin = this.CONFIG.GAME_COINS.includes(coin);
     const price = this.CONFIG.FIXED_PRICES[coin] || this.state.prices[coin] || 0;
     const monthlyQty2 = rewardPerBlock2 * blocksPerDay * 30;
@@ -731,6 +890,7 @@ const UI_FarmCalculator = {
 
     html += `<details id="farmRedeAlvoPanel" class="farm-rede-panel"${this.state.redeAlvoPanelOpen ? ' open' : ''}>`;
     html += '<summary></summary>';
+    html += '<div class="farm-network-notice">Cole a aba <strong>League Power</strong> da liga escolhida acima (o nome da liga aparece no topo da página do jogo, confira se é o mesmo).  O tempo de bloco dela também é guardado como leitura dessa liga.</div>';
     html += `<textarea id="farmCompareNetworkData" rows="5" placeholder="Cole aqui a rede da liga que você quer simular (mesmo formato da rede principal)">${this.state.compareNetworkData || ''}</textarea>`;
     html += '</details>';
 
@@ -1088,6 +1248,17 @@ const UI_FarmCalculator = {
     html += '</select>';
     html += '</div>';
 
+    html += `<div class="farm-chip-rede" onclick="UI_FarmCalculator.toggleMyPowerPanel()">`;
+    if (qtdMoedasPoder && this.state.usarPoderDividido) {
+      html += `<span>🔀 poder dividido em <strong>${qtdMoedasPoder} moedas</strong></span>`;
+    } else if (qtdMoedasPoder) {
+      html += `<span>🔀 My Power colado, <strong>não aplicado</strong></span>`;
+    } else {
+      html += '<span>🔀 poder é igual em toda moeda</span>';
+    }
+    html += '<span class="edit">editar ✎</span>';
+    html += '</div>';
+
     html += `<div class="farm-chip-rede" onclick="UI_FarmCalculator.toggleRedePanel()">`;
     html += qtdMoedasRede
       ? `<span>🌐 rede colada — <strong>${qtdMoedasRede} moedas</strong></span>`
@@ -1095,45 +1266,38 @@ const UI_FarmCalculator = {
     html += '<span class="edit">editar ✎</span>';
     html += '</div>';
 
-    html += `<div class="farm-chip-rede" onclick="UI_FarmCalculator.toggleMyPowerPanel()">`;
-    html += qtdMoedasPoder
-      ? `<span>🔀 poder dividido em <strong>${qtdMoedasPoder} moedas</strong></span>`
-      : '<span>🔀 poder é igual em toda moeda</span>';
-    html += '<span class="edit">editar ✎</span>';
-    html += '</div>';
-
     html += '<button onclick="UI_FarmCalculator.calculate()" class="farm-btn-gerar">💰 Calcular</button>';
     html += '</div>'; // farm-toolbar-row
-
-    html += `<details id="farmRedePanel" class="farm-rede-panel"${this.state.redePanelOpen ? ' open' : ''}>`;
-    html += '<summary></summary>';
-    html += '<div class="farm-network-notice">';
-    html += '⚠️ <strong>Atenção:</strong> a fonte dos dados da rede mudou. ';
-    html += 'Acesse <a href="https://rollercoin.com/game/league" target="_blank">rollercoin.com/game/league</a>, ';
-    html += 'clique na aba <strong>League Power</strong> (por padrão abre em My Power), ';
-    html += 'e copie o texto de <strong>todas as moedas</strong> (Game currencies + Crypto currencies) que aparecem lá — cada uma com Power, Active users, Per block e Last Block Time. ';
-    html += 'Cole tudo aqui abaixo. ';
-    html += '<button onclick="UI_FarmCalculator.abrirExemploRede()" class="farm-btn-text">🖼️ Ver exemplo</button>';
-    html += '</div>';
-    html += `<textarea id="farmNetworkData" rows="6" placeholder="Cole os dados da rede. Formato novo:\nRST\n2%\nPower\n8.082 Zh/s\n\nBTC\n8%\nPower\n34.870 Zh/s">${this.state.networkData}</textarea>`;
-    // Info de blocos: cada moeda tem seu próprio ritmo agora (o DOGE sozinho é ~2,8x mais
-    // lento que o resto), então virou uma lista por moeda em vez de 3 grupos.
-    html += '<div class="farm-blocks-info">';
-    html += '<span style="font-weight: 600;">📊 Blocos/dia por moeda: </span>';
-    html += `<span style="font-size: 12px;">${Object.entries(this.CONFIG.BLOCKS_PER_DAY_BY_COIN).map(([c, v]) => `${c} ${v}`).join(' · ')}</span>`;
-    html += '</div>';
-    html += '</details>';
 
     html += `<details id="farmMyPowerPanel" class="farm-rede-panel"${this.state.myPowerPanelOpen ? ' open' : ''}>`;
     html += '<summary></summary>';
     html += '<div class="farm-network-notice">';
-    html += '🔀 <strong>Seu poder está dividido entre moedas?</strong> O jogo deixa escolher farmar 100% numa moeda só, ou espalhar em várias.  Se for esse o seu caso, o cálculo usando só o total fica errado pra cada moeda individualmente. ';
-    html += 'Acesse <a href="https://rollercoin.com/game/league" target="_blank">rollercoin.com/game/league</a>, ';
-    html += 'clique na aba <strong>My Power</strong>, e copie o texto de todas as moedas de lá (cada uma mostra o % do seu poder dedicado a ela). ';
-    html += 'Cole abaixo. Deixe em branco se você não divide o poder (o cálculo então assume 100% em toda moeda, como sempre foi).';
+    html += '🔀 <strong>Seu poder está dividido entre moedas? (opcional)</strong>  O jogo deixa escolher farmar 100% numa moeda só, ou espalhar em várias.  Nesse caso, calcular só com o poder total deixa o resultado errado em cada moeda.';
+    html += '<ol style="margin:6px 0 6px 18px; padding:0;">';
+    html += '<li>Acesse <a href="https://rollercoin.com/game/league" target="_blank">rollercoin.com/game/league</a>.  O jogo abre direto na aba <strong>My Power</strong>, com o nome da liga no topo da página.</li>';
+    html += '<li>Copie o texto de todas as moedas (cada uma mostra o % do <strong>seu</strong> poder dedicado a ela) e cole abaixo.  Aqui o "Power" é o <strong>seu</strong>, não o da rede.</li>';
+    html += '<li>Depois clique na aba <strong>League Power</strong> e cole o texto dela no campo da rede, logo abaixo (esse é o obrigatório).</li>';
+    html += '</ol>';
+    html += 'Deixe em branco se você não divide o poder (o cálculo assume 100% em toda moeda, como sempre foi).  O "Per block" e o "Last Block Time" dessa página também contam como leitura de tempo de bloco da sua liga.';
     html += '</div>';
+    html += `<label style="display:flex; gap:8px; align-items:flex-start; margin:8px 0; font-size:13px; cursor:pointer;">`;
+    html += `<input type="checkbox" ${this.state.usarPoderDividido ? 'checked' : ''} onchange="UI_FarmCalculator.toggleUsarPoderDividido(this.checked)" style="width:auto; margin-top:2px;">`;
+    html += '<span><strong>Usar essa divisão no cálculo do farm.</strong>  <span class="dim">Ligado: só as moedas em que você tem poder rendem, as outras aparecem zeradas (mostra o que você ganha de verdade hoje).  Desligado: compara todas as moedas como se você tivesse 100% do poder nelas (mostra qual seria a melhor pra farmar).  O tempo de bloco é guardado nos dois casos.</span></span>';
+    html += '</label>';
     html += `<textarea id="farmMyPowerData" rows="6" placeholder="Cole os dados de My Power. Mesmo formato da rede:\nRST\n0%\nPower\n0 Gh/s\n\nBNB\n15%\nPower\n748.175 Eh/s">${this.state.myPowerData}</textarea>`;
     html += '</details>';
+    html += `<details id="farmRedePanel" class="farm-rede-panel"${this.state.redePanelOpen ? ' open' : ''}>`;
+    html += '<summary></summary>';
+    html += '<div class="farm-network-notice">';
+    html += '🌐 <strong>Rede da liga (obrigatório).</strong>  Na mesma página do jogo, clique na aba <strong>League Power</strong> (a segunda), copie o texto de <strong>todas as moedas</strong> (Game currencies e Crypto currencies) e cole <strong>neste campo</strong>.  Aqui o "Power" é o da <strong>rede</strong> da liga, então não cole o texto da My Power aqui.  ';
+    html += 'Essa aba também traz "Per block" e "Last Block Time", que viram leituras de tempo de bloco (veja mais abaixo). ';
+    html += '<button onclick="UI_FarmCalculator.abrirExemploRede()" class="farm-btn-text">🖼️ Ver exemplo</button>';
+    html += '</div>';
+    html += `<textarea id="farmNetworkData" rows="6" placeholder="Cole os dados da rede. Formato novo:\nRST\n2%\nPower\n8.082 Zh/s\n\nBTC\n8%\nPower\n34.870 Zh/s">${this.state.networkData}</textarea>`;
+    html += this._resumoAmostrasBloco(ligaPerfil);
+    html += '</details>';
+
+
 
     if (this.state.results && minhaLigaInfo) {
       html += `<div class="farm-liga-atual">📍 Liga atual: <strong>${minhaLigaInfo.name}</strong> <span class="dim">· goal ${minhaLigaInfo.powerGoal}</span></div>`;
@@ -1144,10 +1308,13 @@ const UI_FarmCalculator = {
       html += `<span style="font-size: 12px;">${Object.entries(minhaLigaInfo.rewards).map(([c, v]) => `${c} ${v}`).join(' · ')}</span>`;
       html += '</div>';
       // Tempo de bloco na mesma unidade que o jogo mostra em "Last Block Time" (mm:ss),
-      // não blocos/dia. É global do jogo, não muda por liga.
+      // não blocos/dia. Moeda marcada com * usa a média das leituras coladas da sua liga;
+      // as outras seguem a tabela geral.
+      const usaLiga = Object.keys(this.CONFIG.BLOCKS_PER_DAY_BY_COIN).filter(c => this._temAmostrasSuficientes(c, ligaPerfil));
       html += '<div class="farm-blocks-info" style="margin-top:6px;">';
       html += '<span style="font-weight: 600;">⏱️ Tempo de bloco: </span>';
-      html += `<span style="font-size: 12px;">${Object.entries(this.CONFIG.BLOCKS_PER_DAY_BY_COIN).map(([c, v]) => `${c} ${this._formatarTempoDeBloco(v)}`).join(' · ')}</span>`;
+      html += `<span style="font-size: 12px;">${Object.keys(this.CONFIG.BLOCKS_PER_DAY_BY_COIN).map(c => `${c} ${this._formatarTempoDeBloco(this._blocksPorDia(c, ligaPerfil))}${usaLiga.includes(c) ? '*' : ''}`).join(' · ')}</span>`;
+      if (usaLiga.length) html += '<div class="dim" style="font-size:11px; margin-top:2px;">* média das leituras que você colou da sua liga</div>';
       html += '</div>';
     }
     html += '</div>'; // farm-etapa
@@ -1427,6 +1594,10 @@ const UI_FarmCalculator = {
     if (compareInput) {
       compareInput.addEventListener('input', (e) => {
         this.state.compareNetworkData = e.target.value;
+      });
+      // A rede da liga alvo traz o "Last Block Time" dela: guarda como amostra dessa liga.
+      compareInput.addEventListener('change', (e) => {
+        this._registrarAmostrasBloco(this.state.compareLeagueId, e.target.value);
       });
     }
 
