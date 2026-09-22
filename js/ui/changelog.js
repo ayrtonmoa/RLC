@@ -4,6 +4,15 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '22 Set 2026', time: '09:31', tag: 'new', label: 'NOVO',
+      html: `<strong>Tutorial em vídeo publicado.</strong>  Aquela enquete em que 78,6% pediram um vídeo mostrando o site funcionando virou isto: um tutorial passando por cada aba, do primeiro Analisar até o plano de merges e a montagem da sala.  O link está no topo da Guia.
+      <ul class="guia-tl-list">
+        <li><strong>Com capítulos:</strong> dá pra pular direto pra aba que você quer, sem assistir tudo.</li>
+        <li><strong>Legendas em português</strong> disponíveis no player.</li>
+        <li>Dúvida ou sugestão de melhoria, comenta por lá.  Foi um comentário que virou esse vídeo.</li>
+      </ul>`
+    },
+    {
       date: '21 Set 2026', time: '19:46', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.781 → 8.829 (48 novas, nenhuma removida). Oito famílias de merge completas (os 6 tiers, do Common ao Legendary): <strong>Santoku</strong>, <strong>Snack Tin</strong>, <strong>Sweet Cart</strong>, <strong>Grand Builder</strong>, <strong>One HamForce</strong>, <strong>Hell's Burner</strong>, <strong>AdamantiX</strong> e <strong>Totem</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
     },
