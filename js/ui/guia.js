@@ -11,6 +11,27 @@ const UI_Guia = {
         </div>
       </div>
 
+      <!-- TUTORIAL EM VÍDEO -->
+      <!-- Miniatura estática linkando pro YouTube em vez do player incorporado: o iframe do
+           YouTube carrega vários scripts e cookies de rastreamento dentro do site, e como a
+           Guia é a aba que abre por padrão, isso pesaria em TODA visita, mesmo de quem nunca
+           vai assistir.  A imagem vem do CDN de miniaturas, que é só um arquivo estático. -->
+      <a class="guia-video" href="https://www.youtube.com/watch?v=xCnqYPdKPSY" target="_blank" rel="noopener">
+        <div class="guia-video-thumb">
+          <img src="https://img.youtube.com/vi/xCnqYPdKPSY/maxresdefault.jpg"
+               alt="Tutorial em vídeo do RollerCoin Analyzer Pro"
+               loading="lazy"
+               onerror="this.onerror=null; this.src='https://img.youtube.com/vi/xCnqYPdKPSY/hqdefault.jpg';">
+          <span class="guia-video-play">▶</span>
+        </div>
+        <div class="guia-video-text">
+          <span class="guia-video-badge">TUTORIAL EM VÍDEO</span>
+          <strong class="guia-video-titulo">Veja o site funcionando, aba por aba</strong>
+          <span class="guia-video-desc">Do primeiro Analisar até o plano de merges e a montagem da sala.  O vídeo tem capítulos, então dá pra pular direto pra aba que você quer.</span>
+          <span class="guia-video-cta">Assistir no YouTube →</span>
+        </div>
+      </a>
+
       <!-- UPDATES RECENTES -->
       <div class="guia-updates-header">
         <span class="guia-updates-badge">NOVIDADES</span>
