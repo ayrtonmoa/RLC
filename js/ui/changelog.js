@@ -4,6 +4,14 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '24 Set 2026', time: '20:25', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.829 → 8.943 (114 novas, nenhuma removida).  Dezenove famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Bad Batch</strong>, <strong>Brass Fever</strong>, <strong>Chew Better</strong>, <strong>Cold Snap</strong>, <strong>Don't Open</strong>, <strong>Green Screen of Death</strong>, <strong>Ha-Ha-Hamster</strong>, <strong>Hauntwork</strong>, <strong>Lab Hopper</strong>, <strong>Neverminer</strong>, <strong>Night Carriage</strong>, <strong>Patient Zero</strong>, <strong>Pulse Check</strong>, <strong>Red Remedy</strong>, <strong>Shock Therapy</strong>, <strong>Taste Test</strong>, <strong>Teatime</strong>, <strong>Toxic Tango</strong> e <strong>Triple Dose</strong>.
+      <ul class="guia-tl-list">
+        <li><strong>Corsair's Oath:</strong> o nome vinha com apóstrofo tipográfico (<code>Corsair’s Oath</code>) e agora usa o apóstrofo simples, igual ao jogo.  Quem digitava o nome na busca não encontrava a miner.  A receita de merge dela também passou a citar o nome na grafia nova.</li>
+        <li>Nenhuma receita de craft mudou de verdade nas demais.</li>
+      </ul>`
+    },
+    {
       date: '22 Set 2026', time: '09:31', tag: 'new', label: 'NOVO',
       html: `<strong>Tutorial em vídeo publicado.</strong>  Aquela enquete em que 78,6% pediram um vídeo mostrando o site funcionando virou isto: um tutorial passando por cada aba, do primeiro Analisar até o plano de merges e a montagem da sala.  O link está no topo da Guia.
       <ul class="guia-tl-list">
