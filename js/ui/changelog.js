@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '27 Set 2026', time: '23:45', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.943 → 8.967 (24 novas, nenhuma removida).  Quatro famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Camera Obscura</strong>, <strong>Gaslight Beacon</strong>, <strong>It Is Time</strong> e <strong>Porcelain Heart</strong>.  Nenhuma receita de craft mudou nas existentes.`
+    },
+    {
       date: '24 Set 2026', time: '20:25', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.829 → 8.943 (114 novas, nenhuma removida).  Dezenove famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Bad Batch</strong>, <strong>Brass Fever</strong>, <strong>Chew Better</strong>, <strong>Cold Snap</strong>, <strong>Don't Open</strong>, <strong>Green Screen of Death</strong>, <strong>Ha-Ha-Hamster</strong>, <strong>Hauntwork</strong>, <strong>Lab Hopper</strong>, <strong>Neverminer</strong>, <strong>Night Carriage</strong>, <strong>Patient Zero</strong>, <strong>Pulse Check</strong>, <strong>Red Remedy</strong>, <strong>Shock Therapy</strong>, <strong>Taste Test</strong>, <strong>Teatime</strong>, <strong>Toxic Tango</strong> e <strong>Triple Dose</strong>.
       <ul class="guia-tl-list">
