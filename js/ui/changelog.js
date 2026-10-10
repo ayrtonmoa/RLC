@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '09 Out 2026', time: '22:00', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.967 → 9.051 (84 novas, nenhuma removida).  Quatorze famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Ban Ban</strong>, <strong>Bronze Tank</strong>, <strong>Clockwork Familiar</strong>, <strong>Cuscuz-in-the-Box</strong>, <strong>Dead Signal</strong>, <strong>Doomscroll</strong>, <strong>Dragon Visage</strong>, <strong>Eternal Sleeper</strong>, <strong>Hash Grail</strong>, <strong>Peak Fiction</strong>, <strong>Phantasmagoria</strong>, <strong>Road Fuel</strong>, <strong>Wheel of Life</strong> e <strong>Who Dis</strong>.  Nenhuma receita de craft mudou nas existentes.`
+    },
+    {
       date: '27 Set 2026', time: '23:45', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.943 → 8.967 (24 novas, nenhuma removida).  Quatro famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Camera Obscura</strong>, <strong>Gaslight Beacon</strong>, <strong>It Is Time</strong> e <strong>Porcelain Heart</strong>.  Nenhuma receita de craft mudou nas existentes.`
     },
