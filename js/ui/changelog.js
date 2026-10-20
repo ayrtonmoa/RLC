@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '20 Out 2026', time: '17:25', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 9.051 → 9.105 (54 novas, nenhuma removida).  Nove famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Better HODL</strong>, <strong>Chrono Synth</strong>, <strong>Family Portrait</strong>, <strong>Gutter Tendril</strong>, <strong>Off with his head!</strong>, <strong>Phantom Pipes</strong>, <strong>Phantom Pulse</strong>, <strong>Steel Tank</strong> e <strong>Tomb Riser</strong>.  Nenhuma receita de craft mudou nas existentes.`
+    },
+    {
       date: '09 Out 2026', time: '22:00', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 8.967 → 9.051 (84 novas, nenhuma removida).  Quatorze famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Ban Ban</strong>, <strong>Bronze Tank</strong>, <strong>Clockwork Familiar</strong>, <strong>Cuscuz-in-the-Box</strong>, <strong>Dead Signal</strong>, <strong>Doomscroll</strong>, <strong>Dragon Visage</strong>, <strong>Eternal Sleeper</strong>, <strong>Hash Grail</strong>, <strong>Peak Fiction</strong>, <strong>Phantasmagoria</strong>, <strong>Road Fuel</strong>, <strong>Wheel of Life</strong> e <strong>Who Dis</strong>.  Nenhuma receita de craft mudou nas existentes.`
     },
