@@ -5,19 +5,19 @@ const UI_Changelog = {
   updates: [
     {
       date: '20 Out 2026', time: '17:25', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Catálogo de miners atualizado:</strong> 9.051 → 9.105 (54 novas, nenhuma removida).  Nove famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Better HODL</strong>, <strong>Chrono Synth</strong>, <strong>Family Portrait</strong>, <strong>Gutter Tendril</strong>, <strong>Off with his head!</strong>, <strong>Phantom Pipes</strong>, <strong>Phantom Pulse</strong>, <strong>Steel Tank</strong> e <strong>Tomb Riser</strong>.  Nenhuma receita de craft mudou nas existentes.`
+      html: `<strong>Catálogo de miners atualizado:</strong> 9.051 → 9.105 (54 novas, nenhuma removida).  Nove famílias de merge completas, com os 6 tiers do Common ao Unreal: <strong>Better HODL</strong>, <strong>Chrono Synth</strong>, <strong>Family Portrait</strong>, <strong>Gutter Tendril</strong>, <strong>Off with his head!</strong>, <strong>Phantom Pipes</strong>, <strong>Phantom Pulse</strong>, <strong>Steel Tank</strong> e <strong>Tomb Riser</strong>.  Nenhuma receita de craft mudou nas existentes.`
     },
     {
       date: '09 Out 2026', time: '22:00', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Catálogo de miners atualizado:</strong> 8.967 → 9.051 (84 novas, nenhuma removida).  Quatorze famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Ban Ban</strong>, <strong>Bronze Tank</strong>, <strong>Clockwork Familiar</strong>, <strong>Cuscuz-in-the-Box</strong>, <strong>Dead Signal</strong>, <strong>Doomscroll</strong>, <strong>Dragon Visage</strong>, <strong>Eternal Sleeper</strong>, <strong>Hash Grail</strong>, <strong>Peak Fiction</strong>, <strong>Phantasmagoria</strong>, <strong>Road Fuel</strong>, <strong>Wheel of Life</strong> e <strong>Who Dis</strong>.  Nenhuma receita de craft mudou nas existentes.`
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.967 → 9.051 (84 novas, nenhuma removida).  Quatorze famílias de merge completas, com os 6 tiers do Common ao Unreal: <strong>Ban Ban</strong>, <strong>Bronze Tank</strong>, <strong>Clockwork Familiar</strong>, <strong>Cuscuz-in-the-Box</strong>, <strong>Dead Signal</strong>, <strong>Doomscroll</strong>, <strong>Dragon Visage</strong>, <strong>Eternal Sleeper</strong>, <strong>Hash Grail</strong>, <strong>Peak Fiction</strong>, <strong>Phantasmagoria</strong>, <strong>Road Fuel</strong>, <strong>Wheel of Life</strong> e <strong>Who Dis</strong>.  Nenhuma receita de craft mudou nas existentes.`
     },
     {
       date: '27 Set 2026', time: '23:45', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Catálogo de miners atualizado:</strong> 8.943 → 8.967 (24 novas, nenhuma removida).  Quatro famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Camera Obscura</strong>, <strong>Gaslight Beacon</strong>, <strong>It Is Time</strong> e <strong>Porcelain Heart</strong>.  Nenhuma receita de craft mudou nas existentes.`
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.943 → 8.967 (24 novas, nenhuma removida).  Quatro famílias de merge completas, com os 6 tiers do Common ao Unreal: <strong>Camera Obscura</strong>, <strong>Gaslight Beacon</strong>, <strong>It Is Time</strong> e <strong>Porcelain Heart</strong>.  Nenhuma receita de craft mudou nas existentes.`
     },
     {
       date: '24 Set 2026', time: '20:25', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Catálogo de miners atualizado:</strong> 8.829 → 8.943 (114 novas, nenhuma removida).  Dezenove famílias de merge completas, com os 6 tiers do Common ao Legendary: <strong>Bad Batch</strong>, <strong>Brass Fever</strong>, <strong>Chew Better</strong>, <strong>Cold Snap</strong>, <strong>Don't Open</strong>, <strong>Green Screen of Death</strong>, <strong>Ha-Ha-Hamster</strong>, <strong>Hauntwork</strong>, <strong>Lab Hopper</strong>, <strong>Neverminer</strong>, <strong>Night Carriage</strong>, <strong>Patient Zero</strong>, <strong>Pulse Check</strong>, <strong>Red Remedy</strong>, <strong>Shock Therapy</strong>, <strong>Taste Test</strong>, <strong>Teatime</strong>, <strong>Toxic Tango</strong> e <strong>Triple Dose</strong>.
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.829 → 8.943 (114 novas, nenhuma removida).  Dezenove famílias de merge completas, com os 6 tiers do Common ao Unreal: <strong>Bad Batch</strong>, <strong>Brass Fever</strong>, <strong>Chew Better</strong>, <strong>Cold Snap</strong>, <strong>Don't Open</strong>, <strong>Green Screen of Death</strong>, <strong>Ha-Ha-Hamster</strong>, <strong>Hauntwork</strong>, <strong>Lab Hopper</strong>, <strong>Neverminer</strong>, <strong>Night Carriage</strong>, <strong>Patient Zero</strong>, <strong>Pulse Check</strong>, <strong>Red Remedy</strong>, <strong>Shock Therapy</strong>, <strong>Taste Test</strong>, <strong>Teatime</strong>, <strong>Toxic Tango</strong> e <strong>Triple Dose</strong>.
       <ul class="guia-tl-list">
         <li><strong>Corsair's Oath:</strong> o nome vinha com apóstrofo tipográfico (<code>Corsair’s Oath</code>) e agora usa o apóstrofo simples, igual ao jogo.  Quem digitava o nome na busca não encontrava a miner.  A receita de merge dela também passou a citar o nome na grafia nova.</li>
         <li>Nenhuma receita de craft mudou de verdade nas demais.</li>
@@ -34,7 +34,7 @@ const UI_Changelog = {
     },
     {
       date: '21 Set 2026', time: '19:46', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Catálogo de miners atualizado:</strong> 8.781 → 8.829 (48 novas, nenhuma removida). Oito famílias de merge completas (os 6 tiers, do Common ao Legendary): <strong>Santoku</strong>, <strong>Snack Tin</strong>, <strong>Sweet Cart</strong>, <strong>Grand Builder</strong>, <strong>One HamForce</strong>, <strong>Hell's Burner</strong>, <strong>AdamantiX</strong> e <strong>Totem</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.781 → 8.829 (48 novas, nenhuma removida). Oito famílias de merge completas (os 6 tiers, do Common ao Unreal): <strong>Santoku</strong>, <strong>Snack Tin</strong>, <strong>Sweet Cart</strong>, <strong>Grand Builder</strong>, <strong>One HamForce</strong>, <strong>Hell's Burner</strong>, <strong>AdamantiX</strong> e <strong>Totem</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
     },
     {
       date: '21 Set 2026', time: '19:46', tag: 'improved', label: 'MELHORIA',
@@ -97,7 +97,7 @@ const UI_Changelog = {
     },
     {
       date: '13 Set 2026', time: '23:48', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Catálogo de miners atualizado:</strong> 8.751 → 8.781 (30 novas, nenhuma removida). Cinco famílias de merge completas (os 6 tiers, do Common ao Legendary): <strong>Celestial Dome</strong>, <strong>Mirage Plate</strong>, <strong>Bazaar Bags</strong>, <strong>Djinn Lamp</strong> e <strong>Bazaar Bite</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.751 → 8.781 (30 novas, nenhuma removida). Cinco famílias de merge completas (os 6 tiers, do Common ao Unreal): <strong>Celestial Dome</strong>, <strong>Mirage Plate</strong>, <strong>Bazaar Bags</strong>, <strong>Djinn Lamp</strong> e <strong>Bazaar Bite</strong>. Nenhuma receita de craft mudou de verdade nas existentes.`
     },
     {
       date: '10 Set 2026', time: '20:27', tag: 'new', label: 'NOVO',
@@ -109,7 +109,7 @@ const UI_Changelog = {
     },
     {
       date: '09 Set 2026', time: '23:56', tag: 'improved', label: 'MELHORIA',
-      html: `<strong>Catálogo de miners atualizado:</strong> 8.741 → 8.751 (10 novas, nenhuma removida). Uma família de merge completa, <strong>Nomad Mangal</strong> (os 6 tiers, do Common ao Legendary), e 4 miners novas da coleção <strong>Piero's Eurotrip</strong>: Paris Croissant, Rome Espresso, Madrid Fiesta e Lima Llama. Nenhuma receita de craft mudou de verdade dessa vez.`
+      html: `<strong>Catálogo de miners atualizado:</strong> 8.741 → 8.751 (10 novas, nenhuma removida). Uma família de merge completa, <strong>Nomad Mangal</strong> (os 6 tiers, do Common ao Unreal), e 4 miners novas da coleção <strong>Piero's Eurotrip</strong>: Paris Croissant, Rome Espresso, Madrid Fiesta e Lima Llama. Nenhuma receita de craft mudou de verdade dessa vez.`
     },
     {
       date: '09 Set 2026', time: '23:55', tag: 'improved', label: 'MELHORIA',
