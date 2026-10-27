@@ -4,6 +4,10 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '27 Out 2026', time: '11:24', tag: 'improved', label: 'MELHORIA',
+      html: `<strong>Catálogo de miners atualizado:</strong> 9.105 → 9.141 (36 novas, nenhuma removida).  Seis famílias de merge completas, com os 6 tiers do Common ao Unreal: <strong>Boo Crew</strong>, <strong>Dead Wrong</strong>, <strong>Head O'Mine</strong>, <strong>Magic Torch</strong>, <strong>Screamatorium</strong> e <strong>Void Shroud</strong>.  Nenhuma receita de craft mudou nas existentes.`
+    },
+    {
       date: '27 Out 2026', time: '11:09', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>SmartRoom: "Preservar sala" agora vale também com limite de poder.</strong>  Quando o plano passava do teto, o corte tirava miners instaladas e depois enchia as vagas abertas com miners novas do inventário, empurrando as instaladas para outros racks.
       <ul class="guia-tl-list">
