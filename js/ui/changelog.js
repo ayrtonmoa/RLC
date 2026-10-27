@@ -4,6 +4,15 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '27 Out 2026', time: '11:09', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>SmartRoom: "Preservar sala" agora vale também com limite de poder.</strong>  Quando o plano passava do teto, o corte tirava miners instaladas e depois enchia as vagas abertas com miners novas do inventário, empurrando as instaladas para outros racks.
+      <ul class="guia-tl-list">
+        <li>No modo Preservar, o corte tira primeiro o que veio do inventário, e só depois mexe numa instalada.</li>
+        <li>Vaga aberta pelo corte não conta mais como vaga livre: só a própria miner instalada pode voltar para ela, e só no rack original.</li>
+        <li>O teto de liga passou a descontar o Freon (ver correção do Resumo), então o limite digitado bate com o poder que o jogo usa para a liga.</li>
+      </ul>`
+    },
+    {
       date: '27 Out 2026', time: '11:07', tag: 'fix', label: 'CORREÇÃO',
       html: `<strong>Poder sem Temporário agora desconta o Freon.</strong>  O bônus do Freon entra no total por dentro do Bônus de Coleção, mas expira junto com o Freon, e o site não descontava essa parte.  Numa conta com Freon ativo, o Resumo mostrava 29,2 Zh/s como poder sustentável quando o jogo considerava 24,4 Zh/s para a liga.
       <ul class="guia-tl-list">

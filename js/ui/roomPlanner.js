@@ -1053,7 +1053,10 @@ const UI_RoomPlanner = {
       if (this._calcularPoderEstimado(placed, racks, userData) <= limiteGH) break;
 
       this._anexarImpactosPool(placed, racks, userData);
-      const alvo = placed.reduce((a, b) => (a._impact <= b._impact ? a : b));
+      // No modo 'preservar', o que veio do inventário sai antes de qualquer instalada:
+      // cortar uma instalada e manter uma nova seria uma troca, não um corte.
+      const novas = this._preservandoInstaladas() ? placed.filter(m => m._minerIndexOriginal == null && !m._pecaDeSetFixa) : [];
+      const alvo = (novas.length ? novas : placed).reduce((a, b) => (a._impact <= b._impact ? a : b));
 
       const lista = rackAssignments[alvo._rackId] || [];
       const i = lista.indexOf(alvo);
@@ -1068,11 +1071,18 @@ const UI_RoomPlanner = {
     // Fase 2 — só faz sentido com o controle de capacidade em mãos; peças de set ficam de
     // fora porque só valem no rack temático delas (mesma razão do preenchimento por
     // fragmentação no executarAutoOtimizacao).
+    // No modo 'preservar', a vaga aberta pelo corte NÃO é vaga livre: ela era de uma miner
+    // instalada.  Por isso só instalada volta (e só pro próprio rack, ver abaixo); o
+    // inventário fica no banco.  Sem esse filtro, a recomposição ordenava tudo por poder e
+    // enchia as vagas cortadas com miners novas do inventário, empurrando as instaladas pra
+    // outros racks: justamente as trocas que o modo existe pra evitar.
+    const preservar = this._preservandoInstaladas();
     let recolocadas = 0;
     if (rackCapacity && banco.length) {
       const candidatos = banco
         .map((m, idx) => ({ m, idx }))
         .filter(({ m }) => !this._setDaMiner(m))
+        .filter(({ m }) => !preservar || m._minerIndexOriginal != null)
         .sort((a, b) => b.m.power - a.m.power);
 
       const jaUsados = new Set();
@@ -1084,10 +1094,10 @@ const UI_RoomPlanner = {
         // rack: jogar instalada pro primeiro rack qualquer com espaço faria essa recolocação
         // virar exatamente o tipo de troca sem sentido que _preservarPosicoesNaMesmaFaixa e
         // o preenchimento genérico já evitam em todo resto do fluxo.
-        let rack = (this._preservandoInstaladas() && m._minerIndexOriginal != null && m._rackIdOriginal)
+        let rack = (preservar && m._rackIdOriginal)
           ? racks.find(r => r._id === m._rackIdOriginal && (rackCapacity[r._id] || 0) >= cells)
           : null;
-        if (!rack) rack = racks.find(r => (rackCapacity[r._id] || 0) >= cells);
+        if (!rack && !preservar) rack = racks.find(r => (rackCapacity[r._id] || 0) >= cells);
         if (!rack) return;
 
         rackAssignments[rack._id].push({ ...m, _rackId: rack._id });
