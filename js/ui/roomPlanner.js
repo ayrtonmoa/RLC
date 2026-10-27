@@ -492,7 +492,7 @@ const UI_RoomPlanner = {
       html += '<div class="comparison-arrow">→</div>';
       html += '<div class="comparison-item"><span class="comparison-label">Estimado sem temporário</span><span class="comparison-value">~' + Utils.formatPower(ligaEstimada * 1e9) + '</span></div>';
       html += '<div class="comparison-delta" style="color:' + ligaColor + '">' + Utils.formatPowerSigned(ligaGanho * 1e9) + '</div>';
-      html += '<div class="comparison-liga-nota">🏆 é este o poder que você sustenta e que importa pra liga — os ' + Utils.formatPower(Utils.poderTemporario(userData.powerData) * 1e9) + ' de poder temporário (boost + expedição do hamster) entram no total acima, mas expiram e não promovem.</div>';
+      html += '<div class="comparison-liga-nota">🏆 é este o poder que você sustenta e que importa pra liga.  Os ' + Utils.formatPower(Utils.poderTemporario(userData.powerData) * 1e9) + ' de poder temporário (boost, Freon e expedição do hamster) entram no total acima, mas expiram e não promovem.</div>';
       html += '</div>';
     }
 

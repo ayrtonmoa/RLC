@@ -66,8 +66,8 @@ const UI_Resumo = {
         <h4>🏆 Poder sem Temporário</h4>
         <p class="power-value-main">${Utils.formatPower(Utils.poderSemTemporario(powerData) * 1e9)}</p>
         <!-- "Aproximado", não "Exato" como os cards acima: os dois de cima são reconstrução
-             fiel de campos que a própria API devolve. Este é current_power menos temp e
-             hamster_expedition_bonus_power — matematicamente correto, mas testado contra o
+             fiel de campos que a própria API devolve. Este é current_power menos temp,
+             hamster_expedition_bonus_power e freon: matematicamente correto, mas testado contra o
              jogo com ~0.09% de resíduo (a mesma margem do max_power não acompanhar em tempo
              real), então não é a mesma garantia de exatidão dos outros dois. -->
         <small class="power-value-small">Aproximado: ${Utils.poderSemTemporario(powerData).toFixed(9)} GH/s</small>
@@ -75,7 +75,7 @@ const UI_Resumo = {
           Este é o poder que você <strong>sustenta de verdade</strong>: o total menos o temporário, que expira.
           É o número que importa pra liga, porque o <strong>poder temporário não promove</strong>.
           ${Utils.poderTemporario(powerData) > 0
-            ? `Hoje o seu total é ${Utils.formatPower(powerData.current_power * 1e9)}, mas ${Utils.formatPower(Utils.poderTemporario(powerData) * 1e9)} disso é temporário (boost + expedição do hamster).`
+            ? `Hoje o seu total é ${Utils.formatPower(powerData.current_power * 1e9)}, mas ${Utils.formatPower(Utils.poderTemporario(powerData) * 1e9)} disso é temporário (boost, Freon e expedição do hamster).`
             : 'No momento você não tem poder temporário ativo, então ele é igual ao total.'}
         </p>
         <!-- Usa Utils.poderSemTemporario(powerData), ou seja current_power - temporário — e
@@ -100,8 +100,7 @@ const UI_Resumo = {
           : ''}
         ${powerData.max_power ? `
         <p class="power-liga-nota">
-          Não confunda com o <strong>"Maximum power"</strong> que o jogo mostra (${Utils.formatPower(powerData.max_power * 1e9)}):
-          aquilo é uma <strong>marca d'água do maior poder já registrado</strong> — só sobe, e não desce quando você tira miner.
+          Para conferir: o <strong>"Maximum power"</strong> que o jogo mostra agora é ${Utils.formatPower(powerData.max_power * 1e9)}.
         </p>` : ''}
       </div>
       
@@ -139,6 +138,12 @@ const UI_Resumo = {
           <strong>Expedição do Hamster:</strong><br>
           ${Utils.formatPower(hamsterBonus * 1e9)}<br>
           <small>${hamsterBonus.toFixed(9)} GH/s — também temporário, campo separado de "Temporário"</small>
+        </div>` : ''}
+        ${powerData.freon > 0 ? `
+        <div class="summary-item">
+          <strong>Freon:</strong><br>
+          ${Utils.formatPower(powerData.freon * 1e9)}<br>
+          <small>${powerData.freon.toFixed(9)} GH/s (temporário, já incluso no Bônus de Coleção)</small>
         </div>` : ''}
         <div class="summary-item">
           <strong>Miners:</strong><br>

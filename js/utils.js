@@ -36,10 +36,15 @@ const Utils = {
    * suficiente pra passar a impressão errada de estar mais perto da próxima liga do que
    * está de verdade. Se a API adicionar mais fontes de boost temporário no futuro, é aqui
    * que entram.
+   *
+   * `powerData.freon` também é temporário: o bônus do Freon entra no total por dentro de
+   * `bonus` (o bônus de coleção), mas expira junto com o Freon. Numa conta real, total
+   * 30.771 Zh/s − temp 1.545 − freon 4.785 = 24.441 Zh/s, exatamente o poder que o jogo
+   * usa pra liga; sem o freon o site mostrava 29.226 Zh/s como permanente.
    */
   poderTemporario(powerData) {
     if (!powerData) return 0;
-    return (powerData.temp || 0) + (powerData.hamster_expedition_bonus_power || 0);
+    return (powerData.temp || 0) + (powerData.hamster_expedition_bonus_power || 0) + (powerData.freon || 0);
   },
 
   /**

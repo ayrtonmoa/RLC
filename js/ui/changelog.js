@@ -4,6 +4,15 @@
 const UI_Changelog = {
   updates: [
     {
+      date: '27 Out 2026', time: '11:07', tag: 'fix', label: 'CORREÇÃO',
+      html: `<strong>Poder sem Temporário agora desconta o Freon.</strong>  O bônus do Freon entra no total por dentro do Bônus de Coleção, mas expira junto com o Freon, e o site não descontava essa parte.  Numa conta com Freon ativo, o Resumo mostrava 29,2 Zh/s como poder sustentável quando o jogo considerava 24,4 Zh/s para a liga.
+      <ul class="guia-tl-list">
+        <li><strong>Resumo:</strong> novo card <em>Freon</em> no detalhamento, e o texto do temporário passou a citar o Freon.</li>
+        <li><strong>SmartRoom:</strong> a nota de poder para a liga usa o mesmo cálculo corrigido.</li>
+        <li>O aviso que chamava o "Maximum power" do jogo de marca d'água foi removido.  Com o Freon descontado, os dois números batem.</li>
+      </ul>`
+    },
+    {
       date: '20 Out 2026', time: '17:25', tag: 'improved', label: 'MELHORIA',
       html: `<strong>Catálogo de miners atualizado:</strong> 9.051 → 9.105 (54 novas, nenhuma removida).  Nove famílias de merge completas, com os 6 tiers do Common ao Unreal: <strong>Better HODL</strong>, <strong>Chrono Synth</strong>, <strong>Family Portrait</strong>, <strong>Gutter Tendril</strong>, <strong>Off with his head!</strong>, <strong>Phantom Pipes</strong>, <strong>Phantom Pulse</strong>, <strong>Steel Tank</strong> e <strong>Tomb Riser</strong>.  Nenhuma receita de craft mudou nas existentes.`
     },
